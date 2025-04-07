@@ -1,23 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data.DataAnnotations
 {
-
     /// <summary>
-    /// Extension de <see cref="DisplayNameAttribute"/> que permite extraer el texto de un Recurso
+    /// Especifica el modo en que los datos se muestran
     /// </summary>
-    public class DisplayNameLocalizedAttribute : DisplayNameAttribute
+    public class DisplayFormatLocalizedAttribute : DisplayFormatAttribute
     {
         #region Constructors
-        public DisplayNameLocalizedAttribute(string diplayName) : base(diplayName)
-        {
-        }
+        public DisplayFormatLocalizedAttribute(string diplayformat) { DataFormatString = diplayformat; }
         #endregion Constructors
 
         #region Properties
@@ -30,13 +23,13 @@ namespace KUtilitiesCore.Data.DataAnnotations
         #endregion Properties
 
         #region Methods
-        public string GetDisplayName()
+        public string GetDataFormatString()
         {
-            if(ResourceType != null)
+            if (ResourceType != null)
             {
-                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(base.DisplayName));
+                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(DataFormatString));
             }
-            return base.DisplayName;
+            return DataFormatString;
         }
         #endregion Methods
     }

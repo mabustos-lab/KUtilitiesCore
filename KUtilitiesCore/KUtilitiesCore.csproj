@@ -25,18 +25,36 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Data\ValidationAttributes\ValidationAtrributesStrings.Designer.cs">
+      <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
+    </Compile>
     <Compile Update="Extensions\ColorExtLocalizable.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ColorExtLocalizable.resx</DependentUpon>
+      <CustomToolNamespace>KUtilitiesCore.Extensions</CustomToolNamespace>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Data\ValidationAttributes\ValidationAtrributesStrings.en-US.resx">
+      <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Data\ValidationAttributes\ValidationAtrributesStrings.resx">
+      <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Extensions\ColorExtLocalizable.en-US.resx">
+      <CustomToolNamespace>KUtilitiesCore.Extensions</CustomToolNamespace>
+    </EmbeddedResource>
     <EmbeddedResource Update="Extensions\ColorExtLocalizable.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ColorExtLocalizable.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>KUtilitiesCore.Extensions</CustomToolNamespace>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\ValidationAttributes\" />
   </ItemGroup>
 
 </Project>

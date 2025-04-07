@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace KUtilities.Extensions {
+namespace KUtilitiesCore.Extensions {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace KUtilities.Extensions {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KUtilities.Extensions.ColorExtLocalizable", typeof(ColorExtLocalizable).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("KUtilitiesCore.Extensions.ColorExtLocalizable", typeof(ColorExtLocalizable).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
