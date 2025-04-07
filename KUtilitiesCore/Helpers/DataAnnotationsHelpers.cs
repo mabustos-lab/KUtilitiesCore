@@ -12,7 +12,7 @@ using KUtilitiesCore.Data.DataAnnotations;
 
 namespace KUtilitiesCore.Helpers
 {
-    internal static class DataAnnotationsExtCore
+    internal static class DataAnnotationsHelpers
     {
         #region Methods
 
