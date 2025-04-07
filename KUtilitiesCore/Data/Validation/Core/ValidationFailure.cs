@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Validation.Core
+namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
     /// Representa un fallo de validación individual.

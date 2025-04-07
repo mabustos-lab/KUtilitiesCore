@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace KUtilitiesCore.Validation.RuleValues
+namespace KUtilitiesCore.Data.Validation.RuleValues
 {
     /// <summary>
     /// Clase que define cuando no hay reglas que validar

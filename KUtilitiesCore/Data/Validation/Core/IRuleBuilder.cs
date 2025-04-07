@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Validation.Core
+namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
     /// Interfaz para construir reglas de validación para una propiedad específica.

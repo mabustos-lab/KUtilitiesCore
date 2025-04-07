@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.Validation.RuleValues
+﻿namespace KUtilitiesCore.Data.Validation.RuleValues
 {
     /// <summary> Implementación genérica de IAllowedValue para un rango numérico. </summary>
     /// <typeparam name="TNum">El tipo numérico (debe implementar IComparable<TNum>).</typeparam>

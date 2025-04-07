@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.Validation.RuleValues
+﻿namespace KUtilitiesCore.Data.Validation.RuleValues
 {
     /// <summary>
     /// Implementación de IAllowedValue para una lista de cadenas permitidas.

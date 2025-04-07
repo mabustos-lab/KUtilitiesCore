@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.Validation.RuleValues
+﻿namespace KUtilitiesCore.Data.Validation.RuleValues
 {
     public abstract class BaseRuleValue : IRuleValue
     {

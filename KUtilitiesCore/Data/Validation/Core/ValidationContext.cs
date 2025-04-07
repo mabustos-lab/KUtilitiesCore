@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.Validation.Core
+﻿namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
     /// Contexto de validación que se pasa a las reglas.

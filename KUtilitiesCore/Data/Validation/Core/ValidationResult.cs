@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace KUtilitiesCore.Validation.Core
+namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
     /// Resultado de una operación de validación.

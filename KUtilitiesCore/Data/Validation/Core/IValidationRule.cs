@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.Validation.Core
+﻿namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
     /// Interfaz para una regla de validación específica.

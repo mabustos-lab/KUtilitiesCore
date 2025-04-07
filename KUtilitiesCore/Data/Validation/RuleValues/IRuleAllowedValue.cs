@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.Validation.RuleValues
+﻿namespace KUtilitiesCore.Data.Validation.RuleValues
 {
     /// <summary>
     /// Interfaz genérica para definir conjuntos de valores permitidos.
