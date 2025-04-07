@@ -56,7 +56,7 @@ namespace KUtilitiesCore.Extensions
         /// </summary>
         public static string DataAnnotationsDescription<TSource, TProperty>(this Expression<Func<TSource, TProperty>> propertyAccesor)
         {
-            MemberInfo mi = ExpressionsExtCore.GetPropertyInformation(propertyAccesor.Body);
+            MemberInfo mi = ExpressionsHelpers.GetPropertyInformation(propertyAccesor.Body);
             return DataAnnotationsHelpers.GetDescriptionCore(typeof(TSource), mi.Name);
         }
 
@@ -86,7 +86,7 @@ namespace KUtilitiesCore.Extensions
         /// </summary>
         public static string DataAnnotationsDisplayFormat<TSource, TProperty>(this Expression<Func<TSource, TProperty>> propertyAccesor)
         {
-            MemberInfo mi = ExpressionsExtCore.GetPropertyInformation(propertyAccesor.Body);
+            MemberInfo mi = ExpressionsHelpers.GetPropertyInformation(propertyAccesor.Body);
             return DataAnnotationsHelpers.GetDisplayFormatCore(typeof(TSource), mi.Name);
         }
 
@@ -123,7 +123,7 @@ namespace KUtilitiesCore.Extensions
         /// </summary>
         public static string DataAnnotationsDisplayName<TSource, TProperty>(this Expression<Func<TSource, TProperty>> propertyAccesor)
         {
-            MemberInfo mi = ExpressionsExtCore.GetPropertyInformation(propertyAccesor.Body);
+            MemberInfo mi = ExpressionsHelpers.GetPropertyInformation(propertyAccesor.Body);
             return DataAnnotationsHelpers.GetDisplayNameCore(typeof(TSource), mi.Name);
         }
 
@@ -153,7 +153,7 @@ namespace KUtilitiesCore.Extensions
         /// </summary>
         public static string DataAnnotationsDisplayShortName<TSource, TProperty>(this Expression<Func<TSource, TProperty>> propertyAccesor)
         {
-            MemberInfo mi = ExpressionsExtCore.GetPropertyInformation(propertyAccesor.Body);
+            MemberInfo mi = ExpressionsHelpers.GetPropertyInformation(propertyAccesor.Body);
             return DataAnnotationsHelpers.GetShortNameCore(typeof(TSource), mi.Name);
         }
 
@@ -180,7 +180,7 @@ namespace KUtilitiesCore.Extensions
         public static TAttrib GetAttribute<TAttrib, TSource, TProperty>(this Expression<Func<TSource, TProperty>> PropertyAccesor)
       where TAttrib : Attribute
         {
-            MemberInfo mi = ExpressionsExtCore.GetPropertyInformation(PropertyAccesor.Body);
+            MemberInfo mi = ExpressionsHelpers.GetPropertyInformation(PropertyAccesor.Body);
             if (mi == null) return null;
             return DataAnnotationsHelpers.GetAttribCore<TSource, TAttrib>(mi.Name);
         }
