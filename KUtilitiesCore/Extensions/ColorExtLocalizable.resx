@@ -1,0 +1,642 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ActiveBorder" xml:space="preserve">
+    <value>Borde activo</value>
+  </data>
+  <data name="ActiveCaption" xml:space="preserve">
+    <value>Subtítulo activo</value>
+  </data>
+  <data name="ActiveCaptionText" xml:space="preserve">
+    <value>Texto de subtítulo activo</value>
+  </data>
+  <data name="AliceBlue" xml:space="preserve">
+    <value>Alice azul</value>
+  </data>
+  <data name="AntiqueWhite" xml:space="preserve">
+    <value>Blanco antiguo</value>
+  </data>
+  <data name="AppWorkspace" xml:space="preserve">
+    <value>Espacio de trabajo de la aplicación</value>
+  </data>
+  <data name="Aqua" xml:space="preserve">
+    <value>Agua</value>
+  </data>
+  <data name="Aquamarine" xml:space="preserve">
+    <value>Aguamarina</value>
+  </data>
+  <data name="Azure" xml:space="preserve">
+    <value>Azur</value>
+  </data>
+  <data name="Beige" xml:space="preserve">
+    <value>Beige</value>
+  </data>
+  <data name="Bisque" xml:space="preserve">
+    <value>Sopa de mariscos</value>
+  </data>
+  <data name="Black" xml:space="preserve">
+    <value>Negro</value>
+  </data>
+  <data name="BlanchedAlmond" xml:space="preserve">
+    <value>Almendra Blanqueada</value>
+  </data>
+  <data name="Blue" xml:space="preserve">
+    <value>Azul</value>
+  </data>
+  <data name="BlueViolet" xml:space="preserve">
+    <value>Violeta Azul</value>
+  </data>
+  <data name="Brown" xml:space="preserve">
+    <value>marrón</value>
+  </data>
+  <data name="BurlyWood" xml:space="preserve">
+    <value>Madera corpulenta</value>
+  </data>
+  <data name="ButtonFace" xml:space="preserve">
+    <value>Cara de botón</value>
+  </data>
+  <data name="ButtonHighlight" xml:space="preserve">
+    <value>Resaltado del botón</value>
+  </data>
+  <data name="ButtonShadow" xml:space="preserve">
+    <value>Sombra de botón</value>
+  </data>
+  <data name="CadetBlue" xml:space="preserve">
+    <value>Azul cadete</value>
+  </data>
+  <data name="Chartreuse" xml:space="preserve">
+    <value>Monasterio</value>
+  </data>
+  <data name="Chocolate" xml:space="preserve">
+    <value>Chocolate</value>
+  </data>
+  <data name="Control" xml:space="preserve">
+    <value>Controlar</value>
+  </data>
+  <data name="ControlDark" xml:space="preserve">
+    <value>Control obscuro</value>
+  </data>
+  <data name="ControlDarkDark" xml:space="preserve">
+    <value>Control obscuro obscuro</value>
+  </data>
+  <data name="ControlLight" xml:space="preserve">
+    <value>Control claro</value>
+  </data>
+  <data name="ControlLightLight" xml:space="preserve">
+    <value>Control claro claro</value>
+  </data>
+  <data name="ControlText" xml:space="preserve">
+    <value>Texto de control</value>
+  </data>
+  <data name="Coral" xml:space="preserve">
+    <value>Coral</value>
+  </data>
+  <data name="CornflowerBlue" xml:space="preserve">
+    <value>Azul aciano</value>
+  </data>
+  <data name="Cornsilk" xml:space="preserve">
+    <value>Seda de maiz</value>
+  </data>
+  <data name="Crimson" xml:space="preserve">
+    <value>carmesí</value>
+  </data>
+  <data name="Cyan" xml:space="preserve">
+    <value>Cian</value>
+  </data>
+  <data name="DarkBlue" xml:space="preserve">
+    <value>Azul oscuro</value>
+  </data>
+  <data name="DarkCyan" xml:space="preserve">
+    <value>Cian oscuro</value>
+  </data>
+  <data name="DarkGoldenrod" xml:space="preserve">
+    <value>Vara de oro oscura</value>
+  </data>
+  <data name="DarkGray" xml:space="preserve">
+    <value>Gris oscuro</value>
+  </data>
+  <data name="DarkGreen" xml:space="preserve">
+    <value>Verde oscuro</value>
+  </data>
+  <data name="DarkKhaki" xml:space="preserve">
+    <value>Caqui oscuro</value>
+  </data>
+  <data name="DarkMagenta" xml:space="preserve">
+    <value>Magenta oscuro</value>
+  </data>
+  <data name="DarkOliveGreen" xml:space="preserve">
+    <value>Verde oliva oscuro</value>
+  </data>
+  <data name="DarkOrange" xml:space="preserve">
+    <value>Naranja oscuro</value>
+  </data>
+  <data name="DarkOrchid" xml:space="preserve">
+    <value>Orquídea oscura</value>
+  </data>
+  <data name="DarkRed" xml:space="preserve">
+    <value>Rojo oscuro</value>
+  </data>
+  <data name="DarkSalmon" xml:space="preserve">
+    <value>Salmón oscuro</value>
+  </data>
+  <data name="DarkSeaGreen" xml:space="preserve">
+    <value>Verde mar oscuro</value>
+  </data>
+  <data name="DarkSlateBlue" xml:space="preserve">
+    <value>Azul pizarra oscuro</value>
+  </data>
+  <data name="DarkSlateGray" xml:space="preserve">
+    <value>Gris pizarra oscuro</value>
+  </data>
+  <data name="DarkTurquoise" xml:space="preserve">
+    <value>Turquesa oscuro</value>
+  </data>
+  <data name="DarkViolet" xml:space="preserve">
+    <value>Violeta oscuro</value>
+  </data>
+  <data name="DeepPink" xml:space="preserve">
+    <value>Rosa profundo</value>
+  </data>
+  <data name="DeepSkyBlue" xml:space="preserve">
+    <value>Azul cielo profundo</value>
+  </data>
+  <data name="Desktop" xml:space="preserve">
+    <value>Escritorio</value>
+  </data>
+  <data name="DimGray" xml:space="preserve">
+    <value>Gris oscuro</value>
+  </data>
+  <data name="DodgerBlue" xml:space="preserve">
+    <value>Dodger Blue</value>
+  </data>
+  <data name="Firebrick" xml:space="preserve">
+    <value>Ladrillo refractario</value>
+  </data>
+  <data name="FloralWhite" xml:space="preserve">
+    <value>Blanco Floral</value>
+  </data>
+  <data name="ForestGreen" xml:space="preserve">
+    <value>Bosque verde</value>
+  </data>
+  <data name="Fuchsia" xml:space="preserve">
+    <value>Fucsia</value>
+  </data>
+  <data name="Gainsboro" xml:space="preserve">
+    <value>Gainsboro</value>
+  </data>
+  <data name="GhostWhite" xml:space="preserve">
+    <value>Blanco fantasma</value>
+  </data>
+  <data name="Gold" xml:space="preserve">
+    <value>Oro</value>
+  </data>
+  <data name="Goldenrod" xml:space="preserve">
+    <value>Vara de oro</value>
+  </data>
+  <data name="GradientActiveCaption" xml:space="preserve">
+    <value>Título activo degradado</value>
+  </data>
+  <data name="GradientInactiveCaption" xml:space="preserve">
+    <value>Título inactivo degradado</value>
+  </data>
+  <data name="Gray" xml:space="preserve">
+    <value>gris</value>
+  </data>
+  <data name="GrayText" xml:space="preserve">
+    <value>Texto gris</value>
+  </data>
+  <data name="Green" xml:space="preserve">
+    <value>Verde</value>
+  </data>
+  <data name="GreenYellow" xml:space="preserve">
+    <value>Verde amarillo</value>
+  </data>
+  <data name="Highlight" xml:space="preserve">
+    <value>Realce</value>
+  </data>
+  <data name="HighlightText" xml:space="preserve">
+    <value>Subrayar el texto</value>
+  </data>
+  <data name="Honeydew" xml:space="preserve">
+    <value>Gotas de miel</value>
+  </data>
+  <data name="HotPink" xml:space="preserve">
+    <value>Rosa caliente</value>
+  </data>
+  <data name="HotTrack" xml:space="preserve">
+    <value>Hot Track</value>
+  </data>
+  <data name="InactiveBorder" xml:space="preserve">
+    <value>Frontera inactiva</value>
+  </data>
+  <data name="InactiveCaption" xml:space="preserve">
+    <value>Título inactivo</value>
+  </data>
+  <data name="InactiveCaptionText" xml:space="preserve">
+    <value>Texto de subtítulo inactivo</value>
+  </data>
+  <data name="IndianRed" xml:space="preserve">
+    <value>Rojo indio</value>
+  </data>
+  <data name="Indigo" xml:space="preserve">
+    <value>Índigo</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="InfoText" xml:space="preserve">
+    <value>Texto de información</value>
+  </data>
+  <data name="Ivory" xml:space="preserve">
+    <value>Marfil</value>
+  </data>
+  <data name="Khaki" xml:space="preserve">
+    <value>Caqui</value>
+  </data>
+  <data name="Lavender" xml:space="preserve">
+    <value>Lavanda</value>
+  </data>
+  <data name="LavenderBlush" xml:space="preserve">
+    <value>Rubor lavanda</value>
+  </data>
+  <data name="LawnGreen" xml:space="preserve">
+    <value>Verde césped</value>
+  </data>
+  <data name="LemonChiffon" xml:space="preserve">
+    <value>Gasa Limón</value>
+  </data>
+  <data name="LightBlue" xml:space="preserve">
+    <value>Azul claro</value>
+  </data>
+  <data name="LightCoral" xml:space="preserve">
+    <value>Coral claro</value>
+  </data>
+  <data name="LightCyan" xml:space="preserve">
+    <value>Cian claro</value>
+  </data>
+  <data name="LightGoldenrodYellow" xml:space="preserve">
+    <value>Amarillo vara de oro claro</value>
+  </data>
+  <data name="LightGray" xml:space="preserve">
+    <value>Gris claro</value>
+  </data>
+  <data name="LightGreen" xml:space="preserve">
+    <value>Verde claro</value>
+  </data>
+  <data name="LightPink" xml:space="preserve">
+    <value>Rosa claro</value>
+  </data>
+  <data name="LightSalmon" xml:space="preserve">
+    <value>Salmón claro</value>
+  </data>
+  <data name="LightSeaGreen" xml:space="preserve">
+    <value>Verde Mar Claro</value>
+  </data>
+  <data name="LightSkyBlue" xml:space="preserve">
+    <value>Cielo azul claro</value>
+  </data>
+  <data name="LightSlateGray" xml:space="preserve">
+    <value>Gris pizarra claro</value>
+  </data>
+  <data name="LightSteelBlue" xml:space="preserve">
+    <value>Azul acero claro</value>
+  </data>
+  <data name="LightYellow" xml:space="preserve">
+    <value>Amarillo claro</value>
+  </data>
+  <data name="Lime" xml:space="preserve">
+    <value>Lima</value>
+  </data>
+  <data name="LimeGreen" xml:space="preserve">
+    <value>Verde lima</value>
+  </data>
+  <data name="Linen" xml:space="preserve">
+    <value>Lino</value>
+  </data>
+  <data name="Magenta" xml:space="preserve">
+    <value>Magenta</value>
+  </data>
+  <data name="Maroon" xml:space="preserve">
+    <value>Granate</value>
+  </data>
+  <data name="MediumAquamarine" xml:space="preserve">
+    <value>Aguamarina mediana</value>
+  </data>
+  <data name="MediumBlue" xml:space="preserve">
+    <value>Azul medio</value>
+  </data>
+  <data name="MediumOrchid" xml:space="preserve">
+    <value>Orquídea mediana</value>
+  </data>
+  <data name="MediumPurple" xml:space="preserve">
+    <value>Morado Medio</value>
+  </data>
+  <data name="MediumSeaGreen" xml:space="preserve">
+    <value>Verde Mar Medio</value>
+  </data>
+  <data name="MediumSlateBlue" xml:space="preserve">
+    <value>Azul pizarra medio</value>
+  </data>
+  <data name="MediumSpringGreen" xml:space="preserve">
+    <value>Verde primavera medio</value>
+  </data>
+  <data name="MediumTurquoise" xml:space="preserve">
+    <value>Turquesa Medio</value>
+  </data>
+  <data name="MediumVioletRed" xml:space="preserve">
+    <value>Rojo violeta medio</value>
+  </data>
+  <data name="Menu" xml:space="preserve">
+    <value>Menú</value>
+  </data>
+  <data name="MenuBar" xml:space="preserve">
+    <value>Barra de menús</value>
+  </data>
+  <data name="MenuHighlight" xml:space="preserve">
+    <value>Menú destacado</value>
+  </data>
+  <data name="MenuText" xml:space="preserve">
+    <value>Texto del menú</value>
+  </data>
+  <data name="MidnightBlue" xml:space="preserve">
+    <value>Azul medianoche</value>
+  </data>
+  <data name="MintCream" xml:space="preserve">
+    <value>Crema de menta</value>
+  </data>
+  <data name="MistyRose" xml:space="preserve">
+    <value>Rosa brumosa</value>
+  </data>
+  <data name="Moccasin" xml:space="preserve">
+    <value>Mocasín</value>
+  </data>
+  <data name="NavajoWhite" xml:space="preserve">
+    <value>Blanco Navajo</value>
+  </data>
+  <data name="Navy" xml:space="preserve">
+    <value>Armada</value>
+  </data>
+  <data name="OldLace" xml:space="preserve">
+    <value>Encaje antiguo</value>
+  </data>
+  <data name="Olive" xml:space="preserve">
+    <value>Aceituna</value>
+  </data>
+  <data name="OliveDrab" xml:space="preserve">
+    <value>Verde oliva</value>
+  </data>
+  <data name="Orange" xml:space="preserve">
+    <value>naranja</value>
+  </data>
+  <data name="OrangeRed" xml:space="preserve">
+    <value>Rojo naranja</value>
+  </data>
+  <data name="Orchid" xml:space="preserve">
+    <value>Orquídea</value>
+  </data>
+  <data name="PaleGoldenrod" xml:space="preserve">
+    <value>Vara de oro pálida</value>
+  </data>
+  <data name="PaleGreen" xml:space="preserve">
+    <value>Verde pálido</value>
+  </data>
+  <data name="PaleTurquoise" xml:space="preserve">
+    <value>Turquesa pálido</value>
+  </data>
+  <data name="PaleVioletRed" xml:space="preserve">
+    <value>Rojo violeta pálido</value>
+  </data>
+  <data name="PapayaWhip" xml:space="preserve">
+    <value>Látigo de papaya</value>
+  </data>
+  <data name="PeachPuff" xml:space="preserve">
+    <value>Melocotón Puff</value>
+  </data>
+  <data name="Peru" xml:space="preserve">
+    <value>Perú</value>
+  </data>
+  <data name="Pink" xml:space="preserve">
+    <value>Rosado</value>
+  </data>
+  <data name="Plum" xml:space="preserve">
+    <value>ciruela</value>
+  </data>
+  <data name="PowderBlue" xml:space="preserve">
+    <value>Azul pálido</value>
+  </data>
+  <data name="Purple" xml:space="preserve">
+    <value>Púrpura</value>
+  </data>
+  <data name="Red" xml:space="preserve">
+    <value>rojo</value>
+  </data>
+  <data name="RosyBrown" xml:space="preserve">
+    <value>Rosy Brown</value>
+  </data>
+  <data name="RoyalBlue" xml:space="preserve">
+    <value>Azul real</value>
+  </data>
+  <data name="SaddleBrown" xml:space="preserve">
+    <value>Sillín Marrón</value>
+  </data>
+  <data name="Salmon" xml:space="preserve">
+    <value>Salmón</value>
+  </data>
+  <data name="SandyBrown" xml:space="preserve">
+    <value>Sandy Brown</value>
+  </data>
+  <data name="ScrollBar" xml:space="preserve">
+    <value>Barra de desplazamiento</value>
+  </data>
+  <data name="SeaGreen" xml:space="preserve">
+    <value>Mar verde</value>
+  </data>
+  <data name="SeaShell" xml:space="preserve">
+    <value>Concha de mar</value>
+  </data>
+  <data name="Sienna" xml:space="preserve">
+    <value>Tierra de siena</value>
+  </data>
+  <data name="Silver" xml:space="preserve">
+    <value>Plata</value>
+  </data>
+  <data name="SkyBlue" xml:space="preserve">
+    <value>Cielo azul</value>
+  </data>
+  <data name="SlateBlue" xml:space="preserve">
+    <value>Azul pizarra</value>
+  </data>
+  <data name="SlateGray" xml:space="preserve">
+    <value>Gris pizarra</value>
+  </data>
+  <data name="Snow" xml:space="preserve">
+    <value>Nieve</value>
+  </data>
+  <data name="SpringGreen" xml:space="preserve">
+    <value>Primavera verde</value>
+  </data>
+  <data name="SteelBlue" xml:space="preserve">
+    <value>Azul acero</value>
+  </data>
+  <data name="Tan" xml:space="preserve">
+    <value>Broncearse</value>
+  </data>
+  <data name="Teal" xml:space="preserve">
+    <value>Verde azulado</value>
+  </data>
+  <data name="Thistle" xml:space="preserve">
+    <value>Cardo</value>
+  </data>
+  <data name="Tomato" xml:space="preserve">
+    <value>Tomate</value>
+  </data>
+  <data name="Transparent" xml:space="preserve">
+    <value>Transparente</value>
+  </data>
+  <data name="Turquoise" xml:space="preserve">
+    <value>Turquesa</value>
+  </data>
+  <data name="Violet" xml:space="preserve">
+    <value>Violeta</value>
+  </data>
+  <data name="Wheat" xml:space="preserve">
+    <value>Trigo</value>
+  </data>
+  <data name="White" xml:space="preserve">
+    <value>Blanco</value>
+  </data>
+  <data name="WhiteSmoke" xml:space="preserve">
+    <value>Humo blanco</value>
+  </data>
+  <data name="Window" xml:space="preserve">
+    <value>Ventana</value>
+  </data>
+  <data name="WindowFrame" xml:space="preserve">
+    <value>Marco de la ventana</value>
+  </data>
+  <data name="WindowText" xml:space="preserve">
+    <value>Texto de ventana</value>
+  </data>
+  <data name="Yellow" xml:space="preserve">
+    <value>Amarillo</value>
+  </data>
+  <data name="YellowGreen" xml:space="preserve">
+    <value>Amarillo verde</value>
+  </data>
+</root>

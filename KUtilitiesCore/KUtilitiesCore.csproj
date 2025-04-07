@@ -24,4 +24,19 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Extensions\ColorExtLocalizable.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ColorExtLocalizable.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Extensions\ColorExtLocalizable.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ColorExtLocalizable.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>
