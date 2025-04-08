@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace KUtilitiesCore.OrderedInfo
 {
     /// <summary>
-    /// Contiene información de ordenamiento de una colección
+    /// Contiene información de ordenamiento de una colección, que puede ser serializada
     /// </summary>
     [Serializable]
     public class OrderedCollectionInfo

@@ -17,6 +17,7 @@ namespace KUtilitiesCore.OrderedInfo.Tests
         [TestInitialize]
         public void setup()
         {
+            
             orderTestList = CreateList();
         }
         [TestMethod()]
