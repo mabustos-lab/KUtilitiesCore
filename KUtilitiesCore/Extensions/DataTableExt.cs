@@ -88,70 +88,70 @@ namespace KUtilitiesCore.Extensions
             return xdoc;
         }
 
-        ///// <summary>
-        ///// Convierte un DataTable a una clase que pueda mapear
-        ///// </summary>
-        ///// <typeparam name="T">Clase u Objeto al cual se mapearan los datos</typeparam>
-        ///// <param name="dt">DataTable de origen de datos</param>
-        ///// <returns></returns>
-        //public static IEnumerable<T> ConvertTo<T>(this DataTable dt)
-        //    where T : class
-        //{
-        //    List<T> list = new List<T>();
-        //    List<PropertyInfo> piList = typeof(T).GetPropertiesInfo(false, x => x.CanWrite).ToList();
+        /// <summary>
+        /// Convierte un DataTable a una clase que pueda mapear
+        /// </summary>
+        /// <typeparam name="T">Clase u Objeto al cual se mapearan los datos</typeparam>
+        /// <param name="dt">DataTable de origen de datos</param>
+        /// <returns></returns>
+        public static IEnumerable<T> ConvertTo<T>(this DataTable dt)
+            where T : class
+        {
+            List<T> list = new List<T>();
+            List<PropertyInfo> piList = typeof(T).GetPropertiesInfo(false, x => x.CanWrite).ToList();
 
-        //    try
-        //    {
-        //        for (int i = 0; i < dt.Rows.Count; i++)
-        //        {
-        //            DataRow dr = dt.Rows[i];
-        //            T ret = (T)Activator.CreateInstance(typeof(T));
-        //            foreach (PropertyInfo pi in piList)
-        //            {
-        //                if (dt.Columns.Contains(pi.Name))
-        //                {
-        //                    object cVal = dr[pi.Name];
-        //                    if (cVal != DBNull.Value)
-        //                    {
-        //                        if (Nullable.GetUnderlyingType(pi.PropertyType) != null)
-        //                        {
-        //                            pi.SetValue(ret, Convert.ChangeType(cVal, Type.GetType(Nullable.GetUnderlyingType(pi.PropertyType).ToString())), null);
-        //                        }
-        //                        else
-        //                        {
-        //                            bool success = false;
-        //                            if (pi.PropertyType.IsEnum)
-        //                            {
-        //                                Type eType = pi.PropertyType;
-        //                                object val = null;
-        //                                int intValue = -1;
-        //                                if (int.TryParse(cVal.ToString(), out intValue))
-        //                                {
-        //                                    success = Enum.IsDefined(eType, intValue);
-        //                                    if (success)
-        //                                    {
-        //                                        val = Enum.ToObject(eType, intValue);
-        //                                        pi.SetValue(ret, val, null);
-        //                                    }
-        //                                }
-        //                            }
-        //                            if (!success)
-        //                                pi.SetValue(ret, Convert.ChangeType(cVal, Type.GetType(pi.PropertyType.ToString())), null);
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //            list.Add(ret);
-        //        }
+            try
+            {
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    DataRow dr = dt.Rows[i];
+                    T ret = (T)Activator.CreateInstance(typeof(T));
+                    foreach (PropertyInfo pi in piList)
+                    {
+                        if (dt.Columns.Contains(pi.Name))
+                        {
+                            object cVal = dr[pi.Name];
+                            if (cVal != DBNull.Value)
+                            {
+                                if (Nullable.GetUnderlyingType(pi.PropertyType) != null)
+                                {
+                                    pi.SetValue(ret, Convert.ChangeType(cVal, Type.GetType(Nullable.GetUnderlyingType(pi.PropertyType).ToString())), null);
+                                }
+                                else
+                                {
+                                    bool success = false;
+                                    if (pi.PropertyType.IsEnum)
+                                    {
+                                        Type eType = pi.PropertyType;
+                                        object val = null;
+                                        int intValue = -1;
+                                        if (int.TryParse(cVal.ToString(), out intValue))
+                                        {
+                                            success = Enum.IsDefined(eType, intValue);
+                                            if (success)
+                                            {
+                                                val = Enum.ToObject(eType, intValue);
+                                                pi.SetValue(ret, val, null);
+                                            }
+                                        }
+                                    }
+                                    if (!success)
+                                        pi.SetValue(ret, Convert.ChangeType(cVal, Type.GetType(pi.PropertyType.ToString())), null);
+                                }
+                            }
+                        }
+                    }
+                    list.Add(ret);
+                }
 
-        //    }
-        //    catch (Exception)
-        //    {
+            }
+            catch (Exception)
+            {
 
-        //        throw;
-        //    }
-        //    return list;
-        //}
+                throw;
+            }
+            return list;
+        }
         #endregion Methods
     }
 }
