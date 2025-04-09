@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace KUtilitiesCore.Encryption
 {
@@ -24,6 +25,16 @@ namespace KUtilitiesCore.Encryption
         {
             return new Base64EncryptionService();
         }
+#if WINDOWS
+        /// <summary>
+        /// Implementación Data Protection API
+        /// </summary>
+        /// <returns></returns>
+        public static IEncryptionService GetDPAPIEncryptionService()
+        {
+            return new DPAPIEncryptServise();
+        }
+#endif
         /// <summary>
         /// Servicio de encriptación usando AES.
         /// </summary>
