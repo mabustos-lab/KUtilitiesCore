@@ -21,7 +21,47 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Data\ValidationAttributes\ValidationAtrributesStrings.Designer.cs">
+      <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Extensions\ColorExtLocalizable.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ColorExtLocalizable.resx</DependentUpon>
+      <CustomToolNamespace>KUtilitiesCore.Extensions</CustomToolNamespace>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Data\ValidationAttributes\ValidationAtrributesStrings.en-US.resx">
+      <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Data\ValidationAttributes\ValidationAtrributesStrings.resx">
+      <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Extensions\ColorExtLocalizable.en-US.resx">
+      <CustomToolNamespace>KUtilitiesCore.Extensions</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Extensions\ColorExtLocalizable.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ColorExtLocalizable.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>KUtilitiesCore.Extensions</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
