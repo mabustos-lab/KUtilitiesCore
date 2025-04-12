@@ -74,15 +74,20 @@ namespace KUtilitiesCore.Diagnostics.Logger
             }
         }
 
-        public void LogCritical(string message, Exception exception = null) => Log(LogLevel.Critical, message, exception);
+        public void LogCritical(string message, Exception exception = null) 
+            => Log(LogLevel.Critical, message, exception);
 
-        public void LogDebug(string message) => Log(LogLevel.Debug, message);
+        public void LogDebug(string message) 
+            => Log(LogLevel.Debug, message);
 
-        public void LogError(string message, Exception exception = null) => Log(LogLevel.Error, message, exception);
+        public void LogError(string message, Exception exception = null) 
+            => Log(LogLevel.Error, message, exception);
 
-        public void LogInformation(string message) => Log(LogLevel.Information, message);
+        public void LogInformation(string message) 
+            => Log(LogLevel.Information, message);
 
-        public void LogWarning(string message) => Log(LogLevel.Warning, message);
+        public void LogWarning(string message) 
+            => Log(LogLevel.Warning, message);
 
         private string FormatLogEntry(LogEntry entry)
         {

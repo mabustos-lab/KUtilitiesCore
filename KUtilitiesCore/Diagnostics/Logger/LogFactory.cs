@@ -57,38 +57,35 @@
 
         public void Log(LogLevel level, string message, Exception exception = null)
         {
+            if(!logs.Any())
+                throw new InvalidOperationException("No se ha registrado ningún servicio de log.");
             foreach (var log in logs.Values)
                 log.Log(level, message, exception);
         }
 
         public void LogCritical(string message, Exception exception = null)
         {
-            foreach (var log in logs.Values)
-                log.LogCritical(message, exception);
+            Log(LogLevel.Critical, message, exception);
         }
 
         public void LogDebug(string message)
         {
-            foreach (var log in logs.Values)
-                log.LogDebug(message);
+            Log(LogLevel.Debug, message);
         }
 
         public void LogError(string message, Exception exception = null)
         {
-            foreach (var log in logs.Values)
-                log.LogError(message, exception);
+            Log(LogLevel.Error, message, exception);
         }
 
         public void LogInformation(string message)
         {
-            foreach (var log in logs.Values)
-                log.LogInformation(message);
+            Log(LogLevel.Information, message);
         }
 
         public void LogWarning(string message)
         {
-            foreach (var log in logs.Values)
-                log.LogWarning(message);
+            Log(LogLevel.Warning, message);
         }
 
         public void RegisterLogger<Tlog>(Tlog logger)
@@ -105,7 +102,7 @@
         }
 
         public bool UnRegisterLogger<Tlog>()
-                                                                            where Tlog : ILoggerService
+            where Tlog : ILoggerService
         {
             Type loggerType = typeof(Tlog);
             if (!logs.TryGetValue(loggerType, out var logger))
