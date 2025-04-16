@@ -7,33 +7,24 @@ namespace KUtilitiesCore.Diagnostics.Logger
 {
     public sealed class FileLoggerService : ILoggerService, IDisposable
     {
-        #region Fields
 
+        private readonly string _appName;
         private readonly string _logFilePath;
         private readonly BlockingCollection<LogEntry> _logQueue = new BlockingCollection<LogEntry>();
         private readonly Task _processingTask;
-        private readonly string _appName;
         private bool _disposed;
-
-        #endregion Fields
-
-        #region Constructors
 
         private FileLoggerService(string logDirectory = null, string appName = "MyApplication")
         {
             _appName = appName;
-            logDirectory = string.IsNullOrEmpty(logDirectory) ? GetDefaultLogDirectory(): logDirectory;
+            logDirectory = string.IsNullOrEmpty(logDirectory) ? GetDefaultLogDirectory() : logDirectory;
             Directory.CreateDirectory(logDirectory);
-            _logFilePath = Path.Combine(logDirectory, $"log_{DateTime.Now:yyyyMMdd}.txt");
-
+            _logFilePath = Path.Combine(logDirectory, $"{appName}.log_{DateTime.Now:yyyyMMdd}.txt");
+            ClearHistory(logDirectory);
             _processingTask = Task.Factory.StartNew(
                 ProcessLogQueue,
                 TaskCreationOptions.LongRunning);
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         public static ILoggerService Create(string logDirectory = null, string appName = "MyApplication")
             => new FileLoggerService(logDirectory, appName);
@@ -74,20 +65,39 @@ namespace KUtilitiesCore.Diagnostics.Logger
             }
         }
 
-        public void LogCritical(string message, Exception exception = null) 
+        public void LogCritical(string message, Exception exception = null)
             => Log(LogLevel.Critical, message, exception);
 
-        public void LogDebug(string message) 
+        public void LogDebug(string message)
             => Log(LogLevel.Debug, message);
 
-        public void LogError(string message, Exception exception = null) 
+        public void LogError(string message, Exception exception = null)
             => Log(LogLevel.Error, message, exception);
 
-        public void LogInformation(string message) 
+        public void LogInformation(string message)
             => Log(LogLevel.Information, message);
 
-        public void LogWarning(string message) 
+        public void LogWarning(string message)
             => Log(LogLevel.Warning, message);
+
+        private void ClearHistory(string logDirectory)
+        {
+            try
+            {
+                var directoryInfo = new DirectoryInfo(logDirectory);
+                var oldLogFiles = directoryInfo.GetFiles("*log*.txt")
+                    .Where(file => file.CreationTime < DateTime.Now.AddDays(-30));
+
+                foreach (var file in oldLogFiles)
+                {
+                    file.Delete();
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteMessage($"Error al eliminar archivos log historicos: {ex.Message}");
+            }
+        }
 
         private string FormatLogEntry(LogEntry entry)
         {
@@ -116,19 +126,19 @@ namespace KUtilitiesCore.Diagnostics.Logger
                 try
                 {
                     var logMessage = FormatLogEntry(entry);
-                    WriteToConsole(logMessage);
+                    WriteMessage(logMessage);
                     WriteToFile(logMessage);
                 }
                 catch (Exception ex)
                 {
-                    WriteToConsole($"Error processing log entry: {ex.Message}");
+                    WriteMessage($"Error processing log entry: {ex.Message}");
                 }
             }
         }
 
-        private void WriteToConsole(string message)
+        private void WriteMessage(string message)
         {
-            Console.WriteLine(message);
+            System.Diagnostics.Debug.WriteLine(message);
         }
 
         private void WriteToFile(string message)
@@ -142,10 +152,9 @@ namespace KUtilitiesCore.Diagnostics.Logger
             }
             catch (Exception ex)
             {
-                WriteToConsole($"Error writing to log file: {ex.Message}");
+                WriteMessage($"Error writing to log file: {ex.Message}");
             }
         }
 
-        #endregion Methods
     }
 }

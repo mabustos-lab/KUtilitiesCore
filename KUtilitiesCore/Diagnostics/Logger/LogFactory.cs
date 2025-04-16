@@ -31,7 +31,13 @@
         {
             return logs.ContainsKey(typeof(Tlog));
         }
-
+        public Tlog GetLogService<Tlog>()
+             where Tlog : ILoggerService
+        {
+            if(logs.TryGetValue(typeof(Tlog), out var service))
+                return (Tlog)Service;
+            return default;
+        }
         public void Dispose()
         {
             if (_disposed) return;
@@ -57,7 +63,7 @@
 
         public void Log(LogLevel level, string message, Exception exception = null)
         {
-            if(!logs.Any())
+            if (!logs.Any())
                 throw new InvalidOperationException("No se ha registrado ningún servicio de log.");
             foreach (var log in logs.Values)
                 log.Log(level, message, exception);
