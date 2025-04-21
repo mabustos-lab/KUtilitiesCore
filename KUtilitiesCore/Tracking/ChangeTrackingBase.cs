@@ -9,7 +9,9 @@ namespace KUtilitiesCore.Tracking
     public abstract class ChangeTrackingBase : INotifyPropertyChanged, IEditableObject
     {
         #region Fields
-
+        /// <summary>
+        /// Memento: almacena el estado en BeginEdit
+        /// </summary>
         [NonSerialized]
         private Dictionary<string, TrackedProperty> memento;
 
@@ -17,7 +19,7 @@ namespace KUtilitiesCore.Tracking
 
         #region Events
 
-        // Memento: almacena el estado en BeginEdit
+        
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion Events
