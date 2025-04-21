@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace KUtilitiesCore.MVVM.Messaging
 {
-    public class Messenger
+    public class Messenger : IMessenger
     {
-        private static Messenger _defaultInstance;
+        private static IMessenger _defaultInstance;
 
         private readonly object _registerLock;
         private static SynchronizationContext _ctx;
@@ -23,7 +23,7 @@ namespace KUtilitiesCore.MVVM.Messaging
         /// <summary>
         /// Obtiene la instancia predeterminada de Messenger, que permite registrar y enviar mensajes de forma estática.
         /// </summary>
-        public static Messenger Default
+        public static IMessenger Default
         {
             get
             {
@@ -437,7 +437,7 @@ namespace KUtilitiesCore.MVVM.Messaging
         /// <summary>
         /// Implementaciónde forEach element removal.ige removal.
         /// </summary>
-        private static List<WeakActionAndToken> RemoveDeadActions(List<WeakActionAndToken> actions, 
+        private static List<WeakActionAndToken> RemoveDeadActions(List<WeakActionAndToken> actions,
             object recipient)
         { return actions.Where(action => !IsActionDead(action.Action, recipient)).ToList(); }
         /// <summary>
