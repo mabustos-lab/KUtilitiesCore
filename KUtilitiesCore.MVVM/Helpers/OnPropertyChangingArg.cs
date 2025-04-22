@@ -7,35 +7,42 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.MVVM.Helpers
 {
     /// <summary>
-    /// Emcapsula el contexto de cambio de valores para validar si se requiere el cambio antes de aplicarlos
+    /// Representa los argumentos de evento para un cambio de propiedad, permitiendo validación y cancelación.
     /// </summary>
-    /// <typeparam name="TContext"></typeparam>
-    /// <typeparam name="TProperty"></typeparam>
-    public class OnPropertyChangingArg<TContext, TProperty>
-        : EventArgs
+    public class PropertyChangingEventArgs : EventArgs
     {
-        #region Constructors
-
-        public OnPropertyChangingArg(
-                    string propertyName, TProperty OldValue, TProperty NewValue)
+        /// <summary>
+        /// Crea una nueva instancia de PropertyChangingEventArgs con los detalles especificados de la propiedad.
+        /// </summary>
+        /// <param name="propertyName">El nombre de la propiedad que está cambiando.</param>
+        /// <param name="oldValue">El valor anterior de la propiedad antes del cambio.</param>
+        /// <param name="newValue">El nuevo valor de la propiedad después del cambio.</param>
+        public PropertyChangingEventArgs(string propertyName, object oldValue, object newValue)
         {
-            this.PropertyName = propertyName;
-            this.OldValue = OldValue;
-            this.NewValue = NewValue;
+            PropertyName = propertyName;
+            OldValue = oldValue;
+            NewValue = newValue;
+            Cancel = false;
         }
 
-        #endregion Constructors
-
-        #region Properties
+        /// <summary>
+        /// Obtiene el nombre de la propiedad que está cambiando.
+        /// </summary>
+        public string PropertyName { get; }
 
         /// <summary>
-        /// Indica si se calncela la actualizacion del Antiguo valor por el Nuevo valor en la propiedad
+        /// Obtiene el valor anterior de la propiedad antes del cambio.
         /// </summary>
-        public bool Cancel { get; set; } = false;
-        public TProperty NewValue { get; private set; }
-        public TProperty OldValue { set; private get; }
-        public string PropertyName { get; private set; }
+        public object OldValue { get; }
 
-        #endregion Properties
+        /// <summary>
+        /// Obtiene el nuevo valor de la propiedad después del cambio.
+        /// </summary>
+        public object NewValue { get; }
+
+        /// <summary>
+        /// Establece un valor que indica si el cambio de propiedad debe cancelarse.
+        /// </summary>
+        public bool Cancel { get; set; }        
     }
 }

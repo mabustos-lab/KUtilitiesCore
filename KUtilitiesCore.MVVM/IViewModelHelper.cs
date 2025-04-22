@@ -10,7 +10,7 @@ namespace KUtilitiesCore.MVVM
     /// <summary>
     /// Funcionalidades de un objeto ViewModel requeridas
     /// </summary>
-    public interface IViewModelHelper
+    public interface IViewModelHelper: IViewModelChanged 
     {
         /// <summary>
         /// Indica cuando el modelo está realizando un proceso 
