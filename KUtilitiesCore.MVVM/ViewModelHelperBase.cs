@@ -64,7 +64,7 @@ namespace KUtilitiesCore.MVVM
         public bool IsLoading
         {
             get { return isLoading; }
-            set { this.SetVMValue(isLoading, value, null, OnIsLoadingChanged); }
+            set { this.SetVMValue(ref isLoading, value, null, OnIsLoadingChanged); }
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace KUtilitiesCore.MVVM
         object ISupportParentViewModel.ParentViewModel
         {
             get => parentViewModel;
-            set => this.SetVMValue(parentViewModel, value, null, OnParentViewModelChangedBase);
+            set => this.SetVMValue(ref parentViewModel, value, null, OnParentViewModelChangedBase);
         }
 
         /// <inheritdoc/>

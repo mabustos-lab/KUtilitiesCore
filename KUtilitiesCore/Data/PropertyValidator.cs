@@ -122,7 +122,7 @@ namespace KUtilitiesCore.Data
         /// <returns>Un objeto <see cref="ValidationContext"/> configurado.</returns>
         private ValidationContext CreateValidationContext(object instance)
         {
-            return new ValidationContext(instance)
+            return new ValidationContext(instance,null,null)
             {
                 MemberName = propertyName,
                 DisplayName = displayName.Length > 0 ? displayName : propertyName

@@ -93,7 +93,7 @@ namespace KUtilitiesCore.MVVM
         /// <returns>true si se permitió el cambio, false en caso contrario.</returns>
         public static bool SetVMValue<TSource, TProperty>(
             this TSource source,
-            TProperty oldValue,
+            ref TProperty oldValue,
             TProperty newValue,
             OnPropertyChangingDelegate onPropertyChanging = null,
             Action onPropertyChanged = null,

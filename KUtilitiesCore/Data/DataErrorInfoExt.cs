@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data
 {
+    /// <summary>
+    /// Valida un objeto que implementa IDataErrorInfo
+    /// </summary>
     public static class DataErrorInfoExt
     {
         /// <summary>
