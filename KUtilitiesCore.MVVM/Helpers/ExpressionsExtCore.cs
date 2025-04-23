@@ -10,61 +10,61 @@ namespace KUtilitiesCore.MVVM.Helpers
 {
     internal static class ExpressionsExt
     {
-        /// <summary>
-        /// Obtiene la ruta completa a una propiedad a través de una expresión.
-        /// </summary>
-        /// <typeparam name="TObject">Tipo del objeto del cual se obtendrá la propiedad.</typeparam>
-        /// <typeparam name="TProperty">Tipo de la propiedad a la que se accederá.</typeparam>
-        /// <param name="expression">Expresión lambda que define la ruta a la propiedad.</param>
-        /// <returns>La ruta completa como una cadena separada por puntos.</returns>
-        public static string GetFullPathProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
-        {
-            MemberExpression currentMember = null;
+        ///// <summary>
+        ///// Obtiene la ruta completa a una propiedad a través de una expresión.
+        ///// </summary>
+        ///// <typeparam name="TObject">Tipo del objeto del cual se obtendrá la propiedad.</typeparam>
+        ///// <typeparam name="TProperty">Tipo de la propiedad a la que se accederá.</typeparam>
+        ///// <param name="expression">Expresión lambda que define la ruta a la propiedad.</param>
+        ///// <returns>La ruta completa como una cadena separada por puntos.</returns>
+        //public static string GetFullPathProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+        //{
+        //    MemberExpression currentMember = null;
 
-            if (!TryFindMemberExpression(expression.Body, ref currentMember))
-                return string.Empty;
+        //    if (!TryFindMemberExpression(expression.Body, ref currentMember))
+        //        return string.Empty;
 
-            List<string> memberNames = new List<string>();
+        //    List<string> memberNames = new List<string>();
 
-            do
-            {
-                memberNames.Add(currentMember.Member.Name);
-            }
-            while (TryFindMemberExpression(currentMember.Expression, ref currentMember));
+        //    do
+        //    {
+        //        memberNames.Add(currentMember.Member.Name);
+        //    }
+        //    while (TryFindMemberExpression(currentMember.Expression, ref currentMember));
 
-            memberNames.Reverse();
-            return string.Join(".", memberNames);
-        }
+        //    memberNames.Reverse();
+        //    return string.Join(".", memberNames);
+        //}
 
-        /// <summary>
-        /// Intenta encontrar una expresión de miembro en una expresión dada.
-        /// </summary>
-        /// <param name="expression">Expresión a analizar.</param>
-        /// <param name="memberExpression">Referencia para almacenar la expresión de miembro encontrada.</param>
-        /// <returns>true si se encontró una expresión de miembro, false en caso contrario.</returns>
-        internal static bool TryFindMemberExpression(Expression expression, ref MemberExpression memberExpression)
-        {
-            memberExpression = expression as MemberExpression;
-            if (memberExpression != null)
-                return true;
+        ///// <summary>
+        ///// Intenta encontrar una expresión de miembro en una expresión dada.
+        ///// </summary>
+        ///// <param name="expression">Expresión a analizar.</param>
+        ///// <param name="memberExpression">Referencia para almacenar la expresión de miembro encontrada.</param>
+        ///// <returns>true si se encontró una expresión de miembro, false en caso contrario.</returns>
+        //internal static bool TryFindMemberExpression(Expression expression, ref MemberExpression memberExpression)
+        //{
+        //    memberExpression = expression as MemberExpression;
+        //    if (memberExpression != null)
+        //        return true;
 
-            if (IsConversion(expression) && expression is UnaryExpression unaryExp)
-            {
-                memberExpression = unaryExp.Operand as MemberExpression;
-                return memberExpression != null;
-            }
+        //    if (IsConversion(expression) && expression is UnaryExpression unaryExp)
+        //    {
+        //        memberExpression = unaryExp.Operand as MemberExpression;
+        //        return memberExpression != null;
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
-        /// <summary>
-        /// Verifica si una expresión es una conversión implícita.
-        /// </summary>
-        /// <param name="expression">Expresión a analizar.</param>
-        /// <returns>true si la expresión es una conversión, false en caso contrario.</returns>
-        internal static bool IsConversion(Expression expression)
-            => expression.NodeType == ExpressionType.Convert ||
-               expression.NodeType == ExpressionType.ConvertChecked;
+        ///// <summary>
+        ///// Verifica si una expresión es una conversión implícita.
+        ///// </summary>
+        ///// <param name="expression">Expresión a analizar.</param>
+        ///// <returns>true si la expresión es una conversión, false en caso contrario.</returns>
+        //internal static bool IsConversion(Expression expression)
+        //    => expression.NodeType == ExpressionType.Convert ||
+        //       expression.NodeType == ExpressionType.ConvertChecked;
 
         /// <summary>
         /// Valida si una expresión no es una expresión de parámetro.

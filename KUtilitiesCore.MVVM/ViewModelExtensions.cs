@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KUtilitiesCore.MVVM.Helpers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.MVVM.Helpers
+namespace KUtilitiesCore.MVVM
 {
     /// <summary>
     /// Extensiones de el ViewModel
@@ -92,7 +93,7 @@ namespace KUtilitiesCore.MVVM.Helpers
         /// <returns>true si se permitió el cambio, false en caso contrario.</returns>
         public static bool SetVMValue<TSource, TProperty>(
             this TSource source,
-            ref TProperty oldValue,
+            TProperty oldValue,
             TProperty newValue,
             OnPropertyChangingDelegate onPropertyChanging = null,
             Action onPropertyChanged = null,
@@ -111,7 +112,7 @@ namespace KUtilitiesCore.MVVM.Helpers
 
             if (allowChange)
             {
-                var args = new PropertyChangingEventArgs(propertyName, oldValue, newValue);
+                var args = new Helpers.PropertyChangingEventArgs(propertyName, oldValue, newValue);
 
                 onPropertyChanging?.Invoke(source, args);
                 allowChange = !args.Cancel;
@@ -134,7 +135,7 @@ namespace KUtilitiesCore.MVVM.Helpers
                 memberName,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
-            return (methodInfo != null && (methodInfo.IsFamily || methodInfo.IsPublic)) ? methodInfo : null;
+            return methodInfo != null && (methodInfo.IsFamily || methodInfo.IsPublic) ? methodInfo : null;
         }
 
         private static IViewModelHelper GetViewModel<TSource>(TSource source)

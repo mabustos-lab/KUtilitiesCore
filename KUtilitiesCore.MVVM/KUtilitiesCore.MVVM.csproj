@@ -10,7 +10,13 @@
    <LangVersion>latest</LangVersion>
  </PropertyGroup>
 <ItemGroup>
+  <Compile Remove="Helpers\ExpressionsExtCore.cs" />
+</ItemGroup>
+<ItemGroup>
   <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+</ItemGroup>
+<ItemGroup>
+  <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
 </ItemGroup>
 
 </Project>

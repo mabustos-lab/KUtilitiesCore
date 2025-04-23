@@ -18,7 +18,7 @@ namespace KUtilitiesCore.Data
         /// <param name="owner">El objeto del cual se intentará obtener la propiedad.</param>
         /// <param name="propertyName">El nombre de la propiedad, el cual puede contener puntos para navegar por propiedades anidadas.</param>
         /// <returns>El texto de error correspondiente a la propiedad, o una cadena vacía si no se encuentra.</returns>
-        public static string GetErrorText(object owner, string propertyName)
+        public static string GetErrorText(this object owner, string propertyName)
         {
             if (owner == null) throw new ArgumentNullException(nameof(owner));
 
@@ -36,7 +36,8 @@ namespace KUtilitiesCore.Data
         /// <param name="ignoreOwnerError">Indica si se debe omitir el error del propietario propio.</param>
         /// <param name="deep">El nivel de profundidad para buscar errores en propiedades anidadas.</param>
         /// <returns>true si se encuentran errores; en caso contrario, false.</returns>
-        public static bool HasErrors(IDataErrorInfo owner, bool ignoreOwnerError, int deep = 2)
+        public static bool HasErrors<T>(T owner, bool ignoreOwnerError, int deep = 2)
+            where T : IDataErrorInfo
         {
             if (owner == null) throw new ArgumentNullException(nameof(owner));
             if (deep < 1) return false;
