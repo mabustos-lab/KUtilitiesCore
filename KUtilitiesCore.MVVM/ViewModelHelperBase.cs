@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
@@ -11,10 +12,10 @@ namespace KUtilitiesCore.MVVM
     {
         #region Fields
 
-        private readonly object errorDictionaryLock = new();
+        //private readonly object errorDictionaryLock = new();
         private IViewModelDocumentOwner documentOwner;
         private string error;
-        private Dictionary<string, string> errorMessages;
+        private ConcurrentDictionary<string, string> errorMessages;
         private bool hasValidationErrors;
         private bool isLoading;
         private object parentViewModel;
@@ -140,7 +141,7 @@ namespace KUtilitiesCore.MVVM
         void IViewModelDataErrorInfo.SetError(string propertyName, string errorMessage)
         {
             if (errorMessages == null)
-                errorMessages = new Dictionary<string, string>();
+                errorMessages = new ConcurrentDictionary<string, string>();
             errorMessages[propertyName] = errorMessage;
         }
 
@@ -161,14 +162,7 @@ namespace KUtilitiesCore.MVVM
         }
 
         internal virtual string GetErrorMessage(string columnName)
-        {
-            string ret;
-            lock (errorDictionaryLock)
-            {
-                ret = GetErrorMessageCore(columnName);
-            }
-            return ret;
-        }
+         => GetErrorMessageCore(columnName);
 
         /// <summary>
         /// Envia un mensaje para el usuario de estado cuando IsLoading=True
@@ -238,13 +232,13 @@ namespace KUtilitiesCore.MVVM
         private string GetErrorMessageCore(string columnName)
         {
             if (errorMessages == null)
-                errorMessages = new Dictionary<string, string>();
+                errorMessages = new ConcurrentDictionary<string, string>();
             string ret = string.Empty;
             if (!errorMessages.ContainsKey(columnName))
             {
                 ret = this.GetErrorText(columnName);
                 if (string.IsNullOrEmpty(ret))
-                    CustomErrorMessage(this, columnName);
+                    CustomColumnMessageError(this, columnName);
             }
             else
                 ret = errorMessages?[columnName];
