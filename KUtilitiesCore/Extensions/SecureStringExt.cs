@@ -13,10 +13,31 @@ namespace KUtilitiesCore.Extensions
     /// </summary>
     public static class SecureStringExt
     {
-        
+        /// <summary>
+        /// Convierte una cadena de texto en un objeto <see cref="SecureString"/>.
+        /// </summary>
+        /// <param name="value">La cadena de texto a convertir. Puede ser nula o vacía.</param>
+        /// <returns>
+        /// Un objeto <see cref="SecureString"/> que contiene los caracteres de la cadena de entrada,
+        /// o <c>null</c> si la cadena de entrada es nula o vacía.
+        /// </returns>
+        /// <remarks>
+        /// - El objeto <see cref="SecureString"/> resultante se marca como de solo lectura para mayor seguridad.
+        /// - Este método es útil para manejar datos sensibles como contraseñas.
+        /// </remarks>
+        public static SecureString ToSecureString(this string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
 
-        #region Comparación
-
+            var secureString = new SecureString();
+            foreach (var c in value)
+            {
+                secureString.AppendChar(c);
+            }
+            secureString.MakeReadOnly();
+            return secureString;
+        }
         /// <summary>
         /// Compara dos cadenas SecureString de manera segura.
         /// </summary>
@@ -74,9 +95,6 @@ namespace KUtilitiesCore.Extensions
                 }
             }
         }
-
-        #endregion
-
 
     }
 }
