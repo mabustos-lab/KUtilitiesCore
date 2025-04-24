@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace KUtilitiesCore.Data.Validation.Core
+namespace KUtilitiesCore.Data.Validation.Helper
 {
     // ----------------------------------------------------------------------
     // Helper para extraer nombres de propiedades (usado internamente)
