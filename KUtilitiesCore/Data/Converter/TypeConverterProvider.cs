@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using KUtilities.Data.Converter;
 using KUtilitiesCore.Data.Converter.Exceptions;
+using KUtilitiesCore.Data.Converter.Types;
 
 namespace KUtilitiesCore.Data.Converter
 {

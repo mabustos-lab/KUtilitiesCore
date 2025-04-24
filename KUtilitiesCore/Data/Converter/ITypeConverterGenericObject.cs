@@ -2,6 +2,9 @@
 {
     public interface ITypeConverterGenericObject : ITypeConverter
     {
-        object TryConvert(string value);
+        /// <summary>
+        /// Intenta convertir el valor de texto especificado a un objeto.
+        /// </summary>
+        new object TryConvert(string value);
     }
 }
