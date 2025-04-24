@@ -98,7 +98,7 @@ namespace KUtilitiesCoreTests.Tracking.Collection
             collection.EndInsertUnmodifiedEntities();
             collection[0] = entity2;
 
-            Assert.AreEqual(2, collection.GetTrackedItems().Count);
+            Assert.AreEqual(1, collection.GetTrackedItems().Count);
             
         }
 
