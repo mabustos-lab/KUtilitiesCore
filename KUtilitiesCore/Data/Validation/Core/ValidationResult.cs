@@ -24,7 +24,7 @@ namespace KUtilitiesCore.Data.Validation.Core
         /// <summary>
         /// Indica si la validación fue exitosa (no hay errores).
         /// </summary>
-        public bool IsValid => !_errors.Any();
+        public bool IsValid => _errors.Count == 0;
 
         #endregion Properties
 
