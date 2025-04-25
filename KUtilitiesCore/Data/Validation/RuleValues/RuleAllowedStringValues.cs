@@ -1,5 +1,6 @@
 ﻿namespace KUtilitiesCore.Data.Validation.RuleValues
 {
+
     /// <summary>
     /// Implementación de IAllowedValue para una lista de cadenas permitidas.
     /// </summary>
@@ -8,7 +9,9 @@
         #region Fields
 
         private readonly HashSet<string> _allowedValues;
+
         private readonly StringComparison _comparisonType;
+        public bool AllowNull { get; }
 
         #endregion Fields
 
@@ -19,10 +22,11 @@
         /// </summary>
         /// <param name="allowedValues">La colección de cadenas permitidas.</param>
         /// <param name="comparisonType">El tipo de comparación a usar (por defecto: OrdinalIgnoreCase).</param>
-        public RuleAllowedStringValues(IEnumerable<string> allowedValues, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+        public RuleAllowedStringValues(IEnumerable<string> allowedValues,
+            StringComparison comparisonType = StringComparison.OrdinalIgnoreCase, bool allowNull = false)
         {
             if (allowedValues == null) throw new ArgumentNullException(nameof(allowedValues));
-
+            AllowNull = allowNull;
             _comparisonType = comparisonType;
             // Usamos HashSet para búsquedas eficientes O(1)
             _allowedValues = new HashSet<string>(allowedValues.Where(v => v != null), GetStringComparer(comparisonType));
@@ -52,8 +56,8 @@
 
         public bool IsAllowed(string value)
         {
-            // Considerar si null debe ser permitido explícitamente o manejado por otra regla (NotNull)
-            if (value == null) return false; // O podría depender de un flag 'allowNull'
+            if (string.IsNullOrEmpty(value))
+                return AllowNull;
             return _allowedValues.Contains(value);
         }
 
