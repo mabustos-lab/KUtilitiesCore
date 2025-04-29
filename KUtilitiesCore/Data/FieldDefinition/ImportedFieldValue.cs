@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data.FieldDefinition
 {
-    public class ImportedFieldValue
+    public class ImportedFieldValue<TValue>
     {
         /// <summary>
         /// La definición del campo al que pertenece este valor.
@@ -23,9 +23,13 @@ namespace KUtilitiesCore.Data.FieldDefinition
         /// El valor convertido al tipo esperado (TValue).
         /// Se establecería después de un intento de conversión.
         /// </summary>
-        public bool TryGetValue<TValue>(out TValue value)
+        public virtual bool TryGetValue(out TValue value)
         {
-            value = (TValue)Definition.Converter.TryConvert(RawValue.ToString());
+            value=default;
+            string strValue = RawValue.ToString();
+            if (string.IsNullOrEmpty(strValue) && Definition.AllowNull)
+                return true;
+            value = (TValue)Definition.Converter.TryConvert(strValue);
             return value != null;
         }
 

@@ -61,7 +61,7 @@ namespace KUtilitiesCore.Data.FieldDefinition
             {
                 displayName = value;
                 OnDisplayNameChanged();
-            };
+            }
         }
 
         /// <inheritdoc/>
