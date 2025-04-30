@@ -14,7 +14,7 @@ namespace KUtilitiesCore.Data.Validation.Core
     /// <typeparam name="TProperty">El tipo de la propiedad.</typeparam>
     public interface IRuleBuilder<T, TProperty>
     {
-        // Aquí irían las definiciones de métodos fluidos (NotNull, NotEmpty, Must, etc.)
-        // Se implementarán como métodos de extensión para mantener esta interfaz limpia.
+        // Aquí irían las definiciones de métodos fluidos (NotNull, NotEmpty, Must, etc.) Se
+        // implementarán como métodos de extensión para mantener esta interfaz limpia.
     }
 }

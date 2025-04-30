@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KUtilitiesCore.Data.Validation.Core
+﻿namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
     /// Interfaz para un validador de un tipo específico.
@@ -12,6 +6,8 @@ namespace KUtilitiesCore.Data.Validation.Core
     /// <typeparam name="T">El tipo de objeto a validar.</typeparam>
     public interface IValidator<T>
     {
+        #region Methods
+
         /// <summary>
         /// Valida la instancia especificada.
         /// </summary>
@@ -25,5 +21,7 @@ namespace KUtilitiesCore.Data.Validation.Core
         /// <param name="context">El contexto de validación.</param>
         /// <returns>Un ValidationResult con los resultados.</returns>
         ValidationResult Validate(ValidationContext<T> context);
+
+        #endregion Methods
     }
 }

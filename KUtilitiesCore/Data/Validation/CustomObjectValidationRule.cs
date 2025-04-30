@@ -1,9 +1,4 @@
 ﻿using KUtilitiesCore.Data.Validation.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data.Validation
 {
@@ -12,12 +7,22 @@ namespace KUtilitiesCore.Data.Validation
     /// </summary>
     internal class CustomObjectValidationRule<T> : IValidationRule<T>
     {
+        #region Fields
+
         private readonly Action<T, ValidationContext<T>, List<ValidationFailure>> _validationAction;
+
+        #endregion Fields
+
+        #region Constructors
 
         internal CustomObjectValidationRule(Action<T, ValidationContext<T>, List<ValidationFailure>> validationAction)
         {
             _validationAction = validationAction;
         }
+
+        #endregion Constructors
+
+        #region Methods
 
         public IEnumerable<ValidationFailure> Validate(ValidationContext<T> context)
         {
@@ -26,5 +31,7 @@ namespace KUtilitiesCore.Data.Validation
             _validationAction(context.InstanceToValidate, context, failures);
             return failures;
         }
+
+        #endregion Methods
     }
 }

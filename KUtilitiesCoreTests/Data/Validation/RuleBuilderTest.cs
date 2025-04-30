@@ -3,6 +3,7 @@ using KUtilitiesCore.Data.Validation.Core;
 using KUtilitiesCore.Data.Validation.RuleValues;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,37 +14,67 @@ namespace KUtilitiesCoreTests.Data.Validation
     public class RuleBuilderTest
     {
         [TestMethod]
+        public void RuleBuilderForUserIsValid()
+        {
+            var usuarioValido = new Usuario { Nombre = "Juan Pérez", Email = "juan.perez@email.com", Edad = 30, Genero = "Masculino" };
+            var usuarioValidator = new UsuarioValidator();
+            Assert.IsTrue(ValidateAndPrint(usuarioValidator, usuarioValido, "Usuario Válido"));
+        }
+        [TestMethod]
+        public void RuleBuilderForUserIsNotValid()
+        {
+            var usuarioInvalido = new Usuario { Nombre = "A", Email = "email-invalido", Edad = -5, Genero = "Otro" };
+            var usuarioValidator = new UsuarioValidator();
+            Assert.IsFalse(ValidateAndPrint(usuarioValidator, usuarioInvalido, "Usuario Válido"));
+        }
+        [TestMethod]
+        public void RuleBuilderForUserIsNotValidEdadExcesiva()
+        {
+            var usuarioEdadExcesiva = new Usuario { Nombre = "Matusalen", Email = "matusalen@eden.com", Edad = 999, Genero = "M" };
+            var usuarioValidator = new UsuarioValidator();
+            Assert.IsFalse(ValidateAndPrint(usuarioValidator, usuarioEdadExcesiva, "Usuario Válido"));
+        }
+        [TestMethod]
         public void RuleBuilderForPeriodoIsValid()
         {
             var periodoValido = new Periodo { FechaInicio = DateTime.Now, FechaFin = DateTime.Now.AddDays(1), Descripcion = "Periodo correcto" };
-            var periodoInvalidoFechas = new Periodo { FechaInicio = DateTime.Now, FechaFin = DateTime.Now.AddDays(-1), Descripcion = "Fechas incorrectas" };
-            var periodoInvalidoDesc = new Periodo { FechaInicio = DateTime.Now, FechaFin = DateTime.Now.AddDays(1), Descripcion = "Corto" };
-
             var periodoValidator = new PeriodoValidator();
-
-            ValidateAndPrint(periodoValidator, periodoValido, "Periodo Válido");
-            ValidateAndPrint(periodoValidator, periodoInvalidoFechas, "Periodo Inválido (Fechas)");
-            ValidateAndPrint(periodoValidator, periodoInvalidoDesc, "Periodo Inválido (Descripción)");
-
-
+            Assert.IsTrue(ValidateAndPrint(periodoValidator, periodoValido, "Fechas válidas"));
         }
-        private static void ValidateAndPrint<T>(IValidator<T> validator, T instance, string description)
+     
+        [TestMethod]
+        public void RuleBuilderForPeriodoIsNotValidDate()
+        {
+            var periodoInvalidoFechas = new Periodo { FechaInicio = DateTime.Now, FechaFin = DateTime.Now.AddDays(-1), Descripcion = "Fechas incorrectas" };
+            var periodoValidator = new PeriodoValidator();
+            Assert.IsFalse(ValidateAndPrint(periodoValidator, periodoInvalidoFechas, "Fechas no válidas"));
+        }
+        [TestMethod]
+        public void RuleBuilderForPeriodoIsNotValidDescription()
+        {
+            var periodoInvalidoDesc = new Periodo { FechaInicio = DateTime.Now, FechaFin = DateTime.Now.AddDays(1), Descripcion = "Corto" };
+            var periodoValidator = new PeriodoValidator();
+            Assert.IsFalse(ValidateAndPrint(periodoValidator, periodoInvalidoDesc, "Descripción no válida"));
+        }
+
+        private static bool ValidateAndPrint<T>(IValidator<T> validator, T instance, string description)
         {
             Console.WriteLine($"\nValidando: {description}");
             var result = validator.Validate(instance);
 
             if (result.IsValid)
             {
-                Console.WriteLine("Resultado: Válido");
+                Debug.WriteLine("Resultado: Válido");
             }
             else
             {
-                Console.WriteLine("Resultado: Inválido");
+                Debug.WriteLine("Resultado: Inválido");
                 foreach (var failure in result.Errors)
                 {
-                    Console.WriteLine($" - Propiedad: {failure.PropertyName ?? "<Objeto>"}, Error: {failure.ErrorMessage}, Valor: {failure.AttemptedValue ?? "<null>"}");
+                    Debug.WriteLine($" - Propiedad: {failure.PropertyName ?? "<Objeto>"}, Error: {failure.ErrorMessage}, Valor: {failure.AttemptedValue ?? "<null>"}");
                 }
             }
+            return result.IsValid;
         }
         // --- Definición de Validadores ---
 
@@ -56,7 +87,7 @@ namespace KUtilitiesCoreTests.Data.Validation
             public PeriodoValidator()
             {
                 // Regla para la propiedad Descripcion
-                RuleFor(p => p.Descripcion).NotEmpty().Length(5, 100);
+                RuleFor(p => p.Descripcion).NotEmpty().Length(6, 100);
 
                 // Regla para FechaInicio (opcional, podría ser nula)
                 // RuleFor(p => p.FechaInicio).NotNull(); // Si fuera requerida
@@ -83,42 +114,39 @@ namespace KUtilitiesCoreTests.Data.Validation
                 });
             }
         }
-        ///// <summary>
-        ///// Validador para la clase Usuario.
-        ///// Demuestra el uso de IAllowedValue y otras reglas comunes.
-        ///// </summary>
-        //public class UsuarioValidator : AbstractValidator<Usuario>
-        //{
-        //    // Definición de valores permitidos para Género
-        //    private static readonly IRuleAllowedValue<string> GeneroAllowedValues =
-        //        new RuleAllowedStringValues(new[] { "Masculino", "Femenino", "M", "F" }, StringComparison.OrdinalIgnoreCase);
+        /// <summary>
+        /// Validador para la clase Usuario.
+        /// Demuestra el uso de IAllowedValue y otras reglas comunes con WithMessage y placeholders.
+        /// </summary>
+        public class UsuarioValidator : AbstractValidator<Usuario>
+        {
+            // Definición de valores permitidos para Género
+            private static readonly IRuleAllowedValue<string> GeneroAllowedValues =
+                new RuleAllowedStringValues(["Masculino", "Femenino", "M", "F"], StringComparison.OrdinalIgnoreCase);
 
-        //    public UsuarioValidator()
-        //    {
-        //        RuleFor(u => u.Nombre)
-        //            .NotEmpty().WithMessage("El nombre de usuario es obligatorio.") // Mensaje personalizado
-        //            .Length(3, 50).WithMessage("El nombre debe tener entre {MinLength} y {MaxLength} caracteres."); // Placeholders de FluentValidation
+            public UsuarioValidator()
+            {
+                RuleFor(u => u.Nombre)
+                    .NotEmpty().WithMessage("El nombre de usuario ('{PropertyName}') es obligatorio.") // Placeholder {PropertyName}
+                    .Length(3, 50).WithMessage("El nombre '{PropertyName}' debe tener entre {MinLength} y {MaxLength} caracteres. Valor: '{PropertyValue}'."); // Placeholders {PropertyName}, {MinLength}, {MaxLength}, {PropertyValue}
 
-        //        RuleFor(u => u.Email)
-        //            .NotEmpty()
-        //            .Matches(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) // Email básico
-        //            .WithMessage("El formato del email no es válido.");
+                RuleFor(u => u.Email)
+                    .NotEmpty().WithMessage("El email es requerido.") // Mensaje simple
+                    .Matches(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    .WithMessage("El formato del email '{PropertyValue}' no es válido para '{PropertyName}'."); // Placeholders {PropertyValue}, {PropertyName}
 
-        //        RuleFor(u => u.Edad)
-        //            .GreaterThan(0).WithMessage("La edad debe ser un número positivo.")
-        //            .LessThan(120).WithMessage("La edad parece excesiva.");
+                RuleFor(u => u.Edad)
+                    .GreaterThan(0).WithMessage("La edad '{PropertyName}' debe ser mayor que {ComparisonValue}.") // Placeholder {ComparisonValue}
+                    .LessThan(120).WithMessage("La edad '{PropertyValue}' para '{PropertyName}' debe ser menor que {ComparisonValue}."); // Placeholders {PropertyValue}, {PropertyName}, {ComparisonValue}
 
-        //        // Uso de la regla AllowedValues con la definición creada antes
-        //        RuleFor(u => u.Genero)
-        //            .NotEmpty().WithMessage("El género es obligatorio.")
-        //            .AllowedValues(GeneroAllowedValues)
-        //            .WithMessage("El género debe ser {AllowedValuesDescription}."); // Placeholder personalizado
-        //                                                                            // Nota: El mensaje por defecto de AllowedValuesValidator ya es descriptivo.
-        //                                                                            // WithMessage aquí sobreescribiría ese mensaje.
-        //                                                                            // Para usar placeholders como {AllowedValuesDescription}, necesitaríamos
-        //                                                                            // extender el formateo de mensajes.
-        //    }
-        //}
+                // Uso de la regla AllowedValues con mensaje personalizado usando placeholders
+                RuleFor(u => u.Genero)
+                    .NotEmpty().WithMessage("El campo '{PropertyName}' es obligatorio.") // Placeholder {PropertyName}
+                    .AllowedValues(GeneroAllowedValues)
+                    // Mensaje personalizado que usa placeholders específicos de AllowedValuesValidator y generales
+                    .WithMessage("El valor '{PropertyValue}' no es válido para '{PropertyName}'. Permitidos: {AllowedValuesDescription}."); // Placeholders {PropertyValue}, {PropertyName}, {AllowedValuesDescription}
+            }
+        }
         public class Periodo
         {
             public DateTime? FechaInicio { get; set; }

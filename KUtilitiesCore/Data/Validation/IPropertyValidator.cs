@@ -1,9 +1,4 @@
 ﻿using KUtilitiesCore.Data.Validation.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data.Validation
 {
@@ -12,7 +7,12 @@ namespace KUtilitiesCore.Data.Validation
     /// </summary>
     internal interface IPropertyValidator<T, TProperty>
     {
-        bool IsValid(ValidationContext<T> context, TProperty value);
+        #region Methods
+
         string GetErrorMessage(ValidationContext<T> context, TProperty value);
+
+        bool IsValid(ValidationContext<T> context, TProperty value);
+
+        #endregion Methods
     }
 }

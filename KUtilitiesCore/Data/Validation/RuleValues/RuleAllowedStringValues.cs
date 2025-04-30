@@ -1,6 +1,7 @@
-﻿namespace KUtilitiesCore.Data.Validation.RuleValues
-{
+﻿using KUtilitiesCore.Extensions;
 
+namespace KUtilitiesCore.Data.Validation.RuleValues
+{
     /// <summary>
     /// Implementación de IAllowedValue para una lista de cadenas permitidas.
     /// </summary>
@@ -11,6 +12,8 @@
         private readonly HashSet<string> _allowedValues;
 
         private readonly StringComparison _comparisonType;
+        private readonly bool _ignoreAcents;
+
         public bool AllowNull { get; }
 
         #endregion Fields
@@ -22,14 +25,18 @@
         /// </summary>
         /// <param name="allowedValues">La colección de cadenas permitidas.</param>
         /// <param name="comparisonType">El tipo de comparación a usar (por defecto: OrdinalIgnoreCase).</param>
+        /// <param name="ignoreAcents">Si es True normaliza las cadenas de Texto ignorando los acentos.</param>
         public RuleAllowedStringValues(IEnumerable<string> allowedValues,
-            StringComparison comparisonType = StringComparison.OrdinalIgnoreCase, bool allowNull = false)
+            StringComparison comparisonType = StringComparison.OrdinalIgnoreCase, bool allowNull = false, bool ignoreAcents = false)
         {
             if (allowedValues == null) throw new ArgumentNullException(nameof(allowedValues));
             AllowNull = allowNull;
             _comparisonType = comparisonType;
+            _ignoreAcents = ignoreAcents;
             // Usamos HashSet para búsquedas eficientes O(1)
-            _allowedValues = new HashSet<string>(allowedValues.Where(v => v != null), GetStringComparer(comparisonType));
+            _allowedValues = new HashSet<string>(allowedValues.Where(v => v != null)
+                .Select(s => _ignoreAcents ? s.ToNormalized() : s)
+                , GetStringComparer(_comparisonType));
         }
 
         #endregion Constructors
@@ -58,7 +65,7 @@
         {
             if (string.IsNullOrEmpty(value))
                 return AllowNull;
-            return _allowedValues.Contains(value);
+            return _allowedValues.Contains(_ignoreAcents ? value.ToNormalized() : value);
         }
 
         private static IEqualityComparer<string> GetStringComparer(StringComparison comparisonType)
