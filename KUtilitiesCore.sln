@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.MVVM", "KUti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.MVVMTests", "KUtilitiesCore.MVVMTests\KUtilitiesCore.MVVMTests.csproj", "{42729E06-FFB1-4121-8CC7-EBC57AA3C616}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.DataAccess", "KUtilitiesCore.DataAccess\KUtilitiesCore.DataAccess.csproj", "{1DF9E7D3-1E87-40FF-B6F4-2CD798ED553A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,6 +36,10 @@ Global
 		{42729E06-FFB1-4121-8CC7-EBC57AA3C616}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42729E06-FFB1-4121-8CC7-EBC57AA3C616}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42729E06-FFB1-4121-8CC7-EBC57AA3C616}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DF9E7D3-1E87-40FF-B6F4-2CD798ED553A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DF9E7D3-1E87-40FF-B6F4-2CD798ED553A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DF9E7D3-1E87-40FF-B6F4-2CD798ED553A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DF9E7D3-1E87-40FF-B6F4-2CD798ED553A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
