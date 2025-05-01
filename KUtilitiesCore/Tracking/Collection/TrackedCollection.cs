@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace KUtilitiesCore.Tracking.Collection
@@ -9,7 +10,8 @@ namespace KUtilitiesCore.Tracking.Collection
     /// <typeparam name="TEntity">
     /// El tipo de los elementos en la colección, que debe implementar <see cref="INotifyPropertyChanged"/>.
     /// </typeparam>
-    public class TrackedCollection<TEntity> : ObservableCollection<TEntity> where TEntity : class, INotifyPropertyChanged
+    public class TrackedCollection<TEntity> : ObservableCollection<TEntity>
+        where TEntity : class, INotifyPropertyChanged
     {
         #region Fields
 
