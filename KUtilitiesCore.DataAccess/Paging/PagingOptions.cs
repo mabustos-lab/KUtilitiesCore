@@ -9,8 +9,8 @@ namespace KUtilitiesCore.DataAccess.Interfaces
     public class PagingOptions : IPagingOptions
     {
         private const int DefaultPageNumber = 1;
-        private const int DefaultPageSize = 10;
-        private const int MaxPageSize = 100; // Límite opcional para el tamaño de página
+        private const int DefaultPageSize = 100;
+        private const int MaxPageSize = 1000; // Límite opcional para el tamaño de página
 
         private int _pageNumber = DefaultPageNumber;
         private int _pageSize = DefaultPageSize;
