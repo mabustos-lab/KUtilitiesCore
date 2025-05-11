@@ -6,9 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
-using Microsoft.Data.SqlClient;
-
-
 #if NET48
 using SqlClient = System.Data.SqlClient;
 #else
@@ -23,19 +20,14 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
     /// utilizando SqlBulkCopy y DbConnection. También soporta estrategias genéricas para otros
     /// proveedores de bases de datos.
     /// </summary>
-    public class SqlBulkInsertService : IBulkInsertService
+    /// <remarks>
+    /// Constructor que inicializa la configuración para la inserción masiva.
+    /// </remarks>
+    /// <param name="config">Configuración para la inserción masiva.</param>
+    /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
+    public class SqlBulkInsertService(BulkInsertConfig config) : IBulkInsertService
     {
-        private readonly BulkInsertConfig _config;
-
-        /// <summary>
-        /// Constructor que inicializa la configuración para la inserción masiva.
-        /// </summary>
-        /// <param name="config">Configuración para la inserción masiva.</param>
-        /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
-        public SqlBulkInsertService(BulkInsertConfig config)
-        {
-            _config = config ?? throw new ArgumentNullException(nameof(config));
-        }
+        private readonly BulkInsertConfig _config = config ?? throw new ArgumentNullException(nameof(config));
 
         /// <summary>
         /// Realiza una inserción masiva de datos desde un DataTable a la base de datos.
