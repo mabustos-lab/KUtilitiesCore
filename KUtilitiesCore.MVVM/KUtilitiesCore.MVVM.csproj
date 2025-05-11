@@ -10,6 +10,11 @@
    <LangVersion>latest</LangVersion>
  </PropertyGroup>
 <ItemGroup>
+  <Compile Remove="ActionResult\**" />
+  <EmbeddedResource Remove="ActionResult\**" />
+  <None Remove="ActionResult\**" />
+</ItemGroup>
+<ItemGroup>
   <Compile Remove="Helpers\ExpressionsExtCore.cs" />
 </ItemGroup>
 <ItemGroup>

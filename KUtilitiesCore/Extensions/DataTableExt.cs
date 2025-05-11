@@ -68,21 +68,24 @@ namespace KUtilitiesCore.Extensions
         /// <param name="dt"></param>
         /// <param name="rootName"></param>
         /// <returns></returns>
-        public static XDocument ToXml(this DataTable dt, string rootName)
+        public static XDocument ToXml(this DataTable dt, string rootName="Root")
         {
-            var xdoc = new XDocument
-            {
-                Declaration = new XDeclaration("1.0", "utf-8", "")
-            };
-            xdoc.Add(new XElement(rootName));
+            if (dt == null) throw new ArgumentNullException(nameof(dt));
+            if (string.IsNullOrWhiteSpace(rootName)) throw new ArgumentException("El nombre de la raíz no puede estar vacío.", nameof(rootName));
+
+            var xdoc = new XDocument(new XDeclaration("1.0", "utf-8", null));
+            var rootElement = new XElement(rootName);
+            xdoc.Add(rootElement);
+
             foreach (DataRow row in dt.Rows)
             {
-                var element = new XElement(dt.TableName);
+                var rowElement = new XElement(string.IsNullOrEmpty(dt.TableName) ? "Row" : dt.TableName);
                 foreach (DataColumn col in dt.Columns)
                 {
-                    element.Add(new XElement(col.ColumnName, row[col].ToString().Trim(' ')));
+                    var value = row[col]?.ToString()?.Trim() ?? string.Empty;
+                    rowElement.Add(new XElement(col.ColumnName, value));
                 }
-                if (xdoc.Root != null) xdoc.Root.Add(element);
+                rootElement.Add(rowElement);
             }
 
             return xdoc;
@@ -95,62 +98,87 @@ namespace KUtilitiesCore.Extensions
         /// <param name="dt">DataTable de origen de datos</param>
         /// <returns></returns>
         public static IEnumerable<T> ConvertTo<T>(this DataTable dt)
-            where T : class
+    where T : class, new()
         {
-            List<T> list = new List<T>();
-            List<PropertyInfo> piList = typeof(T).GetPropertiesInfo(false, x => x.CanWrite).ToList();
+            var list = new List<T>();
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                      .Where(p => p.CanWrite)
+                                      .ToList();
 
-            try
+            foreach (DataRow row in dt.Rows)
             {
-                for (int i = 0; i < dt.Rows.Count; i++)
+                var instance = new T();
+                foreach (var property in properties)
                 {
-                    DataRow dr = dt.Rows[i];
-                    T ret = (T)Activator.CreateInstance(typeof(T));
-                    foreach (PropertyInfo pi in piList)
+                    if (dt.Columns.Contains(property.Name))
                     {
-                        if (dt.Columns.Contains(pi.Name))
+                        var value = row[property.Name];
+                        if (value != DBNull.Value)
                         {
-                            object cVal = dr[pi.Name];
-                            if (cVal != DBNull.Value)
+                            var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+                            if (property.PropertyType.IsEnum)
                             {
-                                if (Nullable.GetUnderlyingType(pi.PropertyType) != null)
+                                if (Enum.IsDefined(targetType, value.ToString()))
                                 {
-                                    pi.SetValue(ret, Convert.ChangeType(cVal, Type.GetType(Nullable.GetUnderlyingType(pi.PropertyType).ToString())), null);
+                                    var eValue = Enum.ToObject(targetType, value.ToString());
+                                    property.SetValue(instance, eValue);
                                 }
-                                else
-                                {
-                                    bool success = false;
-                                    if (pi.PropertyType.IsEnum)
-                                    {
-                                        Type eType = pi.PropertyType;
-                                        object val = null;
-                                        int intValue = -1;
-                                        if (int.TryParse(cVal.ToString(), out intValue))
-                                        {
-                                            success = Enum.IsDefined(eType, intValue);
-                                            if (success)
-                                            {
-                                                val = Enum.ToObject(eType, intValue);
-                                                pi.SetValue(ret, val, null);
-                                            }
-                                        }
-                                    }
-                                    if (!success)
-                                        pi.SetValue(ret, Convert.ChangeType(cVal, Type.GetType(pi.PropertyType.ToString())), null);
-                                }
+                            }
+                            else
+                            {
+                                property.SetValue(instance, Convert.ChangeType(value, targetType));
                             }
                         }
                     }
-                    list.Add(ret);
+                }
+                list.Add(instance);
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Convierte un objeto de tipo <typeparamref name="TSource"/> en un <see cref="DataTable"/>.
+        /// </summary>
+        /// <typeparam name="TSource">El tipo del objeto que se convertirá en un DataTable.</typeparam>
+        /// <param name="source">El objeto fuente que se convertirá en un DataTable.</param>
+        /// <returns>Un <see cref="DataTable"/> que representa los datos del objeto fuente.</returns>
+        /// <exception cref="ArgumentNullException">Se lanza si el parámetro <paramref name="source"/> es nulo.</exception>
+        public static DataTable ConvertToDataTable<TSource>(this TSource source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            DataTable dt = new DataTable();
+            Type type = typeof(TSource);
+            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            // Crear columnas basadas en las propiedades del objeto
+            foreach (var property in properties)
+            {
+                Type propertyType = property.PropertyType;
+
+                // Manejar tipos Nullable
+                if (Nullable.GetUnderlyingType(propertyType) != null)
+                {
+                    propertyType = Nullable.GetUnderlyingType(propertyType);
                 }
 
+                dt.Columns.Add(property.Name, propertyType);
             }
-            catch (Exception)
-            {
 
-                throw;
+            // Crear una fila con los valores del objeto
+            var row = dt.NewRow();
+            foreach (var property in properties)
+            {
+                object value = property.GetValue(source, null);
+                row[property.Name] = value ?? DBNull.Value;
             }
-            return list;
+
+            dt.Rows.Add(row);
+
+            return dt;
         }
         #endregion Methods
     }

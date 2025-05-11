@@ -43,7 +43,7 @@ namespace KUtilitiesCore.Extensions
                 var near = find < 0 ? Math.Abs(find) - 1 : find;
                 // use custom formatter to get the string
                 return String.Format(
-                    new HMSFormatter(),
+                    new HmsFormatter(),
                     cutoff[cutoff.Keys[near]],
                     ts.Days,
                     ts.Hours,

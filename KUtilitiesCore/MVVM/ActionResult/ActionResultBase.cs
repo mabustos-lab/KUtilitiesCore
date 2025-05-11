@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.Diagnostics.Logger;
+﻿
+using System.Diagnostics;
 
 namespace KUtilitiesCore.MVVM.ActionResult
 {
@@ -40,9 +41,9 @@ namespace KUtilitiesCore.MVVM.ActionResult
         protected static void LogError(string message, Exception exception = null)
         {
             if (exception != null)
-                LogFactory.Service.LogError(message, exception);
+                Debug.WriteLine($"{message}. {exception.Message}", "Error");
             else
-                LogFactory.Service.LogWarning(message);
+                Debug.WriteLine($"{message}", "Warning");
         }
 
         #endregion Methods

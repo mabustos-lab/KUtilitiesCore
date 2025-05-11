@@ -1,70 +1,11 @@
 ﻿using KUtilitiesCore.Data.Validation.Core;
 using KUtilitiesCore.Data.Validation.RuleValues;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using static KUtilitiesCore.Data.Validation.RuleBuilderExtensions;
 
 namespace KUtilitiesCore.Data.Validation
 {
-    ///// <summary>
-    ///// Representa una regla asociada a una propiedad específica. Contiene una lista de validadores
-    ///// específicos para esa propiedad.
-    ///// </summary>
-    //internal class PropertyRule<T, TProperty> : IValidationRule<T>
-    //{
-    //    #region Fields
-
-    //    private readonly Func<T, TProperty> _propertyFunc;
-    //    private readonly List<IPropertyValidator<T, TProperty>> _validators = new List<IPropertyValidator<T, TProperty>>();
-
-    //    #endregion Fields
-
-    //    #region Constructors
-
-    //    internal PropertyRule(string propertyName, Func<T, TProperty> propertyFunc)
-    //    {
-    //        PropertyName = propertyName;
-    //        _propertyFunc = propertyFunc;
-    //    }
-
-    //    #endregion Constructors
-
-    //    #region Properties
-
-    //    public string PropertyName { get; }
-
-    //    #endregion Properties
-
-    //    #region Methods
-
-    //    public IEnumerable<ValidationFailure> Validate(ValidationContext<T> context)
-    //    {
-    //        TProperty propertyValue = _propertyFunc(context.InstanceToValidate);
-    //        var failures = new List<ValidationFailure>();
-
-    //        foreach (var validator in _validators)
-    //        {
-    //            if (!validator.IsValid(context, propertyValue))
-    //            {
-    //                failures.Add(new ValidationFailure(
-    //                    PropertyName,
-    //                    validator.GetErrorMessage(context, propertyValue), // Mensaje de error específico del validador
-    //                    propertyValue // Valor que causó el fallo
-    //                ));
-    //                // Aquí también se podría implementar CascadeMode para la propiedad if
-    //                // (CascadeMode == CascadeMode.StopOnFirstFailure) break;
-    //            }
-    //        }
-    //        return failures;
-    //    }
-
-    //    internal void AddValidator(IPropertyValidator<T, TProperty> validator)
-    //    {
-    //        _validators.Add(validator);
-    //    }
-
-    //    #endregion Methods
-    //}
-
     /// <summary>
     /// Representa una regla asociada a una propiedad específica.
     /// Contiene una lista de validadores específicos para esa propiedad y sus mensajes personalizados.
@@ -134,8 +75,8 @@ namespace KUtilitiesCore.Data.Validation
                         propertyValue // Valor que causó el fallo
                     ));
 
-                    // Aquí se podría implementar CascadeMode para la propiedad si se desea
-                    // if (CascadeMode == CascadeMode.StopOnFirstFailure) break;
+                    if (ValidationOptions.Instance.CascadeMode == ValidationMode.StopOnFirstFailure)
+                        break;
                 }
             }
             return failures;
@@ -144,14 +85,14 @@ namespace KUtilitiesCore.Data.Validation
         /// <summary>
         /// Formatea una plantilla de mensaje reemplazando placeholders conocidos.
         /// </summary>
-        private string FormatMessageTemplate(string template, IPropertyValidator<T, TProperty> validator, 
+        private string FormatMessageTemplate(string template, IPropertyValidator<T, TProperty> validator,
             ValidationContext<T> context, TProperty propertyValue, string propertyName)
         {
             // Reemplazos básicos comunes a todas las reglas
             var formatted = template
                 .Replace("{PropertyName}", propertyName ?? "<Property>")
                 .Replace("{PropertyValue}", propertyValue?.ToString() ?? "<null>"); // Usa el operador null-coalescing para evitar problemas con valores nulos
-            
+
             // Reemplazos específicos basados en el tipo de validador
             switch (validator)
             {

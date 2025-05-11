@@ -11,11 +11,10 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Implementación decolección de parámetros de base de datos.
     /// </summary>
-    class DbParameterCollection<TParameter> : IDbParameterCollection<TParameter>
-        where TParameter : DbParameter
+    class DbParameterCollection : IDbParameterCollection
     {
-        private readonly Func<TParameter> _parameterFactory;
-        private readonly Dictionary<string, TParameter> _parameters;
+        private readonly Func<DbParameter> _parameterFactory;
+        private readonly Dictionary<string, DbParameter> _parameters;
         private static readonly Dictionary<Type, DbType> _typeMappings;
 
         static DbParameterCollection()
@@ -59,14 +58,14 @@ namespace KUtilitiesCore.DataAccess.DAL
     };
         }
 
-        public DbParameterCollection(Func<TParameter> parameterFactory)
+        public DbParameterCollection(Func<DbParameter> parameterFactory)
         {
             _parameterFactory = parameterFactory ?? throw new ArgumentNullException(nameof(parameterFactory));
             _parameters = [];
         }
 
         public int Count => _parameters.Count;
-        public TParameter this[string parameterName] => _parameters[parameterName];
+        public DbParameter this[string parameterName] => _parameters[parameterName];
 
         public void Add<TSource, TValue>(TSource sourceObj,
             Expression<Func<TSource, TValue>> propertyExpression,
@@ -163,9 +162,9 @@ namespace KUtilitiesCore.DataAccess.DAL
 
         public bool Remove(string parameterName) => _parameters.Remove(parameterName);
 
-        public bool Remove(TParameter param) => Remove(param.ParameterName);
+        public bool Remove(DbParameter param) => Remove(param.ParameterName);
 
-        private void CreateAndAdd(Type type, Action<TParameter> configure)
+        private void CreateAndAdd(Type type, Action<DbParameter> configure)
         {
             if (!_typeMappings.TryGetValue(type, out var dbType))
                 throw new NotSupportedException($"Tipo '{type.Name}' no soportado.");
@@ -175,7 +174,7 @@ namespace KUtilitiesCore.DataAccess.DAL
             AddCore(parameter, configure);
         }
 
-        private void AddCore(TParameter parameter, Action<TParameter> configure)
+        private void AddCore(DbParameter parameter, Action<DbParameter> configure)
         {
             configure(parameter);
 
@@ -222,7 +221,7 @@ namespace KUtilitiesCore.DataAccess.DAL
             throw new ArgumentException("La expresión debe referirse a una propiedad.");
         }
 
-        public IEnumerator<TParameter> GetEnumerator()
+        public IEnumerator<DbParameter> GetEnumerator()
         {
             return _parameters.Values.GetEnumerator();
         }

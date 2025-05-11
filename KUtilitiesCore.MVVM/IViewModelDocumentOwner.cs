@@ -13,7 +13,7 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         /// <param name="documentContent">Instancia de <see cref="IViewModelDocumentContent"/> que representa el documento a cerrar.</param>
         /// <param name="force">Indica si se debe deshabilitar la lógica de confirmación. true para forzar el cierre; de lo contrario, false.</param>
-        void Close(IViewModelDocumentContent documentContent, bool force = true);
+        void Close(IViewModelDocumentContent documentContent, bool force = false);
 
         /// <summary>
         /// Obtiene o establece el contenido del contenedor del documento.

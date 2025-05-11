@@ -112,7 +112,7 @@ namespace KUtilitiesCore.Extensions
         /// Un <see cref="Tuple{T1, T2}"/> que contiene la propiedad de origen y destino si existe una coincidencia;
         /// null en caso contrario.
         /// </returns>
-        private static Tuple<PropertyInfo, PropertyInfo>? FindMatchingProperty(PropertyInfo destinationProperty, PropertyInfo[] sourceProperties)
+        private static Tuple<PropertyInfo, PropertyInfo> FindMatchingProperty(PropertyInfo destinationProperty, PropertyInfo[] sourceProperties)
         {
             var sourceProp = sourceProperties.FirstOrDefault(p => p.Name == destinationProperty.Name);
 

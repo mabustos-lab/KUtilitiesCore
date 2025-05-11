@@ -11,14 +11,14 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Define una interfaz para interactuar con el contexto de acceso a datos.
     /// </summary>
-    public interface IDALContext : IDisposable
+    public interface IDALContext:IDisposable
     {
         /// <summary>
         /// Inicia una nueva transacción con el nivel de aislamiento especificado.
         /// </summary>
         /// <param name="isolationLevel">El nivel de aislamiento para la transacción.</param>
         /// <returns>Una instancia de <see cref="ITransaction"/> que representa la transacción iniciada.</returns>
-        ITransaction BeginTransaction(IsolationLevel isolationLevel);
+        ITransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Snapshot);
 
         /// <summary>
         /// Verifica si la base de datos asociada al contexto existe.
@@ -26,21 +26,5 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <returns><c>true</c> si la base de datos existe; de lo contrario, <c>false</c>.</returns>
         bool DatabaseExists();
 
-        /// <summary>
-        /// Obtiene el nombre del servidor publicado asociado al contexto de datos.
-        /// </summary>
-        /// <returns>El nombre del servidor publicado como una cadena.</returns>
-        string GetPublishedServerName();
-
-        /// <summary>
-        /// Obtiene la fecha y hora actual del servidor.
-        /// </summary>
-        /// <returns>Un <see cref="DateTime"/> que representa la fecha y hora actual del servidor.</returns>
-        DateTime GetServerDateTime();
-    }
-    public interface IDAOContext : IDALContext
-    {
-        DbConnection Connection { get; }
-        DbDataAdapter CreateAdapter(DbCommand command);
     }
 }

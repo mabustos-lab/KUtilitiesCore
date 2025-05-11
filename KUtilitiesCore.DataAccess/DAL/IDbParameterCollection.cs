@@ -15,14 +15,12 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Colección de parámetros de base de datos con funcionalidad de solo lectura y manipulación avanzada.
     /// </summary>
-    /// <typeparam name="TParameter">Tipo de parámetro que deriva de <see cref="DbParameter"/>.</typeparam>
-    public interface IDbParameterCollection<TParameter> : IReadOnlyCollection<TParameter>
-        where TParameter : DbParameter
+    public interface IDbParameterCollection : IReadOnlyCollection<DbParameter>
     {
         /// <summary>
         /// Acceso por nombre a los parámetros.
         /// </summary>
-        TParameter this[string parameterName] { get; }
+        DbParameter this[string parameterName] { get; }
 
         /// <summary>
         /// Agrega un parámetro basado en una propiedad.
@@ -81,7 +79,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <summary>
         /// Elimina un parámetro específico.
         /// </summary>
-        bool Remove(TParameter param);
+        bool Remove(DbParameter param);
         /// <summary>
         /// Obtiene el valor del parametro.
         /// </summary>

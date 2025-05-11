@@ -63,7 +63,7 @@ namespace KUtilitiesCore.MVVM.Messaging.Tests
 
         private class TestRecipient
         {
-            public string ReceivedMessage { get; private set; }
+            public string? ReceivedMessage { get; private set; }
 
             public void HandleMessage(string message)
             {

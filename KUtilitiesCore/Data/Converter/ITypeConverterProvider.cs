@@ -1,7 +1,6 @@
-﻿using KUtilitiesCore.Data.Converter;
-using System;
+﻿using System;
 
-namespace KUtilities.Data.Converter
+namespace KUtilitiesCore.Data.Converter
 {
     /// <summary>
     /// Delegado que define un método para obtener un convertidor de tipo basado en el tipo de campo.
