@@ -4,27 +4,32 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.DataAccess.Interfaces
+namespace KUtilitiesCore.DataAccess.Paging
 {
     /// <summary>
-    /// Define las opciones para solicitar una página de datos.
+    /// Representa las opciones de configuración para realizar una solicitud de datos paginados.
     /// </summary>
     public interface IPagingOptions
     {
         /// <summary>
-        /// Número de página solicitada (basado en 1).
-        /// Debe ser mayor que 0.
+        /// Obtiene el número de la página solicitada (basado en 1).
+        /// Este valor debe ser mayor que 0.
         /// </summary>
         int PageNumber { get; }
 
         /// <summary>
-        /// Número de elementos por página.
-        /// Debe ser mayor que 0.
+        /// Obtiene el número de elementos que se incluirán en cada página.
+        /// Este valor debe ser mayor que 0.
         /// </summary>
         int PageSize { get; }
 
-        // Opcional: Considerar añadir parámetros para ordenación aquí
-        // string SortBy { get; }
-        // SortDirection SortDirection { get; } // Necesitaría definir un enum SortDirection
+
+        /// <summary>
+        /// Indica si se debe omitir la paginación.
+        /// Si es true, se ignorarán PageNumber y PageSize y se devolverán todos los resultados
+        /// que coincidan con la especificación (después de aplicar filtros y ordenación).
+        /// Por defecto es false.
+        /// </summary>
+        bool SkipPagination { get; }
     }
 }

@@ -11,8 +11,8 @@ namespace KUtilitiesCore.DataAccess.Utils
     /// </summary>
     public class DataDbException : Exception
     {
-        private string _ErrorCaption;
-        private string _ErrorMessage;
+        private readonly string _ErrorCaption;
+        private readonly string _ErrorMessage;
 
         /// <summary>
         /// Inicializa una nueva instancia de la clase DbException.

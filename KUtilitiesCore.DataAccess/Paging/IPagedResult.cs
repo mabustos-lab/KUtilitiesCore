@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace KUtilitiesCore.DataAccess.Interfaces
+namespace KUtilitiesCore.DataAccess.Paging
 {
     /// <summary>
     /// Representa el resultado de una consulta paginada.
