@@ -16,7 +16,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
     public abstract class Specification<T> : ISpecification<T>
     {
         /// <inheritdoc/>
-        public virtual Expression<Func<T, bool>> Criteria { get; protected set; } // Permitir set en clases derivadas
+        public virtual Expression<Func<T, bool>> Criteria { get; protected set; }
 
         /// <inheritdoc/>
         public List<Expression<Func<T, object>>> Includes { get; } = new List<Expression<Func<T, object>>>();
@@ -30,16 +30,6 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <inheritdoc/>
         public Expression<Func<T, object>> OrderByDescending { get; private set; }
 
-        /// <inheritdoc/>
-        public int Take { get; private set; }
-
-        /// <inheritdoc/>
-        public int Skip { get; private set; }
-
-        /// <inheritdoc/>
-        public bool IsPagingEnabled { get; private set; } = false;
-
-        public IPagingOptions PagingOptions { get; private set; }
 
         /// <summary>
         /// Constructor base para especificaciones.
@@ -48,7 +38,6 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         protected Specification(Expression<Func<T, bool>> criteria = null)
         {
             Criteria = criteria;
-            PagingOptions=new PagingOptions();
         }
 
         /// <summary>
@@ -90,22 +79,6 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         }
 
         /// <summary>
-        /// Aplica la paginación.
-        /// </summary>
-        /// <param name="skip">Número de elementos a omitir.</param>
-        /// <param name="take">Número de elementos a tomar.</param>
-        protected virtual void ApplyPaging(int skip, int take)
-        {
-            // Validaciones básicas
-            if (skip < 0) throw new ArgumentOutOfRangeException(nameof(skip), "Skip no puede ser negativo.");
-            if (take <= 0) throw new ArgumentOutOfRangeException(nameof(take), "Take debe ser positivo para paginación.");
-
-            Skip = skip;
-            Take = take;
-            IsPagingEnabled = true;
-        }
-
-        /// <summary>
         /// Combina esta especificación con otra usando un operador AND lógico.
         /// </summary>
         /// <param name="other">La otra especificación a combinar.</param>
@@ -134,6 +107,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
             return new NotSpecification<T>(this);
         }
     }
+
     /// <summary>
     /// Especificación para combinar dos especificaciones con un operador AND.
     /// </summary>
@@ -155,10 +129,10 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
             // Combinar Includes (evitando duplicados)
             Includes.AddRange(left.Includes.Union(right.Includes));
             IncludeStrings.AddRange(left.IncludeStrings.Union(right.IncludeStrings));
-
-            // La ordenación y paginación generalmente se toman de una de las especificaciones
-            // o se aplican externamente. Aquí, por simplicidad, no se combinan automáticamente.
-            // Se podría dar prioridad a 'left' o 'right', o requerir que solo una tenga estas propiedades.
+            if (left.OrderBy != null) ApplyOrderBy(left.OrderBy);
+            else if (left.OrderByDescending != null) ApplyOrderByDescending(left.OrderByDescending);
+            else if (right.OrderBy != null) ApplyOrderBy(right.OrderBy);
+            else if (right.OrderByDescending != null) ApplyOrderByDescending(right.OrderByDescending);
         }
     }
 
@@ -181,6 +155,10 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 
             Includes.AddRange(left.Includes.Union(right.Includes));
             IncludeStrings.AddRange(left.IncludeStrings.Union(right.IncludeStrings));
+            if (left.OrderBy != null) ApplyOrderBy(left.OrderBy);
+            else if (left.OrderByDescending != null) ApplyOrderByDescending(left.OrderByDescending);
+            else if (right.OrderBy != null) ApplyOrderBy(right.OrderBy);
+            else if (right.OrderByDescending != null) ApplyOrderByDescending(right.OrderByDescending);
         }
     }
 
@@ -201,7 +179,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 
             Includes.AddRange(original.Includes);
             IncludeStrings.AddRange(original.IncludeStrings);
-            // La ordenación y paginación se heredan o se ignoran según el diseño.
+            if (original.OrderBy != null) ApplyOrderBy(original.OrderBy);
+            if (original.OrderByDescending != null) ApplyOrderByDescending(original.OrderByDescending);
         }
     }
-}

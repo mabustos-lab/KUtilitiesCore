@@ -10,7 +10,8 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
     /// <summary>
     /// Define un contrato para el patrón de Especificación, permitiendo encapsular
-    /// la lógica de consulta (filtrado, ordenación, paginación e inclusiones).
+    /// la lógica de consulta (filtrado, ordenación e inclusiones).
+    /// La paginación se maneja externamente a través de IPagingOptions.
     /// </summary>
     /// <typeparam name="T">El tipo de entidad al que se aplica la especificación.</typeparam>
     public interface ISpecification<T>
@@ -39,26 +40,5 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// Expresión para ordenar los resultados en orden descendente.
         /// </summary>
         Expression<Func<T, object>> OrderByDescending { get; }
-
-        /// <summary>
-        /// Número de elementos a tomar (para paginación).
-        /// Si es 0, no se aplica Take.
-        /// </summary>
-        int Take { get; }
-
-        /// <summary>
-        /// Número de elementos a omitir (para paginación).
-        /// Si es 0, no se aplica Skip.
-        /// </summary>
-        int Skip { get; }
-
-        /// <summary>
-        /// Indica si la paginación (Take/Skip) está habilitada para esta especificación.
-        /// </summary>
-        bool IsPagingEnabled { get; }
-        /// <summary>
-        /// Establece las opciones de paginación
-        /// </summary>
-        IPagingOptions PagingOptions { get; }
     }
 }
