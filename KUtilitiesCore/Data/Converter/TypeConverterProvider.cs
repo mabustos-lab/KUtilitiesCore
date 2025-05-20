@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using KUtilitiesCore.Data.Converter.Exceptions;
 using KUtilitiesCore.Data.Converter.Types;
 
@@ -81,7 +82,7 @@ namespace KUtilitiesCore.Data.Converter
             Add(new ArrayConverter<ulong>(new UInt64Converter()));
         }
 
-        public ConverterByType GetCustomConverter { get; set; }
+        public ConverterByType? GetCustomConverter { get; set; }
 
         public ITypeConverterProvider Add<TTargetType>(ITypeConverter<TTargetType> typeConverter)
         {
@@ -99,7 +100,7 @@ namespace KUtilitiesCore.Data.Converter
         {
             if (typeConverters.ContainsKey(typeConverter.TargetType))
             {
-                throw new TypeConverterAlreadyRegisteredException($"Duplicate TypeConverter registration for Type {typeConverter.TargetType}");
+                throw new TypeConverterAlreadyRegisteredException($"TypeConverter registro duplicado para el tipo {typeConverter.TargetType}");
             }
 
             typeConverters[typeConverter.TargetType] = typeConverter;
@@ -117,10 +118,9 @@ namespace KUtilitiesCore.Data.Converter
                 ITypeConverter vtype= GetCustomConverter(targetType);
                 if (vtype!=null) typeConverters[targetType] = vtype;
             }
-            if (!typeConverters.TryGetValue(targetType, out ITypeConverter typeConverter))
+            if (!typeConverters.TryGetValue(targetType, out ITypeConverter? typeConverter))
             {
-                
-                throw new TypeConverterNotRegisteredException($"No TypeConverter registered for Type {targetType}, you can register your own converter provider.");
+                throw new TypeConverterNotRegisteredException($"No se encuentra registrado TypeConverter para el tipo {targetType}, ustd puede registrar su propio TypeConverter.");
             }
 
             return typeConverter;
@@ -129,15 +129,23 @@ namespace KUtilitiesCore.Data.Converter
         public ITypeConverter<TTargetType> Resolve<TTargetType>()
         {
             Type targetType = typeof(TTargetType);
-
-            return Resolve(targetType) as ITypeConverter<TTargetType>;
+            var converter = Resolve(targetType) as ITypeConverter<TTargetType>;
+            if (converter is null)
+            {
+                throw new TypeConverterNotRegisteredException($"No se encuentra registrado TypeConverter para el tipo {targetType}, ustd puede registrar su propio TypeConverter.");
+            }
+            return converter;
         }
 
         public IArrayTypeConverter<TTargetType> ResolveCollection<TTargetType>()
         {
             Type targetType = typeof(TTargetType);
-
-            return Resolve(targetType) as IArrayTypeConverter<TTargetType>;
+            var converter = Resolve(targetType) as IArrayTypeConverter<TTargetType>;
+            if (converter is null)
+            {
+                throw new TypeConverterNotRegisteredException($"No se encuentra registrado TypeConverter para el tipo {targetType}, ustd puede registrar su propio TypeConverter.");
+            }
+            return converter;
         }
 
         ITypeConverterProvider ITypeConverterProvider.AddEnum<TTargetType>()

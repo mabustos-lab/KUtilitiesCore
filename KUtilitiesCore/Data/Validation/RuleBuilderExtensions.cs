@@ -1,14 +1,12 @@
 ﻿using KUtilitiesCore.Data.Validation.Core;
 using KUtilitiesCore.Data.Validation.RuleValues;
-using Microsoft.CodeAnalysis.Operations;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Text.RegularExpressions;
 
 namespace KUtilitiesCore.Data.Validation
 {
-    // ---------------------------------------------------------------------- Métodos de extensión
-    // para el API Fluido (NotNull, NotEmpty, Must, etc.) ----------------------------------------------------------------------
+    // Métodos de extensión para el API Fluido (NotNull, NotEmpty, Must, etc.)
     public static class RuleBuilderExtensions
     {
 
@@ -104,15 +102,7 @@ namespace KUtilitiesCore.Data.Validation
             builder.AddValidator(new NotEmptyValidator<T>());
             return builder;
         }
-        /// <summary>
-        /// Establece un mensaje personalizado para el último validador añadido.
-        /// </summary>
-        public static IRuleBuilder<T, TProperty> WithMessage<T, TProperty>(this IRuleBuilder<T, TProperty> ruleBuilder, string message)
-        {
-            var builder = (RuleBuilder<T, TProperty>)ruleBuilder;
-            builder.Rule.SetMessageForLastValidator(message);
-            return builder;
-        }
+
         /// <summary>
         /// Añade una regla que asegura que la colección no sea nula ni vacía.
         /// </summary>
@@ -146,6 +136,16 @@ namespace KUtilitiesCore.Data.Validation
             return builder;
         }
 
+        /// <summary>
+        /// Establece un mensaje personalizado para el último validador añadido.
+        /// </summary>
+        public static IRuleBuilder<T, TProperty> WithMessage<T, TProperty>(this IRuleBuilder<T, TProperty> ruleBuilder, string message)
+        {
+            var builder = (RuleBuilder<T, TProperty>)ruleBuilder;
+            builder.Rule.SetMessageForLastValidator(message);
+            return builder;
+        }
+
         // --- Implementaciones de Validadores Específicos ---
 
         // --- Helper para formatear mensajes de error --- (Se podría hacer más sofisticado con
@@ -157,48 +157,98 @@ namespace KUtilitiesCore.Data.Validation
             // Añadir más reemplazos si es necesario ({PropertyValue}, etc.)
         }
 
+        public class LessThanValidator<T, TProperty> : IPropertyValidator<T, TProperty>
+        {
+
+            public LessThanValidator(TProperty valueToCompare)
+            {
+                if (typeof(TProperty).IsValueType && Nullable.GetUnderlyingType(typeof(TProperty)) != null)
+                    throw new ArgumentException($"El tipo parametro [{typeof(TProperty).Name}] debe ser tipo Valor y no nulo.", nameof(valueToCompare));
+                ValueToCompare = valueToCompare;
+            }
+
+            // Propiedad pública para placeholder {ComparisonValue}
+            public TProperty ValueToCompare { get; }
+
+            // Mensaje por defecto que usa los placeholders internos
+            public string GetErrorMessage(ValidationContext<T> context, TProperty value) => "'{PropertyName}' debe ser menor que {ComparisonValue}.";
+
+            public bool IsValid(ValidationContext<T> context, TProperty value)
+            {
+                return Comparer.Default.Compare(value, ValueToCompare) < 0;
+            }
+
+        }
+
         internal class AllowedValuesValidator<T, TProperty> : IPropertyValidator<T, TProperty>
         {
-            // Propiedad pública para placeholder {AllowedValuesDescription}
-            public IRuleAllowedValue<TProperty> AllowedValueDefinition { get; }
+
             public AllowedValuesValidator(IRuleAllowedValue<TProperty> allowedValueDefinition)
             {
                 AllowedValueDefinition = allowedValueDefinition;
             }
-            public bool IsValid(ValidationContext<T> context, TProperty value)
-            {
-                if (EqualityComparer<TProperty>.Default.Equals(value, default(TProperty))) return true; // Nulls son válidos a menos que se use NotNull
-                return AllowedValueDefinition.IsAllowed(value);
-            }
+
+            // Propiedad pública para placeholder {AllowedValuesDescription}
+            public IRuleAllowedValue<TProperty> AllowedValueDefinition { get; }
+
             // Mensaje por defecto que usa los placeholders internos
             public string GetErrorMessage(ValidationContext<T> context, TProperty value) =>
                 "El valor '{PropertyValue}' para '{PropertyName}' no es válido. Valores permitidos: {AllowedValuesDescription}.";
-        }
 
+            public bool IsValid(ValidationContext<T> context, TProperty value)
+            {
+                if (value is null)
+                    return true;  // Nulls son válidos a menos que se use NotNull
+
+                return AllowedValueDefinition.IsAllowed(value);
+            }
+
+        }
 
         internal class GreaterThanValidator<T, TProperty> : IPropertyValidator<T, TProperty>
         {
+
+            public GreaterThanValidator(TProperty valueToCompare)
+            {
+                if (typeof(TProperty).IsValueType && Nullable.GetUnderlyingType(typeof(TProperty)) != null)
+                    throw new ArgumentException($"El tipo parametro [{typeof(TProperty).Name}] debe ser tipo Valor y no nulo.", nameof(valueToCompare));
+                ValueToCompare = valueToCompare;
+            }
+
             // Propiedad pública para placeholder {ComparisonValue}
             public TProperty ValueToCompare { get; }
 
-            public GreaterThanValidator(TProperty valueToCompare) 
-            {
-                if (typeof(TProperty).IsValueType && Nullable.GetUnderlyingType(typeof(TProperty)) != null)
-                    throw new ArgumentException($"El tipo parametro [{typeof(TProperty).Name}] debe ser tipo Valor y no nulo.",nameof(valueToCompare));
-                ValueToCompare = valueToCompare; 
-            }
-            public bool IsValid(ValidationContext<T> context, TProperty value)
-            {
-                return Comparer.Default.Compare(value, ValueToCompare)>0;
-            }
-
-
             // Mensaje por defecto que usa los placeholders internos
             public string GetErrorMessage(ValidationContext<T> context, TProperty value) => "'{PropertyName}' debe ser mayor que {ComparisonValue}.";
+
+            public bool IsValid(ValidationContext<T> context, TProperty value)
+            {
+                return Comparer.Default.Compare(value, ValueToCompare) > 0;
+            }
+
         }
 
+        internal class LengthValidator<T> : IPropertyValidator<T, string>
+        {
 
-        private class InstancePredicateValidator<T, TProperty> : IPropertyValidator<T, TProperty>
+            public LengthValidator(int min, int max)
+            { Min = min; Max = max; }
+
+            public int Max { get; }
+            public int Min { get; }
+
+            // Propiedad pública para placeholder {MinLength} Propiedad pública para placeholder {MaxLength}
+            public string GetErrorMessage(ValidationContext<T> context, string value) => "La longitud de '{PropertyName}' debe estar entre {MinLength} y {MaxLength} caracteres.";
+
+            public bool IsValid(ValidationContext<T> context, string value)
+            {
+                if (string.IsNullOrEmpty(value)) return true; // Longitud 0, si se requiere no vacío, usar NotEmpty
+                return value.Length >= Min && value.Length <= Max;
+            }
+
+        }
+
+        private sealed class InstancePredicateValidator<T, TProperty> : IPropertyValidator<T, TProperty>
         {
 
             private readonly string _errorMessageFormat;
@@ -220,46 +270,8 @@ namespace KUtilitiesCore.Data.Validation
 
         }
 
-        internal class LengthValidator<T> : IPropertyValidator<T, string>
+        private sealed class NotEmptyCollectionValidator<T, TCollection> : IPropertyValidator<T, TCollection> where TCollection : class, System.Collections.IEnumerable
         {
-
-            public int Min { get; } // Propiedad pública para placeholder {MinLength}
-            public int Max { get; } // Propiedad pública para placeholder {MaxLength}
-
-            public LengthValidator(int min, int max)
-            { Min = min; Max = max; }
-
-            public string GetErrorMessage(ValidationContext<T> context, string value) => "La longitud de '{PropertyName}' debe estar entre {MinLength} y {MaxLength} caracteres.";
-
-            public bool IsValid(ValidationContext<T> context, string value)
-            {
-                if (string.IsNullOrEmpty(value)) return true; // Longitud 0, si se requiere no vacío, usar NotEmpty
-                return value.Length >= Min && value.Length <= Max;
-            }
-
-        }
-
-        public class LessThanValidator<T, TProperty> : IPropertyValidator<T, TProperty>
-        {
-            // Propiedad pública para placeholder {ComparisonValue}
-            public TProperty ValueToCompare { get; }
-            public LessThanValidator(TProperty valueToCompare) 
-            {
-                if (typeof(TProperty).IsValueType && Nullable.GetUnderlyingType(typeof(TProperty)) != null)
-                    throw new ArgumentException($"El tipo parametro [{typeof(TProperty).Name}] debe ser tipo Valor y no nulo.", nameof(valueToCompare));
-                ValueToCompare = valueToCompare; 
-            }
-            public bool IsValid(ValidationContext<T> context, TProperty value)
-            {
-                return Comparer.Default.Compare(value, ValueToCompare) < 0;
-            }
-            // Mensaje por defecto que usa los placeholders internos
-            public string GetErrorMessage(ValidationContext<T> context, TProperty value) => "'{PropertyName}' debe ser menor que {ComparisonValue}.";
-        }
-
-        private class NotEmptyCollectionValidator<T, TCollection> : IPropertyValidator<T, TCollection> where TCollection : class, System.Collections.IEnumerable
-        {
-
             public string GetErrorMessage(ValidationContext<T> context, TCollection value) => "La colección '{PropertyName}' no debe estar vacía.";
 
             public bool IsValid(ValidationContext<T> context, TCollection value)
@@ -270,7 +282,7 @@ namespace KUtilitiesCore.Data.Validation
 
         }
 
-        private class NotEmptyValidator<T> : IPropertyValidator<T, string>
+        private sealed class NotEmptyValidator<T> : IPropertyValidator<T, string>
         {
 
             public string GetErrorMessage(ValidationContext<T> context, string value) => "La propiedad '{PropertyName}' no debe estar vacía.";
@@ -279,16 +291,16 @@ namespace KUtilitiesCore.Data.Validation
 
         }
 
-        private class NotNullValidator<T, TProperty> : IPropertyValidator<T, TProperty>
+        private sealed class NotNullValidator<T, TProperty> : IPropertyValidator<T, TProperty>
         {
 
             public string GetErrorMessage(ValidationContext<T> context, TProperty value) => "La propiedad '{PropertyName}' no debe ser nula.";
 
-            public bool IsValid(ValidationContext<T> context, TProperty value) => value != null;
+            public bool IsValid(ValidationContext<T> context, TProperty value) => value is not null;
 
         }
 
-        private class PredicateValidator<T, TProperty> : IPropertyValidator<T, TProperty>
+        private sealed class PredicateValidator<T, TProperty> : IPropertyValidator<T, TProperty>
         {
 
             private readonly string _errorMessageFormat;
@@ -307,17 +319,16 @@ namespace KUtilitiesCore.Data.Validation
                 // Si el valor es nulo, la condición generalmente no se aplica (a menos que el
                 // predicado lo maneje) Reglas como NotNull deben usarse explícitamente si se
                 // requiere que no sea nulo.
-                if (value == null) return true;
+                if (value is null) return true;
                 return _predicate(value);
             }
 
             // El formateo final con PropertyName se hace en PropertyRule
         }
 
-        private class RegularExpressionValidator<T> : IPropertyValidator<T, string>
+        private sealed class RegularExpressionValidator<T> : IPropertyValidator<T, string>
         {
 
-            public string Pattern { get; }
             private readonly Regex _regex;
 
             public RegularExpressionValidator(string pattern, RegexOptions options)
@@ -325,6 +336,8 @@ namespace KUtilitiesCore.Data.Validation
                 Pattern = pattern;
                 _regex = new Regex(pattern, options);
             }
+
+            public string Pattern { get; }
 
             public string GetErrorMessage(ValidationContext<T> context, string value) => "'{PropertyName}' no tiene el formato correcto ({Pattern}).";
 
@@ -373,7 +386,7 @@ namespace KUtilitiesCore.Data.Validation
         // ValidationFailure. Esto simplifica un poco. El formateo final se hace al crear
         // ValidationFailure en PropertyRule.Validate.
         // **Revisando**: El código actual ya pasa el PropertyName al constructor de ValidationFailure.
-        // El mensaje del validador DEBE incluir el placeholder '{PropertyName}' para que
-        // funcione. Lo he añadido a los mensajes de ejemplo en los validadores.
+        // El mensaje del validador DEBE incluir el placeholder '{PropertyName}' para que funcione.
+        // Lo he añadido a los mensajes de ejemplo en los validadores.
     }
 }

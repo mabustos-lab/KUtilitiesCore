@@ -1,12 +1,9 @@
-﻿using System;
-using System.Linq;
-
-namespace KUtilitiesCore.MVVM.ActionResult
+﻿namespace KUtilitiesCore.MVVM.ActionResult
 {
     /// <summary>
     /// Representa los posibles estados de un resultado de acción.
     /// </summary>
-    public enum EnumResulResult
+    public enum ActionResultStatus
     {
         /// <summary>
         /// Indica que el resultado está vacío o no se ha establecido.

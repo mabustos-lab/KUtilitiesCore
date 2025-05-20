@@ -1,16 +1,19 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
-namespace KUtilitiesCore.Diagnostics.Exceptions
+namespace KUtilitiesCore.Logger.Info
 {
     internal class CallerInfo
     {
-        #region Constructors
 
         public CallerInfo()
         {
+            ClassName=string.Empty;
+            FileName = "No Info";
+            LineNumber = 0;
+            MethodSignature = "No Info";
+            IsEmpty = true;
         }
 
         public CallerInfo(StackFrame frame) : this(
@@ -30,19 +33,9 @@ namespace KUtilitiesCore.Diagnostics.Exceptions
             IsEmpty = false;
         }
 
-        #endregion Constructors
-
-        #region Properties
-
         public static CallerInfo Empty
         {
-            get => new CallerInfo()
-            {
-                FileName = "No Info",
-                LineNumber = 0,
-                MethodSignature = "No Info",
-                IsEmpty = true
-            };
+            get => new CallerInfo();
         }
 
         public string ClassName { get; private set; }
@@ -51,15 +44,10 @@ namespace KUtilitiesCore.Diagnostics.Exceptions
         public int LineNumber { get; private set; }
         public string MethodSignature { get; private set; }
 
-        #endregion Properties
-
-        #region Methods
-
         public override string ToString()
         {
             return $" At Caller:{ClassName} {MethodSignature} File: {FileName} LN: {LineNumber}";
         }
 
-        #endregion Methods
     }
 }

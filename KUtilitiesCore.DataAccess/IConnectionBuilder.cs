@@ -19,7 +19,7 @@ namespace KUtilitiesCore.DataAccess
     /// <summary>
     /// Interfaz para la construcción de cadenas de conexión independiente de la infraestructura de datos.
     /// </summary>
-    public interface IConnectionBuilder : IDataErrorInfo
+    public interface IConnectionBuilder : IConnectionString, IDataErrorInfo
     {
         /// <summary>
         /// Regresa un DataTable con la lista de las bases de datos disponibles en el Servidor
@@ -29,18 +29,13 @@ namespace KUtilitiesCore.DataAccess
         /// <summary>
         /// Indica si existe la configuración minima para listar las Bases de datos
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True si se puede listar las bases de datos, de lo contrario false.</returns>
         bool CanListDatabases();
 
         /// <summary>
         /// Establece o obtiene el nombre de la aplicación que realiza la conexión.
         /// </summary>
         string ApplicationName { get; set; }
-
-        /// <summary>
-        /// Establece o obtiene la cadena de conexión resultante de los parámetros de la clase.
-        /// </summary>
-        string CnnString { get; }
 
         /// <summary>
         /// Indica si se utiliza cifrado SSL en la conexión.
@@ -65,12 +60,6 @@ namespace KUtilitiesCore.DataAccess
         string Password { get; set; }
 
         /// <summary>
-        /// Establece o obtiene el nombre del proveedor de la conexión a la base de datos.
-        /// </summary>
-        [Required(AllowEmptyStrings = false)]
-        string ProviderName { get; set; }
-
-        /// <summary>
         /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base
         /// de datos.
         /// </summary>
@@ -87,7 +76,7 @@ namespace KUtilitiesCore.DataAccess
         string UserName { get; set; }
 
         /// <summary>
-        /// Carga los valores almacenados en el objeto
+        /// Carga los valores almacenados en el objeto.
         /// </summary>
         void Load();
 

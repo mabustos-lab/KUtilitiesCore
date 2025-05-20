@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using static KUtilitiesCore.OrderedInfo.OrderedCollectionExtensions;
 
 namespace KUtilitiesCore.OrderedInfo
 {
@@ -18,7 +19,7 @@ namespace KUtilitiesCore.OrderedInfo
         /// <summary>
         /// Propiedad a ordenar
         /// </summary>
-        public PNameInfo Property { get; set; }
+        public PropertyNameInfo Property { get; set; }
 
         #endregion Properties
 

@@ -10,6 +10,7 @@ namespace KUtilitiesCore.Data.DataAnnotations
     /// <summary>
     /// Especifica una Descripcion para una propiedad o evento localizable
     /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
     public class DescriptionLocalizedAttribute : DescriptionAttribute
     {
         #region Constructors
@@ -26,7 +27,7 @@ namespace KUtilitiesCore.Data.DataAnnotations
         /// Representa el tipo del Recurso donde se buscará el texto para la Descripción, la
         /// Description representa la propiedad de Aceso al recurso, si este no es nulo.
         /// </summary>
-        public Type ResourceType
+        public Type? ResourceType
         { get; set; }
 
         #endregion Properties
@@ -35,9 +36,9 @@ namespace KUtilitiesCore.Data.DataAnnotations
 
         public string GetDescription()
         {
-            if (ResourceType != null)
+            if (ResourceType is not null)
             {
-                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(base.Description));
+                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(base.Description))??string.Empty;
             }
             return base.Description;
         }

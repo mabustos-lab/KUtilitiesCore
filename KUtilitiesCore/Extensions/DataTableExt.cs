@@ -1,185 +1,176 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace KUtilitiesCore.Extensions
 {
     public static class DataTableExt
     {
-        #region Methods
+        #region Métodos de extensión
 
         /// <summary>
-        /// Crea un <see cref="IEnumerable{DataColumn}"/> de las columnas de un <see cref="DataTable"/>/>
+        /// Obtiene las columnas de un DataTable como enumeración
         /// </summary>
-        /// <param name="dt"></param>
-        /// <returns><see cref="IEnumerable{DataColumn}" que representa las Columnas</returns>
-        public static IEnumerable<DataColumn> DataColumnAsEnumerable(this DataTable dt)
+        public static IEnumerable<DataColumn> GetColumns(this DataTable dataTable)
         {
-            return dt.Columns.Cast<DataColumn>();
+            return dataTable.Columns.Cast<DataColumn>();
         }
 
         /// <summary>
-        /// Convierte un DataTable en una estructura de texto
+        /// Convierte un DataTable en texto estructurado con separadores personalizables
         /// </summary>
-        /// <param name="dt"></param>
-        /// <param name="inclideColumns">Indica que debe incluir las columnas como la primera fla</param>
-        /// <param name="separator">establece el separador entre elementos</param>
-        /// <returns></returns>
-        public static string DataTableToText(this DataTable dt, bool inclideColumns = true, string separator = "\t")
+        public static string ToText(this DataTable dataTable, bool includeHeader = true, string separator = "\t")
         {
-            StringBuilder ret = new StringBuilder();
-            IEnumerable<DataColumn> cols = dt.DataColumnAsEnumerable();
-            if (inclideColumns) ret.AppendLine(string.Join(separator,
-                cols.
-                Select(c => c.ColumnName).
-                ToArray()));
-            foreach (DataRow row in dt.Rows)
-            {
-                List<string> values = new List<string>();
-                foreach (DataColumn col in cols)
-                {
-                    if (col.DataType == typeof(string))
-                    {
+            var output = new StringBuilder();
+            var columns = dataTable.GetColumns().ToList();
 
-                        string res = row[col.ColumnName].ToString();
-                        if (res.Contains(separator))
-                            res = $"\"{res}\"";
-                        values.Add(res);
-                    }
-                    else
-                    {
-                        values.Add(row[col.ColumnName].ToString());
-                    }
-                }
-                ret.AppendLine(string.Join(separator, values.ToArray()));
+            if (includeHeader)
+            {
+                output.AppendLine(FormatHeader(columns, separator));
             }
-            return ret.ToString();
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                output.AppendLine(FormatRow(row, columns, separator));
+            }
+
+            return output.ToString();
         }
 
         /// <summary>
-        /// Converts entire DataTabel To XDocument
-        ///  example: <example>dtCert.ToXml("Certs")</example>
+        /// Serializa un DataTable a formato XML
         /// </summary>
-        /// <param name="dt"></param>
-        /// <param name="rootName"></param>
-        /// <returns></returns>
-        public static XDocument ToXml(this DataTable dt, string rootName="Root")
+        public static XDocument ToXml(this DataTable dataTable, string rootName = "Data")
         {
-            if (dt == null) throw new ArgumentNullException(nameof(dt));
-            if (string.IsNullOrWhiteSpace(rootName)) throw new ArgumentException("El nombre de la raíz no puede estar vacío.", nameof(rootName));
+            if (dataTable == null) throw new ArgumentNullException(nameof(dataTable));
+            if (string.IsNullOrWhiteSpace(rootName)) rootName = "Data";
 
-            var xdoc = new XDocument(new XDeclaration("1.0", "utf-8", null));
             var rootElement = new XElement(rootName);
-            xdoc.Add(rootElement);
+            var xmlDocument = new XDocument(new XDeclaration("1.0", "utf-8", null), rootElement);
 
-            foreach (DataRow row in dt.Rows)
+            foreach (DataRow row in dataTable.Rows)
             {
-                var rowElement = new XElement(string.IsNullOrEmpty(dt.TableName) ? "Row" : dt.TableName);
-                foreach (DataColumn col in dt.Columns)
+                var rowElement = new XElement(dataTable.TableName.DefaultIfEmpty("Row"));
+                foreach (DataColumn column in dataTable.Columns)
                 {
-                    var value = row[col]?.ToString()?.Trim() ?? string.Empty;
-                    rowElement.Add(new XElement(col.ColumnName, value));
+                    var cellValue = (row[column].ToString() ?? string.Empty).Trim();
+                    rowElement.Add(new XElement(column.ColumnName.SanitizeXmlName(), cellValue));
                 }
                 rootElement.Add(rowElement);
             }
 
-            return xdoc;
+            return xmlDocument;
         }
 
         /// <summary>
-        /// Convierte un DataTable a una clase que pueda mapear
+        /// Mapea un DataTable a una colección de objetos
         /// </summary>
-        /// <typeparam name="T">Clase u Objeto al cual se mapearan los datos</typeparam>
-        /// <param name="dt">DataTable de origen de datos</param>
-        /// <returns></returns>
-        public static IEnumerable<T> ConvertTo<T>(this DataTable dt)
-    where T : class, new()
+        public static IEnumerable<T> MapTo<T>(this DataTable dataTable) where T : class, new()
         {
-            var list = new List<T>();
-            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                      .Where(p => p.CanWrite)
-                                      .ToList();
+            var propertyCache = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                        .Where(p => p.CanWrite)
+                                        .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
 
-            foreach (DataRow row in dt.Rows)
+            foreach (DataRow row in dataTable.Rows)
             {
-                var instance = new T();
-                foreach (var property in properties)
-                {
-                    if (dt.Columns.Contains(property.Name))
-                    {
-                        var value = row[property.Name];
-                        if (value != DBNull.Value)
-                        {
-                            var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-
-                            if (property.PropertyType.IsEnum)
-                            {
-                                if (Enum.IsDefined(targetType, value.ToString()))
-                                {
-                                    var eValue = Enum.ToObject(targetType, value.ToString());
-                                    property.SetValue(instance, eValue);
-                                }
-                            }
-                            else
-                            {
-                                property.SetValue(instance, Convert.ChangeType(value, targetType));
-                            }
-                        }
-                    }
-                }
-                list.Add(instance);
+                yield return CreateEntity<T>(row, propertyCache);
             }
-
-            return list;
         }
 
         /// <summary>
-        /// Convierte un objeto de tipo <typeparamref name="TSource"/> en un <see cref="DataTable"/>.
+        /// Convierte un objeto en DataTable
         /// </summary>
-        /// <typeparam name="TSource">El tipo del objeto que se convertirá en un DataTable.</typeparam>
-        /// <param name="source">El objeto fuente que se convertirá en un DataTable.</param>
-        /// <returns>Un <see cref="DataTable"/> que representa los datos del objeto fuente.</returns>
-        /// <exception cref="ArgumentNullException">Se lanza si el parámetro <paramref name="source"/> es nulo.</exception>
-        public static DataTable ConvertToDataTable<TSource>(this TSource source)
+        public static DataTable ToDataTable<TSource>(this TSource source) where TSource : class
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
-            DataTable dt = new DataTable();
-            Type type = typeof(TSource);
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var dataTable = new DataTable();
+            var type = typeof(TSource);
+            var properties = type.GetRuntimeProperties().ToList();
 
-            // Crear columnas basadas en las propiedades del objeto
             foreach (var property in properties)
             {
-                Type propertyType = property.PropertyType;
-
-                // Manejar tipos Nullable
-                if (Nullable.GetUnderlyingType(propertyType) != null)
-                {
-                    propertyType = Nullable.GetUnderlyingType(propertyType);
-                }
-
-                dt.Columns.Add(property.Name, propertyType);
+                var columnType = GetUnderlyingType(property.PropertyType);
+                dataTable.Columns.Add(property.Name, columnType);
             }
 
-            // Crear una fila con los valores del objeto
-            var row = dt.NewRow();
+            var dataRow = dataTable.NewRow();
             foreach (var property in properties)
             {
-                object value = property.GetValue(source, null);
-                row[property.Name] = value ?? DBNull.Value;
+                dataRow[property.Name] = property.GetValue(source) ?? DBNull.Value;
             }
 
-            dt.Rows.Add(row);
-
-            return dt;
+            dataTable.Rows.Add(dataRow);
+            return dataTable;
         }
-        #endregion Methods
+
+        #endregion
+
+        #region Helpers
+
+        private static string FormatHeader(IEnumerable<DataColumn> columns, string separator)
+        {
+            return string.Join(separator, columns.Select(c => c.ColumnName));
+        }
+
+        private static string FormatRow(DataRow row, IEnumerable<DataColumn> columns, string separator)
+        {
+            var formattedValues = columns.Select(column =>
+            {
+                var value = row[column].ToString()??string.Empty;
+                return value.Contains(separator) ? $"\"{value}\"" : value;
+            });
+
+            return string.Join(separator, formattedValues);
+        }
+
+        private static T CreateEntity<T>(DataRow row, IReadOnlyDictionary<string, PropertyInfo> properties) where T : new()
+        {
+            var entity = new T();
+            foreach (var property in properties.Values)
+            {
+                if (!row.Table.Columns.Contains(property.Name)) continue;
+
+                var value = row[property.Name];
+                if (value == DBNull.Value) continue;
+
+                var targetType = GetUnderlyingType(property.PropertyType);
+                var convertedValue = ConvertValue(value, targetType);
+                property.SetValue(entity, convertedValue);
+            }
+            return entity;
+        }
+
+        private static object ConvertValue(object value, Type targetType)
+        {
+            if (targetType.IsEnum)
+            {
+                return Enum.Parse(targetType, value.ToString()??string.Empty);
+            }
+
+            return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
+        }
+
+        private static Type GetUnderlyingType(Type type)
+        {
+            return Nullable.GetUnderlyingType(type) ?? type;
+        }
+
+        private static string SanitizeXmlName(this string name)
+        {
+            return new string(name.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
+        }
+
+        private static string DefaultIfEmpty(this string value, string defaultValue)
+        {
+            return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
+        }
+
+        #endregion
     }
 }

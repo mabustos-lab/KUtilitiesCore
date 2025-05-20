@@ -28,7 +28,7 @@ namespace KUtilitiesCore.Data.Validation
         /// </summary>
         internal void AddValidator(IPropertyValidator<T, TProperty> validator)
         {
-            _validators.Add((validator, null)); // Inicialmente sin mensaje personalizado
+            _validators.Add((validator, string.Empty)); // Inicialmente sin mensaje personalizado
         }
 
         /// <summary>
@@ -85,9 +85,10 @@ namespace KUtilitiesCore.Data.Validation
         /// <summary>
         /// Formatea una plantilla de mensaje reemplazando placeholders conocidos.
         /// </summary>
-        private string FormatMessageTemplate(string template, IPropertyValidator<T, TProperty> validator,
+        private static string FormatMessageTemplate(string template, IPropertyValidator<T, TProperty> validator,
             ValidationContext<T> context, TProperty propertyValue, string propertyName)
         {
+            
             // Reemplazos básicos comunes a todas las reglas
             var formatted = template
                 .Replace("{PropertyName}", propertyName ?? "<Property>")
@@ -102,19 +103,21 @@ namespace KUtilitiesCore.Data.Validation
                         .Replace("{MaxLength}", lengthValidator.Max.ToString());
                     break;
                 case GreaterThanValidator<T, TProperty> gtValidator:
-                    formatted = formatted.Replace("{ComparisonValue}", gtValidator.ValueToCompare.ToString());
+                    formatted = formatted.Replace("{ComparisonValue}", gtValidator.ValueToCompare!.ToString());
                     break;
                 case LessThanValidator<T, TProperty> ltValidator:
                     // Asegúrate de que TProperty es un tipo de valor no anulable antes de usarlo
-                    formatted = formatted.Replace("{ComparisonValue}", ltValidator.ValueToCompare.ToString());
+                    formatted = formatted.Replace("{ComparisonValue}", ltValidator.ValueToCompare!.ToString());
                     break;
                 case AllowedValuesValidator<T, TProperty> avValidator:
                     formatted = formatted.Replace("{AllowedValuesDescription}", avValidator.AllowedValueDefinition.GetAllowedDescription());
                     break;
-                    // Añadir más casos para otros validadores con placeholders específicos
-                    // case RegularExpressionValidator<T> regexValidator:
-                    //    formatted = formatted.Replace("{Pattern}", regexValidator.Pattern);
-                    //    break;
+                    /*
+                     Añadir más casos para otros validadores con placeholders específicos
+                     case RegularExpressionValidator<T> regexValidator:
+                        formatted = formatted.Replace("{Pattern}", regexValidator.Pattern);
+                        break;
+                    */
             }
 
             // Podrían añadirse más placeholders globales si es necesario (ej: {InstanceId})

@@ -71,10 +71,10 @@ namespace KUtilitiesCore.Data
             return Validator.TryValidateProperty(propertyValue, context, validationResults);
         }
 
-        private static object GetPropertyValue<TSource>(TSource source, string propertyName)
+        private static object? GetPropertyValue<TSource>(TSource source, string propertyName)
         {
             var property = typeof(TSource).GetProperty(propertyName);
-            if (property == null)
+            if (property is null)
             {
                 throw new ArgumentException($"Propiedad {propertyName} no existe en {typeof(TSource)}", nameof(propertyName));
             }

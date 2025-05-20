@@ -1,124 +1,157 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace KUtilitiesCore.Tracking
 {
     /// <summary>
-    /// Clase base que implementa IEditableObject para gestionar el seguimiento y reversión de cambios
+    /// Clase base que implementa IEditableObject para gestionar el seguimiento y reversión de cambios.
     /// </summary>
     public abstract class ChangeTrackingBase : INotifyPropertyChanged, IEditableObject
     {
         #region Fields
-        /// <summary>
-        /// Memento: almacena el estado en BeginEdit
-        /// </summary>
-        [NonSerialized]
-        private Dictionary<string, TrackedProperty> memento;
 
-        #endregion Fields
+        [NonSerialized]
+        private readonly Stack<Dictionary<string, TrackedProperty>> _snapshotStack = new();
+
+        #endregion
 
         #region Events
 
-        
-        public event PropertyChangedEventHandler PropertyChanged;
+        /// <summary>
+        /// Evento que se produce cuando el valor de una propiedad cambia.
+        /// </summary>
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        #endregion Events
+        #endregion
 
         #region Properties
 
         /// <summary>
-        /// Indica si se han modificado los valores de las propiedades despúes de Invocar BeginEdit
+        /// Indica si se han modificado los valores de las propiedades después de invocar BeginEdit.
         /// </summary>
-        public bool IsChanged { get => memento != null && memento.Any(x => x.Value.IsChanged(this)); }
+        public bool IsChanged => CurrentSnapshot?.Any(x => x.Value.IsChanged(this)) ?? false;
 
-        #endregion Properties
+        private Dictionary<string, TrackedProperty>? CurrentSnapshot =>
+            _snapshotStack.Count > 0 ? _snapshotStack.Peek() : null;
+
+        #endregion
 
         #region Methods
 
         /// <summary>
-        /// Se captura el estado actual de las propiedades (se puede personalizar según necesidades)
+        /// Captura el estado actual de las propiedades para realizar el seguimiento de cambios.
         /// </summary>
         public void BeginEdit()
         {
-            if (memento == null)
-                memento = new Dictionary<string, TrackedProperty>();
-            Track(GetTrackableProperties());
+            var snapshot = CreateCleanSnapshot();
+            _snapshotStack.Push(snapshot);
         }
 
         /// <summary>
-        /// Restaura los valores de las propiedades modificadas y fiinaliza la edición
+        /// Restaura los valores de las propiedades modificadas y finaliza la edición.
         /// </summary>
         public void CancelEdit()
         {
-            if (memento != null)
-            {
-                foreach (KeyValuePair<string, TrackedProperty> p in memento)
-                {
-                    p.Value.Property.SetValue(this, p.Value.Value);
-                    OnPropertyChanged(p.Key);
-                }
-            }
-            EndEdit();
+            if (_snapshotStack.Count == 0) return;
+
+            var snapshot = _snapshotStack.Pop();
+            RestoreSnapshot(snapshot);
         }
 
         /// <summary>
-        /// Establece los valores actuales como finales
+        /// Establece los valores actuales como finales y limpia el historial de cambios.
         /// </summary>
         public void EndEdit()
         {
-            memento?.Clear();
-            memento = null;
+            if (_snapshotStack.Count > 0)
+                _snapshotStack.Pop();
         }
 
-        // Método para notificar cambios en las propiedades
+        /// <summary>
+        /// Notifica un cambio en el valor de una propiedad usando una expresión lambda.
+        /// </summary>
+        /// <typeparam name="T">Tipo de la propiedad</typeparam>
+        /// <param name="propertyExpression">Expresión que identifica la propiedad</param>
+        protected void OnPropertyChanged<T>(Expression<Func<T>> propertyExpression)
+        {
+            var memberExpression = propertyExpression.Body as MemberExpression;
+            if (memberExpression == null) return;
+
+            string propertyName = memberExpression.Member.Name;
+            OnPropertyChanged(propertyName);
+        }
+
+        /// <summary>
+        /// Notifica un cambio en el valor de una propiedad.
+        /// </summary>
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        /// <summary>
-        /// Obtiene una lista de propiedades que pueden ser rastreadas.
-        /// </summary>
-        /// <returns></returns>
+        #endregion
 
-        private IEnumerable<PropertyInfo> GetTrackableProperties()
+        #region Helper Methods
+
+        private Dictionary<string, TrackedProperty> CreateCleanSnapshot()
         {
-            return GetType().GetProperties()
-                .Where(p =>
-                    !p.DeclaringType.Equals(typeof(ChangeTrackingBase))
-                    && p.CanRead
-                    && p.CanWrite
-                    && !p.GetCustomAttributes<ChangeTrackerIgnoreAttribute>(false).Any()
-                );
+            var snapshot = new Dictionary<string, TrackedProperty>();
+            var currentTrackableProperties = GetTrackableProperties().ToList();
+
+            // Limpieza de propiedades obsoletas en snapshots previos
+            if (_snapshotStack.Count > 0)
+            {
+                var previousSnapshot = _snapshotStack.Peek();
+                foreach (var key in previousSnapshot.Keys.ToList())
+                {
+                    if (!currentTrackableProperties.Any(p => p.Name == key))
+                        previousSnapshot.Remove(key);
+                }
+            }
+
+            foreach (var prop in currentTrackableProperties)
+            {
+                snapshot[prop.Name] = new TrackedProperty(prop, this);
+            }
+            return snapshot;
         }
 
-        /// <summary>
-        /// Comienza a rastrear las propiedades especificadas.
-        /// </summary>
-        /// <param name="properties"></param>
-        private void Track(IEnumerable<PropertyInfo> properties)
+        private void RestoreSnapshot(Dictionary<string, TrackedProperty> snapshot)
         {
-            if (properties != null && properties.Any())
+            foreach (var entry in snapshot)
             {
-                foreach (PropertyInfo prop in properties)
-                {
-                    TrackProperty(prop);
-                }
+                entry.Value.Property.SetValue(this, entry.Value.Value);
+                OnPropertyChanged(entry.Key);
             }
         }
 
-        private void TrackProperty(PropertyInfo prop)
+        private IEnumerable<PropertyInfo> GetTrackableProperties()
         {
-            memento[prop.Name] = new TrackedProperty(prop, this);
+            return GetType()
+                .GetProperties()
+                .Where(IsTrackableProperty);
         }
 
-        #endregion Methods
-
-        #region Classes
-
-        private class TrackedProperty
+        private bool IsTrackableProperty(PropertyInfo property)
         {
-            #region Properties
+            return property.DeclaringType != typeof(ChangeTrackingBase) &&
+                   property.CanRead &&
+                   property.CanWrite &&
+                   !property.GetCustomAttributes<ChangeTrackerIgnoreAttribute>(false).Any();
+        }
+
+        #endregion
+
+        #region Inner Classes
+
+        private sealed class TrackedProperty
+        {
+            public PropertyInfo Property { get; }
+            public object? Value { get; }
 
             public TrackedProperty(PropertyInfo property, ChangeTrackingBase srcObject)
             {
@@ -126,21 +159,12 @@ namespace KUtilitiesCore.Tracking
                 Value = property.GetValue(srcObject, null);
             }
 
-            public PropertyInfo Property { get; set; }
-            public object Value { get; set; }
-
-            #endregion Properties
-
-            #region Methods
-
             internal bool IsChanged(ChangeTrackingBase srcObject)
             {
                 return !Equals(Value, Property.GetValue(srcObject, null));
             }
-
-            #endregion Methods
         }
 
-        #endregion Classes
+        #endregion
     }
 }

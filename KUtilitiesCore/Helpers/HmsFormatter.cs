@@ -35,12 +35,12 @@ namespace KUtilitiesCore.Helpers
         /// <param name="arg">Valor a formatear</param>
         /// <param name="formatProvider">Proveedor de formato</param>
         /// <returns>Valor formateado</returns>
-        public string Format(string format, object arg, IFormatProvider formatProvider)
+        public string Format(string? format, object? arg, IFormatProvider? formatProvider)
         {
             try
             {
                 return string.Format(new PluralFormatter(),
-                                    TimeFormats.TryGetValue(format, out var formatString) ?
+                                    TimeFormats.TryGetValue(format??string.Empty, out var formatString) ?
                                     formatString : "{0}",
                                     arg);
             }
@@ -56,7 +56,7 @@ namespace KUtilitiesCore.Helpers
         /// </summary>
         /// <param name="formatType">Tipo del proveedor de formato</param>
         /// <returns>Proveedor de formato</returns>
-        public object GetFormat(Type formatType)
+        public object? GetFormat(Type? formatType)
         {
             return formatType == typeof(ICustomFormatter) ? this : null;
         }

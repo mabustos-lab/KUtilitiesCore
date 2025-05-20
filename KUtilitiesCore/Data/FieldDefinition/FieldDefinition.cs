@@ -8,69 +8,88 @@ using System.Reflection;
 
 namespace KUtilitiesCore.Data.FieldDefinition
 {
-    /// <summary>
-    /// Representa la definición de un campo con validación adicional.
-    /// </summary>
-    public class FieldDefinition : FieldDefinitionBase, IFieldValidation
-    {
-        #region Properties
-
-        /// <inheritdoc/>
-        public IRuleValue AllowedValueDefinition { get; set; } = new EmptyRuleValue();
-
-        /// <inheritdoc/>
-        public ITypeConverter Converter { get; private set; }
-
-        /// <inheritdoc/>
-        public bool IsRequerided { get; set; }
-
-        /// <inheritdoc/>
-        public bool IsUnique { get; set; }
-
-        /// <inheritdoc/>
-        public string MappedName
-        { get; set; }
-
-        #endregion Properties
-
-        #region Methods
-
         /// <summary>
-        /// Carga la información del campo a partir de la propiedad proporcionada.
+        /// Representa la definición de un campo con validación adicional.
         /// </summary>
-        /// <param name="fieldProperty">La propiedad que define el campo.</param>
-        internal override void LoadInfo(PropertyInfo fieldProperty)
+        /// <remarks>
+        /// Esta clase extiende <see cref="FieldDefinitionBase"/> e implementa <see cref="IFieldValidation"/> para proporcionar
+        /// validaciones adicionales como unicidad, obligatoriedad y reglas de valores permitidos.
+        /// </remarks>
+        public class FieldDefinition : FieldDefinitionBase, IFieldValidation
         {
-            base.LoadInfo(fieldProperty);
+            #region Properties
 
-            // Verifica si la propiedad tiene el atributo Key para marcarla como única.
-            if (fieldProperty.GetCustomAttribute<KeyAttribute>() != null)
+            /// <summary>
+            /// Define las reglas de valores permitidos para el campo.
+            /// </summary>
+            public IRuleValue AllowedValueDefinition { get; set; } = new EmptyRuleValue();
+
+            /// <summary>
+            /// Obtiene el convertidor de tipo asociado al campo.
+            /// </summary>
+            public ITypeConverter? Converter { get; private set; }
+
+            /// <summary>
+            /// Indica si el campo es requerido.
+            /// </summary>
+            public bool IsRequerided { get; set; }
+
+            /// <summary>
+            /// Indica si el campo debe ser único.
+            /// </summary>
+            public bool IsUnique { get; set; }
+
+            /// <summary>
+            /// Establece el nombre del campo en la fuente de datos, por default es el Nombre mostrado en pantalla.
+            /// </summary>
+            public string MappedName { get; set; } = string.Empty;
+
+            #endregion Properties
+
+            #region Methods
+
+            /// <summary>
+            /// Carga la información del campo a partir de la propiedad proporcionada.
+            /// </summary>
+            /// <param name="fieldProperty">La propiedad que define el campo.</param>
+            internal override void LoadInfo(PropertyInfo fieldProperty)
             {
-                IsUnique = true;
+                base.LoadInfo(fieldProperty);
+
+                // Verifica si la propiedad tiene el atributo Key para marcarla como única.
+                if (fieldProperty.GetCustomAttribute<KeyAttribute>() != null)
+                {
+                    IsUnique = true;
+                }
+
+                // Verifica si la propiedad tiene el atributo Required para marcarla como requerida.
+                if (fieldProperty.GetCustomAttribute<RequiredAttribute>() != null)
+                {
+                    IsRequerided = true;
+                }
             }
 
-            // Verifica si la propiedad tiene el atributo Required para marcarla como requerida.
-            if (fieldProperty.GetCustomAttribute<RequiredAttribute>() != null)
+            /// <summary>
+            /// Actualiza el nombre mapeado cuando cambia el nombre mostrado.
+            /// </summary>
+            internal override void OnDisplayNameChanged()
             {
-                IsRequerided = true;
+                base.OnDisplayNameChanged();
+                MappedName = FieldName;
             }
-        }
 
-        internal override void OnDisplayNameChanged()
-        {
-            base.OnDisplayNameChanged();
-            MappedName = FieldName;
-        }
-
-        internal override void OnFieldTypeChanged()
-        {
-            if (FieldType != null)
+            /// <summary>
+            /// Actualiza el convertidor de tipo cuando cambia el tipo de campo.
+            /// </summary>
+            internal override void OnFieldTypeChanged()
             {
-                // Resuelve el convertidor de tipo para el tipo de campo actual.
-                Converter = TypeConverterFactory.Provider.Resolve(FieldType);
+                if (FieldType != null)
+                {
+                    // Resuelve el convertidor de tipo para el tipo de campo actual.
+                    Converter = TypeConverterFactory.Provider.Resolve(FieldType);
+                }
             }
-        }
 
-        #endregion Methods
-    }
+            #endregion Methods
+        }
 }

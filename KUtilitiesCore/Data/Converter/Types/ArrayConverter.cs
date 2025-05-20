@@ -34,23 +34,22 @@ namespace KUtilitiesCore.Data.Converter.Types
             return TryConvert(values, out _);
         }
 
-        public virtual object TryConvert(string[] values)
+        public virtual object? TryConvert(string[] values)
         {
-            TTargetType[] result = new TTargetType[values.Length];
-            if (TryConvert(values, out result))
+            if (TryConvert(values, out TTargetType[] result))
             {
                 return result as object;
             }
             return null;
         }
 
-        public virtual bool TryConvert(string[] values, out TTargetType[] result)
+        public virtual bool TryConvert(string[] value, out TTargetType[] result)
         {
-            result = new TTargetType[values.Length];
+            result = new TTargetType[value.Length];
 
-            for (int pos = 0; pos < values.Length; pos++)
+            for (int pos = 0; pos < value.Length; pos++)
             {
-                if (!internalConverter.TryConvert(values[pos], out TTargetType element))
+                if (!internalConverter.TryConvert(value[pos], out TTargetType element))
                     return false;
 
                 result[pos] = element;
@@ -59,7 +58,7 @@ namespace KUtilitiesCore.Data.Converter.Types
             return true;
         }
 
-        public virtual object TryConvert(string value)
+        public virtual object? TryConvert(string value)
         {
             return TryConvert(value.Split(Separator));
         }

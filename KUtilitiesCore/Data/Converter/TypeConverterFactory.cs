@@ -7,7 +7,7 @@ namespace KUtilitiesCore.Data.Converter
         #region Fields
 
         private static readonly Lazy<TypeConverterFactory> instance = new Lazy<TypeConverterFactory>(() => new TypeConverterFactory());
-        private readonly ITypeConverterProvider provider = null;
+        private readonly ITypeConverterProvider provider;
 
         #endregion Fields
 

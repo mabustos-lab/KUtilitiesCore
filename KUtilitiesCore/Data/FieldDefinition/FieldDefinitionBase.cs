@@ -15,8 +15,8 @@ namespace KUtilitiesCore.Data.FieldDefinition
     {
         #region Fields
 
-        private string displayName;
-        private Type fieldType;
+        private string displayName = string.Empty;
+        private Type fieldType = typeof(string);
 
         #endregion Fields
 
@@ -29,6 +29,7 @@ namespace KUtilitiesCore.Data.FieldDefinition
         {
             if (fieldProperty == null)
                 throw new ArgumentNullException(nameof(fieldProperty));
+            
             LoadInfo(fieldProperty);
         }
 
@@ -51,7 +52,7 @@ namespace KUtilitiesCore.Data.FieldDefinition
 
         /// <inheritdoc/>
         public string Description
-        { get; set; }
+        { get; set; } = string.Empty;
 
         /// <inheritdoc/>
         public string DisplayName
@@ -66,7 +67,7 @@ namespace KUtilitiesCore.Data.FieldDefinition
 
         /// <inheritdoc/>
         public string FieldName
-        { get; private set; }
+        { get; private set; } = string.Empty;
 
         /// <inheritdoc/>
         public Type FieldType
@@ -79,14 +80,12 @@ namespace KUtilitiesCore.Data.FieldDefinition
             }
         }
 
-        #endregion Properties
-
-        #region Methods
-
         internal virtual void LoadInfo(PropertyInfo fieldProperty)
         {
             AllowNull = (Nullable.GetUnderlyingType(fieldProperty.PropertyType) != null);
-            FieldType = AllowNull ? Nullable.GetUnderlyingType(fieldProperty.PropertyType) : fieldProperty.PropertyType;
+            var underlyingType = Nullable.GetUnderlyingType(fieldProperty.PropertyType);
+            var resolvedType = (AllowNull ? underlyingType : fieldProperty.PropertyType) ?? throw new InvalidOperationException($"No se pudo determinar el tipo de campo para la propiedad '{fieldProperty.Name}'.");
+            FieldType = resolvedType;
             FieldName = fieldProperty.Name;
             DisplayName = fieldProperty.DataAnnotationsDisplayName();
             Description = fieldProperty.DataAnnotationsDescription();

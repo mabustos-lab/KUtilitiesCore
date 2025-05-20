@@ -40,7 +40,7 @@ namespace KUtilitiesCore.Data.Converter.Abstracts
         /// </summary>
         /// <param name="value">El valor de texto a convertir.</param>
         /// <returns>El objeto convertido si la conversión es exitosa; caso contrario, null.</returns>
-        public virtual object TryConvert(string value)
+        public virtual object? TryConvert(string value)
             => TryConvert(value, out TTargetType result) ? result : null;
 
         #endregion Métodos

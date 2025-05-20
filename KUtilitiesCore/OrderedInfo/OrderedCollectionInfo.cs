@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using static KUtilitiesCore.OrderedInfo.OrderedCollectionExtensions;
 
 namespace KUtilitiesCore.OrderedInfo
 {
@@ -52,10 +53,10 @@ namespace KUtilitiesCore.OrderedInfo
         /// <exception cref="ArgumentException">
         /// Seleva si <paramref name="info.PropertyName"/> es nulo o vacío
         /// </exception>
-        public void AddProperty(PNameInfo info, SortDirection direction)
+        public void AddProperty(PropertyNameInfo info, SortDirection direction)
         {
-            if (info == null) throw new ArgumentNullException(nameof(info));
-            if (string.IsNullOrEmpty(info.PropertyName))
+            //if (info == null) throw new ArgumentNullException(nameof(info));
+            if (string.IsNullOrEmpty(info.TechnicalName))
                 throw new ArgumentException("El nombre de la propiedad no puede ser nulo ni vacío", nameof(info));
 
             OrderedProperties.Add(CreateOrderedQueryableInfo(info, direction));
@@ -120,7 +121,7 @@ namespace KUtilitiesCore.OrderedInfo
         /// <param name="property">Información de la propiedad</param>
         /// <param name="direction">Dirección de ordenamiento</param>
         /// <returns>Una nueva instancia de <see cref="OrderedQueryableInfo"/></returns>
-        private OrderedQueryableInfo CreateOrderedQueryableInfo(PNameInfo property, SortDirection direction)
+        private OrderedQueryableInfo CreateOrderedQueryableInfo(PropertyNameInfo property, SortDirection direction)
         {
             return new OrderedQueryableInfo
             {

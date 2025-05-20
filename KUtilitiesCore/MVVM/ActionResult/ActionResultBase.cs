@@ -1,5 +1,4 @@
-﻿
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace KUtilitiesCore.MVVM.ActionResult
 {
@@ -8,26 +7,19 @@ namespace KUtilitiesCore.MVVM.ActionResult
     /// </summary>
     public abstract class ActionResultBase : IActionResult
     {
-        #region Constructors
-
-        protected ActionResultBase()
-        { Status = EnumResulResult.Empty; }
-
-        #endregion Constructors
-
         #region Properties
 
         /// <inheritdoc/>
-        public string ErrorMessage { get; protected set; }
+        public string ErrorMessage { get; protected internal set; } = string.Empty;
 
         /// <inheritdoc/>
-        public Exception Ex { get; protected set; }
+        public Exception? Exception { get; protected internal set; }
 
         /// <inheritdoc/>
-        public bool HasException => Ex != null;
+        public bool HasException => Exception != null;
 
         /// <inheritdoc/>
-        public EnumResulResult Status { get; protected set; }
+        public ActionResultStatus Status { get; protected internal set; } = ActionResultStatus.Empty;
 
         #endregion Properties
 
@@ -38,12 +30,10 @@ namespace KUtilitiesCore.MVVM.ActionResult
         /// </summary>
         /// <param name="message">Mensaje del error.</param>
         /// <param name="exception">Excepción asociada (opcional).</param>
-        protected static void LogError(string message, Exception exception = null)
+        protected static void LogError(string message, Exception? exception = null)
         {
-            if (exception != null)
-                Debug.WriteLine($"{message}. {exception.Message}", "Error");
-            else
-                Debug.WriteLine($"{message}", "Warning");
+            var logLevel = exception != null ? "Error" : "Warning";
+            Debug.WriteLine($"{logLevel}: {message}", exception?.Message);
         }
 
         #endregion Methods

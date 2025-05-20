@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.ComponentModel.DataAnnotations;
+
+
+
 
 #if NET6_0_OR_GREATER // Incluye .NET 6, 7, 8 y superiores
 using System.Text.Json;
@@ -19,7 +23,7 @@ namespace KUtilitiesCore.Extensions.Serialization
     {
 #if NET6_0_OR_GREATER
         // --- Opciones de Serialización JSON para System.Text.Json ---
-        private static readonly JsonSerializerOptions _jsonOptionsDefault = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _jsonOptionsDefault = new()
         {
             PropertyNameCaseInsensitive = true, // Ignora mayúsculas/minúsculas en propiedades
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase, // Usa camelCase para nombres de propiedad (ej. miPropiedad)
@@ -37,9 +41,9 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// <returns>Una cadena que representa el objeto en formato JSON.</returns>
         /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>
         /// <exception cref="JsonException">Si ocurre un error durante la serialización.</exception>
-        public static string ToJson<T>(this T source, JsonSerializerOptions options = null)
+        public static string ToJson<T>(this T source, JsonSerializerOptions? options = null)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source), "El objeto a serializar no puede ser null.");
             }
@@ -63,7 +67,7 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// <returns>Una instancia del objeto de tipo T.</returns>
         /// <exception cref="ArgumentException">Si la cadena JSON es null o vacía.</exception>
         /// <exception cref="JsonException">Si ocurre un error durante la deserialización.</exception>
-        public static T FromJson<T>(this string json, JsonSerializerOptions options = null)
+        public static T FromJson<T>(this string json, JsonSerializerOptions? options = null)
         {
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -71,7 +75,10 @@ namespace KUtilitiesCore.Extensions.Serialization
             }
             try
             {
-                return JsonSerializer.Deserialize<T>(json, options ?? _jsonOptionsDefault);
+                var result = JsonSerializer.Deserialize<T>(json, options ?? _jsonOptionsDefault);
+                return result is null
+                    ? throw new JsonException($"La deserialización retornó null para el tipo {typeof(T).FullName}. Se esperaba un objeto válido.")
+                    : result;
             }
             catch (Exception ex)
             {
@@ -82,7 +89,7 @@ namespace KUtilitiesCore.Extensions.Serialization
 #else
         // --- Opciones de Serialización JSON para Newtonsoft.Json ---
 
-        private static readonly JsonSerializerSettings _jsonSettingsDefault = new JsonSerializerSettings
+        private static readonly JsonSerializerSettings _jsonSettingsDefault = new()
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(), // Usa camelCase
             Formatting = Formatting.Indented, // Formato indentado
@@ -100,9 +107,9 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// <returns>Una cadena que representa el objeto en formato JSON.</returns>
         /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>
         /// <exception cref="JsonSerializationException">Si ocurre un error durante la serialización.</exception>
-        public static string ToJson<T>(this T obj, JsonSerializerSettings settings = null)
+        public static string ToJson<T>(this T obj, JsonSerializerSettings? settings = null)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(nameof(obj), "El objeto a serializar no puede ser null.");
             }
@@ -127,21 +134,22 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// <returns>Una instancia del objeto de tipo T.</returns>
         /// <exception cref="ArgumentException">Si la cadena JSON es null o vacía.</exception>
         /// <exception cref="JsonSerializationException">Si ocurre un error durante la deserialización.</exception>
-        public static T FromJson<T>(this string json, JsonSerializerSettings settings = null)
+        public static T FromJson<T>(this string json, JsonSerializerSettings? settings = null)
         {
-             if (string.IsNullOrWhiteSpace(json))
+            if (string.IsNullOrWhiteSpace(json))
             {
-                 throw new ArgumentException("La cadena JSON no puede ser null o vacía.", nameof(json));
+                throw new ArgumentException("La cadena JSON no puede ser null o vacía.", nameof(json));
             }
-             try
+            try
             {
-                // Newtonsoft.Json retorna null si no puede deserializar, a diferencia de System.Text.Json que lanza excepción
-                // Se podría añadir una validación extra si se espera siempre un objeto válido.
-                return JsonConvert.DeserializeObject<T>(json, settings ?? _jsonSettingsDefault);
+                var result = JsonConvert.DeserializeObject<T>(json, settings ?? _jsonSettingsDefault);
+                return result is null
+                    ? throw new JsonSerializationException($"La deserialización retornó null para el tipo {typeof(T).FullName}. Se esperaba un objeto válido.")
+                    : result;
             }
             catch (Exception ex)
             {
-                 // Considera loggear el error aquí
+                // Considera loggear el error aquí
                 throw new JsonSerializationException($"Error al deserializar JSON al tipo {typeof(T).FullName}.", ex);
             }
         }
@@ -159,9 +167,9 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// <returns>Una cadena que representa el objeto en formato XML.</returns>
         /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>
         /// <exception cref="InvalidOperationException">Si ocurre un error durante la serialización XML (p.ej., el tipo no es serializable).</exception>
-        public static string ToXml<T>(this T obj, bool omitXmlDeclaration = false, XmlSerializerNamespaces namespaces = null)
+        public static string ToXml<T>(this T obj, bool omitXmlDeclaration = false, XmlSerializerNamespaces? namespaces = null)
         {
-            if (obj == null)
+            if (obj is null)
             {
                 throw new ArgumentNullException(nameof(obj), "El objeto a serializar no puede ser null.");
             }
@@ -169,23 +177,21 @@ namespace KUtilitiesCore.Extensions.Serialization
             try
             {
                 var xmlSerializer = new XmlSerializer(typeof(T));
-                using (var stringWriter = new StringWriterUtf8()) // Usar StringWriter con codificación UTF-8
+                using var stringWriter = new StringWriterUtf8(); // Usar StringWriter con codificación UTF-8
+                var writerSettings = new System.Xml.XmlWriterSettings
                 {
-                    var writerSettings = new System.Xml.XmlWriterSettings
-                    {
-                        Indent = true, // Indentar el XML para legibilidad
-                        OmitXmlDeclaration = omitXmlDeclaration,
-                        Encoding = Encoding.UTF8 // Asegurar UTF-8
-                    };
+                    Indent = true, // Indentar el XML para legibilidad
+                    OmitXmlDeclaration = omitXmlDeclaration,
+                    Encoding = Encoding.UTF8 // Asegurar UTF-8
+                };
 
-                    using (var xmlWriter = System.Xml.XmlWriter.Create(stringWriter, writerSettings))
-                    {
-                        // Usar los namespaces proporcionados o crear uno vacío por defecto para evitar xsi/xsd
-                        XmlSerializerNamespaces ns = namespaces ?? new XmlSerializerNamespaces(new[] { System.Xml.XmlQualifiedName.Empty });
-                        xmlSerializer.Serialize(xmlWriter, obj, ns);
-                    }
-                    return stringWriter.ToString();
+                using (var xmlWriter = System.Xml.XmlWriter.Create(stringWriter, writerSettings))
+                {
+                    // Usar los namespaces proporcionados o crear uno vacío por defecto para evitar xsi/xsd
+                    XmlSerializerNamespaces ns = namespaces ?? new XmlSerializerNamespaces([System.Xml.XmlQualifiedName.Empty]);
+                    xmlSerializer.Serialize(xmlWriter, obj, ns);
                 }
+                return stringWriter.ToString();
             }
             catch (Exception ex)
             {
@@ -212,10 +218,11 @@ namespace KUtilitiesCore.Extensions.Serialization
             try
             {
                 var xmlSerializer = new XmlSerializer(typeof(T));
-                using (var stringReader = new StringReader(xml))
-                {
-                    return (T)xmlSerializer.Deserialize(stringReader);
-                }
+                using var stringReader = new StringReader(xml);
+                T? result= (T?)xmlSerializer.Deserialize(stringReader);
+                return result is null
+                    ? throw new InvalidOperationException($"La deserialización retornó null para el tipo {typeof(T).FullName}. Se esperaba un objeto válido.")
+                    : result;
             }
             catch (Exception ex)
             {

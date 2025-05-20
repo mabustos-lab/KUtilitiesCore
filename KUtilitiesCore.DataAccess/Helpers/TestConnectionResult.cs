@@ -16,7 +16,7 @@ namespace KUtilitiesCore.DataAccess.Helpers
         /// <summary>
         /// Excepción que ocurrió durante la prueba de conexión, si aplica.
         /// </summary>
-        public DataDbException Ex { get; set; }
+        public DataAccessException Ex { get; set; }
 
         /// <summary>
         /// Indica si la prueba de conexión fue exitosa.
@@ -56,7 +56,7 @@ namespace KUtilitiesCore.DataAccess.Helpers
         /// </summary>
         /// <param name="e">La excepción que ocurrió durante la prueba.</param>
         /// <returns>Una instancia de <see cref="TestConnectionResult"/> indicando el fallo.</returns>
-        public static TestConnectionResult FailTest(DataDbException e)
+        public static TestConnectionResult FailTest(DataAccessException e)
         {
             return new TestConnectionResult
             {

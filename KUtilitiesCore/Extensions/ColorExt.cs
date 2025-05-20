@@ -55,9 +55,11 @@ namespace KUtilitiesCore.Extensions
             Type cKnowColor = typeof(KnownColor);
             Type ctype = typeof(Color);
             IEnumerable<PropertyInfo> propInfos = ctype
-                .GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public)
-                .Cast<PropertyInfo>();
-            return propInfos.Select(c => new KeyValuePair<KnownColor, Color>((KnownColor)Enum.Parse(cKnowColor, c.Name), (Color)c.GetValue(null)));
+                .GetProperties(BindingFlags.Static | BindingFlags.DeclaredOnly | BindingFlags.Public);
+            return propInfos.Select(
+                c => new KeyValuePair<KnownColor, Color>(
+                    (KnownColor)Enum.Parse(cKnowColor, c.Name),
+                    (Color)(c.GetValue(null) ?? Color.Empty)));
         }
 
         /// <summary>
@@ -67,15 +69,14 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Enumeración de pares clave-valor de nombres de colores localizables y sus valores.</returns>
         public static IEnumerable<KeyValuePair<string, Color>> GetKnowLocalizableColors(bool IncludeSystemColors = false)
         {
-            KeyValuePair<string, Color> p(KeyValuePair<KnownColor, Color> a) => new KeyValuePair<string, Color>(
-                ResourceHelpers.GetFromResource(typeof(ColorExtLocalizable), q => q.GetString(a.Key.ToString())),
-                a.Value);
-            Func<KeyValuePair<KnownColor, Color>, KeyValuePair<string, Color>> ConvertionHelper = p;
-            if (IncludeSystemColors)
-            {
-                return GetKnowAllColors().Select(c => ConvertionHelper(c));
-            }
-            return GetKnowColors().Select(c => ConvertionHelper(c));
+            IEnumerable<KeyValuePair<KnownColor, Color>> colors = IncludeSystemColors ? GetKnowAllColors() : GetKnowColors();
+            return colors.Select(c =>
+                new KeyValuePair<string, Color>(
+                    ResourceHelpers.GetFromResource(typeof(ColorExtLocalizable),
+                    q => q.GetString(c.Key.ToString()) ?? string.Empty),
+                    c.Value
+                )
+            );
         }
 
         /// <summary>

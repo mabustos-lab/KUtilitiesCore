@@ -10,24 +10,14 @@ namespace KUtilitiesCore.Data.ValidationAttributes
     /// <summary>
     /// Indica que una propiedad es requerida si cumple una condición
     /// </summary>
-    public class RequiredIf : ValidationAttribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public class RequiredIfAttribute(string otherProperty, object targetValue) : ValidationAttribute
     {
-        #region Constructors
-
-        public RequiredIf(string otherProperty, object targetValue)
-        {
-            OtherProperty = otherProperty;
-            TargetValue = targetValue;
-        }
-
-        #endregion Constructors
-
-        #region Properties
 
         /// <summary>
         /// Indica la propiedad de la cual se requere el valor para que cumpla la condición
         /// </summary>
-        public string OtherProperty { get; private set; }
+        public string OtherProperty { get; private set; } = otherProperty;
 
         /// <inheritdoc/>
         public override bool RequiresValidationContext => true;
@@ -35,14 +25,10 @@ namespace KUtilitiesCore.Data.ValidationAttributes
         /// <summary>
         /// Indica el valor que debe cumplir la condición
         /// </summary>
-        public object TargetValue { get; private set; }
-
-        #endregion Properties
-
-        #region Methods
+        public object TargetValue { get; private set; } = targetValue;
 
         /// <inheritdoc/>
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             var otherPropertyValue = validationContext.ObjectType
                                                   .GetProperty(OtherProperty)?
@@ -58,6 +44,5 @@ namespace KUtilitiesCore.Data.ValidationAttributes
             return ValidationResult.Success;
         }
 
-        #endregion Methods
     }
 }

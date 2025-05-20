@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
     /// <summary>
-    /// Clase base para implementaciones de ISpecification.
-    /// Proporciona una estructura común para definir especificaciones.
+    /// Clase base para implementaciones de ISpecification. Proporciona una estructura común para definir
+    /// especificaciones.
     /// </summary>
     /// <typeparam name="T">El tipo de entidad.</typeparam>
     public abstract class Specification<T> : ISpecification<T>
@@ -35,28 +35,20 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// Constructor base para especificaciones.
         /// </summary>
         /// <param name="criteria">La expresión de criterio inicial (opcional).</param>
-        protected Specification(Expression<Func<T, bool>> criteria = null)
-        {
-            Criteria = criteria;
-        }
+        protected Specification(Expression<Func<T, bool>> criteria = null) { Criteria = criteria; }
 
         /// <summary>
         /// Añade una expresión de inclusión de propiedad de navegación.
         /// </summary>
         /// <param name="includeExpression">La expresión de inclusión.</param>
         protected virtual void AddInclude(Expression<Func<T, object>> includeExpression)
-        {
-            Includes.Add(includeExpression);
-        }
+        { Includes.Add(includeExpression); }
 
         /// <summary>
         /// Añade una cadena de inclusión de propiedad de navegación.
         /// </summary>
         /// <param name="includeString">La cadena de inclusión (ej. "Orders.OrderItems").</param>
-        protected virtual void AddInclude(string includeString)
-        {
-            IncludeStrings.Add(includeString);
-        }
+        protected virtual void AddInclude(string includeString) { IncludeStrings.Add(includeString); }
 
         /// <summary>
         /// Aplica la ordenación ascendente.
@@ -83,29 +75,20 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// </summary>
         /// <param name="other">La otra especificación a combinar.</param>
         /// <returns>Una nueva especificación que representa la combinación AND.</returns>
-        public ISpecification<T> And(ISpecification<T> other)
-        {
-            return new AndSpecification<T>(this, other);
-        }
+        public ISpecification<T> And(ISpecification<T> other) { return new AndSpecification<T>(this, other); }
 
         /// <summary>
         /// Combina esta especificación con otra usando un operador OR lógico.
         /// </summary>
         /// <param name="other">La otra especificación a combinar.</param>
         /// <returns>Una nueva especificación que representa la combinación OR.</returns>
-        public ISpecification<T> Or(ISpecification<T> other)
-        {
-            return new OrSpecification<T>(this, other);
-        }
+        public ISpecification<T> Or(ISpecification<T> other) { return new OrSpecification<T>(this, other); }
 
         /// <summary>
         /// Niega esta especificación.
         /// </summary>
         /// <returns>Una nueva especificación que representa la negación de la actual.</returns>
-        public ISpecification<T> Not()
-        {
-            return new NotSpecification<T>(this);
-        }
+        public ISpecification<T> Not() { return new NotSpecification<T>(this); }
     }
 
     /// <summary>
@@ -123,16 +106,22 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 
             // Combinar criterios
             var paramExpr = Expression.Parameter(typeof(T));
-            var exprBody = Expression.AndAlso(Expression.Invoke(left.Criteria, paramExpr), Expression.Invoke(right.Criteria, paramExpr));
+            var exprBody = Expression.AndAlso(
+                Expression.Invoke(left.Criteria, paramExpr),
+                Expression.Invoke(right.Criteria, paramExpr));
             Criteria = Expression.Lambda<Func<T, bool>>(exprBody, paramExpr);
 
             // Combinar Includes (evitando duplicados)
             Includes.AddRange(left.Includes.Union(right.Includes));
             IncludeStrings.AddRange(left.IncludeStrings.Union(right.IncludeStrings));
-            if (left.OrderBy != null) ApplyOrderBy(left.OrderBy);
-            else if (left.OrderByDescending != null) ApplyOrderByDescending(left.OrderByDescending);
-            else if (right.OrderBy != null) ApplyOrderBy(right.OrderBy);
-            else if (right.OrderByDescending != null) ApplyOrderByDescending(right.OrderByDescending);
+            if(left.OrderBy != null)
+                ApplyOrderBy(left.OrderBy);
+            else if(left.OrderByDescending != null)
+                ApplyOrderByDescending(left.OrderByDescending);
+            else if(right.OrderBy != null)
+                ApplyOrderBy(right.OrderBy);
+            else if(right.OrderByDescending != null)
+                ApplyOrderByDescending(right.OrderByDescending);
         }
     }
 
@@ -150,15 +139,21 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
             _left = left ?? throw new ArgumentNullException(nameof(left));
 
             var paramExpr = Expression.Parameter(typeof(T));
-            var exprBody = Expression.OrElse(Expression.Invoke(left.Criteria, paramExpr), Expression.Invoke(right.Criteria, paramExpr));
+            var exprBody = Expression.OrElse(
+                Expression.Invoke(left.Criteria, paramExpr),
+                Expression.Invoke(right.Criteria, paramExpr));
             Criteria = Expression.Lambda<Func<T, bool>>(exprBody, paramExpr);
 
             Includes.AddRange(left.Includes.Union(right.Includes));
             IncludeStrings.AddRange(left.IncludeStrings.Union(right.IncludeStrings));
-            if (left.OrderBy != null) ApplyOrderBy(left.OrderBy);
-            else if (left.OrderByDescending != null) ApplyOrderByDescending(left.OrderByDescending);
-            else if (right.OrderBy != null) ApplyOrderBy(right.OrderBy);
-            else if (right.OrderByDescending != null) ApplyOrderByDescending(right.OrderByDescending);
+            if(left.OrderBy != null)
+                ApplyOrderBy(left.OrderBy);
+            else if(left.OrderByDescending != null)
+                ApplyOrderByDescending(left.OrderByDescending);
+            else if(right.OrderBy != null)
+                ApplyOrderBy(right.OrderBy);
+            else if(right.OrderByDescending != null)
+                ApplyOrderByDescending(right.OrderByDescending);
         }
     }
 
@@ -179,7 +174,10 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 
             Includes.AddRange(original.Includes);
             IncludeStrings.AddRange(original.IncludeStrings);
-            if (original.OrderBy != null) ApplyOrderBy(original.OrderBy);
-            if (original.OrderByDescending != null) ApplyOrderByDescending(original.OrderByDescending);
+            if(original.OrderBy != null)
+                ApplyOrderBy(original.OrderBy);
+            if(original.OrderByDescending != null)
+                ApplyOrderByDescending(original.OrderByDescending);
         }
     }
+}

@@ -19,7 +19,7 @@ namespace KUtilitiesCore.Helpers
         /// <param name="expression">Expresión a validar</param>
         public static void CheckParameterExpression(Expression expression)
         {
-            if (expression is not ParameterExpression)
+            if ( expression is not ParameterExpression)
                 throw new ArgumentException(nameof(expression));
         }
 
@@ -64,7 +64,7 @@ namespace KUtilitiesCore.Helpers
         public static MethodInfo GetArgumentMethodStrictCore(LambdaExpression expression)
         {
             var methodCallExpression = GetMethodCallExpression(expression);
-            CheckParameterExpression(methodCallExpression.Object);
+            CheckParameterExpression(methodCallExpression.Object!);
             return methodCallExpression.Method;
         }
 
@@ -83,7 +83,7 @@ namespace KUtilitiesCore.Helpers
                 UnaryExpression unaryExpression when unaryExpression.NodeType == ExpressionType.Convert => (MemberExpression)unaryExpression.Operand,
                 _ => throw new ArgumentException(nameof(expression))
             };
-            CheckParameterExpression(body.Expression);
+            CheckParameterExpression(body.Expression!);
             return (PropertyInfo)body.Member;
         }
 
@@ -105,7 +105,7 @@ namespace KUtilitiesCore.Helpers
         {
             if (commandMethodExpression.Body is not NewExpression body)
                 throw new ArgumentException(nameof(commandMethodExpression));
-            return body.Constructor;
+            return body.Constructor!;
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace KUtilitiesCore.Helpers
         /// <returns>Información del método getter</returns>
         public static MethodInfo GetGetterMethod<TInterface>(TInterface iface, string getMethodName)
         {
-            var interfaceMap = iface.GetType().GetInterfaceMap(typeof(TInterface));
+            var interfaceMap = typeof(TInterface).GetInterfaceMap(typeof(TInterface));
             var index = interfaceMap.InterfaceMethods
                 .Select((m, i) => new { m.Name, Index = i })
                 .First(m => string.Equals(m.Name, getMethodName, StringComparison.Ordinal))
@@ -186,7 +186,7 @@ namespace KUtilitiesCore.Helpers
         /// <typeparam name="TProperty">Tipo de la propiedad</typeparam>
         /// <param name="expression">Expresión lambda</param>
         /// <returns>Descriptor de la propiedad</returns>
-        public static PropertyDescriptor GetProperty<T, TProperty>(Expression<Func<T, TProperty>> expression)
+        public static PropertyDescriptor? GetProperty<T, TProperty>(Expression<Func<T, TProperty>> expression)
             => GetPropertiesCore(typeof(T))[GetPropertyName(expression)];
 
         /// <summary>
@@ -199,17 +199,17 @@ namespace KUtilitiesCore.Helpers
             if (propertyExpression == null)
                 throw new ArgumentNullException(nameof(propertyExpression));
 
-            var memberExpr = propertyExpression as MemberExpression;
-            if (memberExpr == null)
+            MemberExpression? memberExpr = propertyExpression as MemberExpression;
+            if (memberExpr == null && propertyExpression is UnaryExpression unaryExpr &&
+                    (unaryExpr.NodeType == ExpressionType.Convert || unaryExpr.NodeType == ExpressionType.ConvertChecked))
             {
-                var unaryExpr = propertyExpression as UnaryExpression;
-                if (unaryExpr != null && (unaryExpr.NodeType == ExpressionType.Convert || unaryExpr.NodeType == ExpressionType.ConvertChecked))
-                {
-                    memberExpr = (MemberExpression)unaryExpr.Operand;
-                }
+                memberExpr = unaryExpr.Operand as MemberExpression;
             }
 
-            return memberExpr?.Member.MemberType == MemberTypes.Property ? memberExpr.Member : null;
+            if (memberExpr == null || memberExpr.Member.MemberType != MemberTypes.Property)
+                throw new ArgumentException("La expresión no representa una propiedad.", nameof(propertyExpression));
+
+            return memberExpr.Member;
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace KUtilitiesCore.Helpers
         public static string GetPropertyNameCore(LambdaExpression expression)
         {
             var memberExpression = GetMemberExpression(expression);
-            if (IsPropertyExpression(memberExpression.Expression as MemberExpression))
+            if (memberExpression.Expression is MemberExpression innerMemberExpression && IsPropertyExpression(innerMemberExpression))
                 throw new ArgumentException(nameof(expression));
             return memberExpression.Member.Name;
         }
@@ -260,9 +260,10 @@ namespace KUtilitiesCore.Helpers
         /// <param name="property">Expresión lambda de la propiedad</param>
         /// <param name="tryInvoke">Indica si se debe intentar invocar el método getter</param>
         /// <returns>Verdadero si la propiedad tiene una implementación implícita, falso en caso contrario</returns>
-        public static bool PropertyHasImplicitImplementation<TInterface, TPropertyType>(TInterface iface, Expression<Func<TInterface, TPropertyType>> property, bool tryInvoke = true)
+        public static bool PropertyHasImplicitImplementation<TInterface, TPropertyType>(TInterface iface, 
+            Expression<Func<TInterface, TPropertyType>> property, bool tryInvoke = true)            
         {
-            if (iface == null)
+            if (iface is null)
                 throw new ArgumentNullException(nameof(iface));
 
             var name = GetArgumentPropertyStrict(property).Name;
@@ -290,16 +291,18 @@ namespace KUtilitiesCore.Helpers
         /// <param name="exp">Expresión</param>
         /// <param name="memberExp">Expresión de miembro</param>
         /// <returns>Verdadero si se encuentra una expresión de miembro, falso en caso contrario</returns>
-        public static bool TryFindMemberExpression(Expression exp, ref MemberExpression memberExp)
+        public static bool TryFindMemberExpression(Expression? exp, ref MemberExpression? memberExp)
         {
+            if(exp is null)
+                return false;
             memberExp = exp as MemberExpression;
-            if (memberExp != null)
+            if (memberExp is not null)
                 return true;
 
             if (IsConversion(exp) && exp is UnaryExpression unaryExp)
             {
                 memberExp = unaryExp.Operand as MemberExpression;
-                if (memberExp != null)
+                if (memberExp is not null)
                     return true;
             }
 

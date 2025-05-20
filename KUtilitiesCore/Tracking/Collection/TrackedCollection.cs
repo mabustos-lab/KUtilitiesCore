@@ -28,7 +28,7 @@ namespace KUtilitiesCore.Tracking.Collection
         public TrackedCollection()
         {
             BeginInsertUnmodifiedItems = false;
-            _entityItems = new Dictionary<TEntity, EntityTracked<TEntity>>();
+            _entityItems = [];
         }
 
         #endregion Constructors
@@ -56,9 +56,9 @@ namespace KUtilitiesCore.Tracking.Collection
         /// </summary>
         /// <param name="entity">El elemento a buscar.</param>
         /// <returns>El elemento rastreado si se encuentra; de lo contrario, <c>null</c>.</returns>
-        public EntityTracked<TEntity> GetTrackedItem(TEntity entity)
+        public EntityTracked<TEntity>? GetTrackedItem(TEntity entity)
         {
-            _entityItems.TryGetValue(entity, out EntityTracked<TEntity> wrapper);
+            _entityItems.TryGetValue(entity, out EntityTracked<TEntity>? wrapper);
             return wrapper;
         }
 
@@ -78,9 +78,9 @@ namespace KUtilitiesCore.Tracking.Collection
         {
             foreach (var wrapper in _entityItems.Values)
             {
-                if (wrapper != null && wrapper.Entity != null)
+                if (wrapper?.Entity != null)
                 {
-                    wrapper.Entity.PropertyChanged -= OnItemValueChanged;
+                    wrapper.Entity.PropertyChanged -= new PropertyChangedEventHandler(OnItemValueChanged);
                 }
             }
             _entityItems.Clear();
@@ -98,7 +98,7 @@ namespace KUtilitiesCore.Tracking.Collection
             ? TrackedStatus.None
             : TrackedStatus.Added;
 
-            if (!_entityItems.TryGetValue(item, out EntityTracked<TEntity> wrapper))
+            if (!_entityItems.TryGetValue(item, out EntityTracked<TEntity>? wrapper))
             {
                 wrapper = new EntityTracked<TEntity>(item, status);
                 _entityItems[item] = wrapper;
@@ -119,12 +119,12 @@ namespace KUtilitiesCore.Tracking.Collection
         /// <param name="index">El índice del elemento a eliminar.</param>
         protected override void RemoveItem(int index)
         {
-            TEntity itemToRemove = Items[index];
-            if (_entityItems.TryGetValue(itemToRemove, out EntityTracked<TEntity> wrapper))
+            TEntity? itemToRemove = Items[index];
+            if (itemToRemove != null && _entityItems.TryGetValue(itemToRemove, out EntityTracked<TEntity>? wrapper) && wrapper != null)
             {
-                if (wrapper != null && wrapper.Entity != null)
+                if (wrapper.Entity != null)
                 {
-                    wrapper.Entity.PropertyChanged -= OnItemValueChanged;
+                    wrapper.Entity.PropertyChanged -= OnItemValueChanged!;
                 }
 
                 if (wrapper.Status == TrackedStatus.Added)
@@ -144,13 +144,13 @@ namespace KUtilitiesCore.Tracking.Collection
         /// </summary>
         /// <param name="index">El índice del elemento a reemplazar.</param>
         /// <param name="item">El nuevo elemento.</param>
-        protected override void SetItem(int index, TEntity newItem)
+        protected override void SetItem(int index, TEntity item)
         {
             // Eliminar el item antiguo
             TEntity oldItem = Items[index];
-            if (_entityItems.TryGetValue(oldItem, out EntityTracked<TEntity> oldWrapper))
+            if (_entityItems.TryGetValue(oldItem, out EntityTracked<TEntity>? oldWrapper) && oldWrapper is not null)
             {
-                oldWrapper.Entity.PropertyChanged -= OnItemValueChanged;
+                oldWrapper.Entity.PropertyChanged -= OnItemValueChanged!;
                 _entityItems.Remove(oldItem);
             }
 
@@ -159,31 +159,31 @@ namespace KUtilitiesCore.Tracking.Collection
                 ? TrackedStatus.None
                 : TrackedStatus.Added;
 
-            EntityTracked<TEntity> newWrapper = new EntityTracked<TEntity>(newItem, status);
+            EntityTracked<TEntity> newWrapper = new(item, status);
 
-            newItem.PropertyChanged += OnItemValueChanged;
-            _entityItems[newItem] = newWrapper;
+            item.PropertyChanged += OnItemValueChanged!;
+            _entityItems[item] = newWrapper;
 
-            base.SetItem(index, newItem);
+            base.SetItem(index, item);
         }
 
         /// <summary>
         /// Maneja el evento de cambio de propiedad de un elemento.
         /// </summary>
-        /// <param name="wrapper">El contenedor del elemento rastreado.</param>
+        /// <param name="sender">El objeto que generó el evento.</param>
         /// <param name="e">Los datos del evento.</param>
-        private void OnItemValueChanged(object sender, PropertyChangedEventArgs e)
+        private void OnItemValueChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (sender is TEntity entity)
-            {
-                if (_entityItems.TryGetValue(entity, out EntityTracked<TEntity> wrapper))
-                {
-                    if (wrapper.Status != TrackedStatus.Added && wrapper.Status != TrackedStatus.Removed)
-                    {
-                        wrapper.Status = TrackedStatus.Modified;
-                    }
-                }
-            }
+            if (sender is not TEntity entity)
+                return;
+
+            if (!_entityItems.TryGetValue(entity, out EntityTracked<TEntity>? wrapper) || wrapper is null)
+                return;
+
+            if (wrapper.Status == TrackedStatus.Added || wrapper.Status == TrackedStatus.Removed)
+                return;
+
+            wrapper.Status = TrackedStatus.Modified;
         }
 
         #endregion Methods

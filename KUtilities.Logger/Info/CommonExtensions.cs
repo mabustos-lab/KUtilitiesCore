@@ -1,10 +1,12 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
+using System;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace KUtilitiesCore.Diagnostics.Exceptions
+namespace KUtilitiesCore.Logger.Info
 {
     public static class CommonExtensions
     {
@@ -56,41 +58,36 @@ namespace KUtilitiesCore.Diagnostics.Exceptions
         /// </exception>
         public static string ToShortString(this MethodInfo method)
         {
-            if (method == null) { throw new ArgumentNullException(nameof(method)); }
+            if (method == null) throw new ArgumentNullException(nameof(method));
 
-            var indentWidth = 4;
-            var indent = new Func<int, string>(depth => new string(' ', indentWidth * depth));
+            var parameters = method.GetParameters()
+                .Select(p => $"{p.ParameterType.ToShortString()} {p.Name}");
 
-            var parameters = method.GetParameters().Select(p => $"{p.ParameterType.ToShortString()} {p.Name}");
+            string accessModifier =
+                method.IsPublic ? "public" :
+                method.IsFamily ? "protected" :
+                method.IsAssembly ? "internal" :
+                method.IsPrivate ? "private" :
+                "[Unknown]";
 
-            var accessModifier = new[]
-            {
-                method.IsPublic ? "public" : string.Empty,
-                method.IsAssembly ? "internal" : string.Empty,
-                method.IsPrivate ? "private" : string.Empty,
-                method.IsFamily ? "protected" : string.Empty,
-                "[Unknow]"
-            }
-            .First(x => !string.IsNullOrEmpty(x));
+            string inheritanceModifier =
+                method.IsAbstract ? " abstract" :
+                method.GetBaseDefinition() != method ? " override" :
+                method.IsVirtual ? " virtual" :
+                string.Empty;
 
-            var inheritanceModifier = new[]
-            {
-                method.IsAbstract ? " abstract" : string.Empty,
-                method.IsVirtual ? " virtual" : string.Empty,
-                method.GetBaseDefinition() != method ? " override" : string.Empty,
-            }
-            .FirstOrDefault(x => !string.IsNullOrEmpty(x));
+            bool isAsync = method.GetCustomAttribute<AsyncStateMachineAttribute>() != null;
 
             var signature = new StringBuilder()
-                .Append(" { ")
+                .Append("{ ")
                 .Append(accessModifier)
                 .Append(method.IsStatic ? " static" : string.Empty)
                 .Append(inheritanceModifier)
-                .Append(method.GetCustomAttribute<AsyncStateMachineAttribute>() != null ? " async" : string.Empty)
+                .Append(isAsync ? " async" : string.Empty)
                 .Append(" ").Append(method.ReturnType.ToShortString())
                 .Append(" ").Append(method.Name)
                 .Append("(").Append(string.Join(", ", parameters)).Append(") { ... }")
-                .Append(" } ")
+                .Append(" }")
                 .ToString();
 
             return signature;

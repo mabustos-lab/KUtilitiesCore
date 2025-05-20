@@ -7,10 +7,12 @@ namespace KUtilitiesCore.Data.DataAnnotations
     /// <summary>
     /// Especifica el modo en que los datos se muestran
     /// </summary>
+    [AttributeUsage( AttributeTargets.Property)]
     public class DisplayFormatLocalizedAttribute : DisplayFormatAttribute
     {
         #region Constructors
-        public DisplayFormatLocalizedAttribute(string diplayformat) { DataFormatString = diplayformat; }
+        public DisplayFormatLocalizedAttribute(string diplayformat) 
+        { DataFormatString = diplayformat; }
         #endregion Constructors
 
         #region Properties
@@ -19,17 +21,17 @@ namespace KUtilitiesCore.Data.DataAnnotations
         /// Representa el tipo del Recurso donde se buscará el texto para la FormatString, FormatString representa la
         /// propiedad de Acceso al recurso, si este no es nulo.
         /// </summary>
-        public Type ResourceType { get; set; }
+        public Type? ResourceType { get; set; }
         #endregion Properties
-
+        
         #region Methods
         public string GetDataFormatString()
         {
-            if (ResourceType != null)
+            if (ResourceType is not null)
             {
-                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(DataFormatString));
+                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(DataFormatString!))??string.Empty;
             }
-            return DataFormatString;
+            return DataFormatString!;
         }
         #endregion Methods
     }

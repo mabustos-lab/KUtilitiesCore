@@ -48,7 +48,7 @@ namespace KUtilitiesCore.Data.Converter
         /// <summary>
         /// Obtiene o establece un delegado para resolver convertidores personalizados basados en el tipo.
         /// </summary>
-        ConverterByType GetCustomConverter { get; set; }
+        ConverterByType? GetCustomConverter { get; set; }
 
         /// <summary>
         /// Resuelve un convertidor para un tipo de destino específico.

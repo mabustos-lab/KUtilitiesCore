@@ -8,7 +8,7 @@
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                result = default;
+                result = default!;
 
                 return true;
             }
