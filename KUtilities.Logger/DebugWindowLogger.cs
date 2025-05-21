@@ -20,7 +20,7 @@ namespace KUtilitiesCore.Logger
             {
                 var formattedMessage = string.Format(message, args);
                 var eventIdInfo = eventId.Id != 0 ? $"| EventID: {eventId.Id} {eventId.Name}" : string.Empty;
-                var logLine = $"[{DateTime.Now:HH:mm:ss.fff}] [{logLevel}] [{categoryName}] {eventIdInfo} {formattedMessage}";
+                var logLine = $"[{DateTime.Now:HH:mm:ss.fff}] [{logLevel}] [{CategoryName}] {eventIdInfo} {formattedMessage}";
 
                 if(exception != null)
                 {

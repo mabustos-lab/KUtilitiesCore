@@ -42,14 +42,14 @@ namespace KUtilitiesCore.Extensions.Tests
         [TestMethod()]
         public void DataColumnAsEnumerableTest()
         {
-            var dc= SourceDataTableTest.DataColumnAsEnumerable();
+            var dc= SourceDataTableTest.GetColumns();
             Assert.IsTrue(dc!=null && dc.Count()==3);
         }
 
         [TestMethod()]
         public void DataTableToTextTest()
         {
-            string result= SourceDataTableTest.DataTableToText();
+            string result= SourceDataTableTest.ToText();
             Assert.IsTrue(!string.IsNullOrEmpty(result));
         }
 
@@ -63,14 +63,14 @@ namespace KUtilitiesCore.Extensions.Tests
         [TestMethod()]
         public void ConvertToTest()
         {
-            var result = SourceDataTableTest.ConvertTo<TestConvert>();
+            var result = SourceDataTableTest.MapTo<TestConvert>();
             Assert.IsNotNull(result);
         }
 
         [TestMethod()]
         public void ConvertToDataTableTest()
         {
-            DataTable result = SourceDataTableTest.ConvertToDataTable();
+            DataTable result = SourceDataTableTest.ToDataTable();
             Assert.IsNotNull(result);
         }
         private class TestConvert

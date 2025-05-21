@@ -30,7 +30,7 @@ namespace KUtilitiesCore.Logger
         /// <summary>
         /// Opciones de serialización JSON para los logs.
         /// </summary>
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions()
+        private readonly JsonSerializerOptions _jsonOptions = new()
         {
             WriteIndented = false,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -45,7 +45,7 @@ namespace KUtilitiesCore.Logger
         /// <summary>
         /// Cola concurrente para almacenar las entradas de log pendientes de escritura.
         /// </summary>
-        private readonly BlockingCollection<LogEntry> _logQueue = new BlockingCollection<LogEntry>();
+        private readonly BlockingCollection<LogEntry> _logQueue = [];
 
         /// <summary>
         /// Tarea en segundo plano que procesa la cola de logs.
@@ -191,7 +191,7 @@ namespace KUtilitiesCore.Logger
             {
                 entry.Timestamp,
                 Level = entry.Level.ToString(),
-                Category = categoryName,
+                Category = CategoryName,
                 Message = entry.Message ?? string.Empty,
                 Exception = entry.Exception != null ? new ExceptionInfo(entry.Exception) : null,
                 EventId = entry.Event.Id,
@@ -213,7 +213,7 @@ namespace KUtilitiesCore.Logger
 
             if (entry.Exception != null)
             {
-                ExceptionInfo exceptionInfo = new ExceptionInfo(entry.Exception);
+                ExceptionInfo exceptionInfo = new(entry.Exception);
                 sb.AppendLine()
                     .AppendLine(exceptionInfo.GetReport());
             }
@@ -315,7 +315,7 @@ namespace KUtilitiesCore.Logger
                 using var writer = new StreamWriter(_currentLogFilePath, true, Encoding.UTF8);
                 writer.WriteLine(message);
 
-                if (_useJsonFormat && !message.EndsWith(','))
+                if (_useJsonFormat && !message.EndsWith(","))
                     writer.WriteLine(","); // Separador para múltiples entradas JSON
             }
             catch (Exception ex)
@@ -327,54 +327,46 @@ namespace KUtilitiesCore.Logger
         /// <summary>
         /// Estructura interna que representa una entrada de log.
         /// </summary>
-        private readonly struct LogEntry
+        /// <remarks>
+        /// Inicializa una nueva instancia de LogEntry.
+        /// </remarks>
+        /// <param name="timestamp">Fecha y hora del log.</param>
+        /// <param name="level">Nivel de log.</param>
+        /// <param name="eventId">Id del evento.</param>
+        /// <param name="exception">Excepción asociada.</param>
+        /// <param name="message">Mensaje de log.</param>
+        private readonly struct LogEntry(
+            DateTime timestamp,
+            LogLevel level,
+            EventId eventId,
+            Exception? exception,
+            string message)
         {
-            /// <summary>
-            /// Inicializa una nueva instancia de LogEntry.
-            /// </summary>
-            /// <param name="timestamp">Fecha y hora del log.</param>
-            /// <param name="level">Nivel de log.</param>
-            /// <param name="eventId">Id del evento.</param>
-            /// <param name="exception">Excepción asociada.</param>
-            /// <param name="message">Mensaje de log.</param>
-            public LogEntry(
-                DateTime timestamp,
-                LogLevel level,
-                EventId eventId,
-                Exception? exception,
-                string message)
-            {
-                Timestamp = timestamp;
-                Level = level;
-                Event = eventId;
-                Exception = exception;
-                Message = message;
-            }
 
             /// <summary>
             /// Id del evento de log.
             /// </summary>
-            public EventId Event { get; }
+            public EventId Event { get; } = eventId;
 
             /// <summary>
             /// Excepción asociada al log (si existe).
             /// </summary>
-            public Exception? Exception { get; }
+            public Exception? Exception { get; } = exception;
 
             /// <summary>
             /// Nivel de severidad del log.
             /// </summary>
-            public LogLevel Level { get; }
+            public LogLevel Level { get; } = level;
 
             /// <summary>
             /// Mensaje del log.
             /// </summary>
-            public string Message { get; }
+            public string Message { get; } = message;
 
             /// <summary>
             /// Fecha y hora del log.
             /// </summary>
-            public DateTime Timestamp { get; }
+            public DateTime Timestamp { get; } = timestamp;
         }
     }
 }

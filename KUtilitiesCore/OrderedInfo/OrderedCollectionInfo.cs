@@ -18,7 +18,7 @@ namespace KUtilitiesCore.OrderedInfo
         /// ordenadas vacías
         /// </summary>
         public OrderedCollectionInfo()
-            : this(new HashSet<OrderedQueryableInfo>())
+            : this([])
         {
         }
 
@@ -56,7 +56,7 @@ namespace KUtilitiesCore.OrderedInfo
         public void AddProperty(PropertyNameInfo info, SortDirection direction)
         {
             //if (info == null) throw new ArgumentNullException(nameof(info));
-            if (string.IsNullOrEmpty(info.TechnicalName))
+            if (string.IsNullOrEmpty(info.PropertyName))
                 throw new ArgumentException("El nombre de la propiedad no puede ser nulo ni vacío", nameof(info));
 
             OrderedProperties.Add(CreateOrderedQueryableInfo(info, direction));
@@ -76,7 +76,7 @@ namespace KUtilitiesCore.OrderedInfo
                 throw new ArgumentException("El nombre de la propiedad no puede ser nulo ni vacío", nameof(propertyName));
 
             OrderedProperties.Add(CreateOrderedQueryableInfo(
-                new PNameInfo(propertyName, propertyName), direction));
+                new PropertyNameInfo(propertyName, propertyName), direction));
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace KUtilitiesCore.OrderedInfo
         /// </exception>
         public IQueryable<T> Apply<T>(IEnumerable<T> source) where T : class
         {
-            if (source == null)
+            if (source is null)
                 throw new ArgumentNullException(nameof(source));
 
             var queryable = source.AsQueryable();
@@ -121,7 +121,7 @@ namespace KUtilitiesCore.OrderedInfo
         /// <param name="property">Información de la propiedad</param>
         /// <param name="direction">Dirección de ordenamiento</param>
         /// <returns>Una nueva instancia de <see cref="OrderedQueryableInfo"/></returns>
-        private OrderedQueryableInfo CreateOrderedQueryableInfo(PropertyNameInfo property, SortDirection direction)
+        private static OrderedQueryableInfo CreateOrderedQueryableInfo(PropertyNameInfo property, SortDirection direction)
         {
             return new OrderedQueryableInfo
             {

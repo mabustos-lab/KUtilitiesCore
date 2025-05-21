@@ -67,9 +67,10 @@ namespace KUtilitiesCore.Extensions
         /// <param name="Source">Objeto fuente.</param>
         /// <param name="pathProperty">Ruta de la propiedad.</param>
         /// <returns>Valor de la propiedad.</returns>
-        public static TResult GetPropertyValueOfPath<TSource, TResult>(TSource Source, string pathProperty)
+        public static TResult? GetPropertyValueOfPath<TSource, TResult>(TSource Source, string pathProperty)
+            where TSource: class
         {
-            return (TResult)Source.GetPropertyValueOfPath(pathProperty);
+            return (TResult?)Source.GetPropertyValueOfPath(pathProperty);
         }
 
         /// <summary>
@@ -80,18 +81,19 @@ namespace KUtilitiesCore.Extensions
         /// <param name="Source">Objeto fuente.</param>
         /// <param name="expression">Expresión lambda que representa la propiedad.</param>
         /// <returns>Valor de la propiedad.</returns>
-        public static TResult GetPropertyValueOfPath<TSource, TResult>(this TSource Source, Expression<Func<TSource, TResult>> expression)
-            => (TResult)GetPropertyValueOfPath(Source, expression.GetFullPathProperty());
+        public static TResult? GetPropertyValueOfPath<TSource, TResult>(this TSource Source, Expression<Func<TSource, TResult>> expression)
+            where TSource : class
+            => (TResult?)Source.GetPropertyValueOfPath(expression.GetFullPathProperty());
 
         /// <summary>
         /// Obtiene el valor de una propiedad de un objeto dada una cadena de texto.
         /// </summary>
-        /// <typeparam name="TObject">Tipo del objeto.</typeparam>
+        /// <typeparam name="TSource">Tipo del objeto.</typeparam>
         /// <param name="source">Objeto fuente.</param>
         /// <param name="pathProperty">Ruta de la propiedad.</param>
         /// <returns>Valor de la propiedad.</returns>
-        public static object? GetPropertyValueOfPath<TObject>(this TObject source, string pathProperty)
-            where TObject :class
+        public static object? GetPropertyValueOfPath<TSource>(this TSource source, string pathProperty)
+            where TSource :class
         {
             if (source  is null)
                 throw new ArgumentNullException(nameof(source));
