@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
-    public class DataAccessObjectContext : IDAOContext
+    public class DataAccessObjectContext : IDaoContext
     {
 
         private Lazy<DbConnection> connection;

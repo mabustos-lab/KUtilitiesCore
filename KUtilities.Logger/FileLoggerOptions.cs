@@ -16,5 +16,9 @@ namespace KUtilitiesCore.Logger
         /// Obtiene o establece la cantidad máxima de archivos de log retenidos.
         /// </summary>
         public int MaxRetainedFiles { get; set; } = 5;
+        /// <summary>
+        /// Establece el Máximo en dias de vida de un archivo Log
+        /// </summary>
+        public int RetentionDays { get; set; } = 30;
     }
 }

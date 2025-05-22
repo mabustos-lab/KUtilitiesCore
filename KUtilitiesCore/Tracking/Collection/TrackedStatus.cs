@@ -12,7 +12,7 @@ namespace KUtilitiesCore.Tracking.Collection
     /// </summary>
     public enum TrackedStatus
     {
-        None,
+        UnModified,
         Added,
         Modified,
         Removed

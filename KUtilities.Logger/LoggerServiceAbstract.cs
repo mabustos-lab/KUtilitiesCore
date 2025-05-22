@@ -24,7 +24,7 @@ namespace KUtilitiesCore.Logger
             CategoryName = typeof(TCategoryName).Name;
         }
 
-        internal abstract void WriteLog(LogLevel logLevel, EventId eventId, Exception? exception, string message, object[] args);
+        internal abstract void WriteLog(LogLevel logLevel, EventId eventId, Exception? exception, string message,params object[] args);
         /// <inheritdoc/>
         public void Log(LogLevel logLevel, EventId eventId, Exception exception, string message, params object[] args)
         {

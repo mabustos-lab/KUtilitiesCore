@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.DataAccess.BulkInsert
 {
     /// <summary>
-    /// Interfaz genérica para realizar inserciones masivas de datos.
+    /// Interfaz genérica para realizar operaciones masivas de datos.
     /// </summary>
-    public interface IBulkInsertService
+    public interface IBulkOperationsService
     {
         /// <summary>
         /// Inserta un DataTable en la base de datos utilizando la estrategia óptima según el proveedor.
         /// </summary>
-        void BulkInsert(DataTable dataTable);
+        void BulkCopy(DataTable dataTable);
     }
 }

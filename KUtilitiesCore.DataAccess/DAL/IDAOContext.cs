@@ -10,7 +10,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// Define una interfaz para interactuar con el contexto de acceso a datos, proporcionando métodos para la creación de comandos,
     /// ejecución de consultas y manejo de transacciones.
     /// </summary>
-    public interface IDAOContext : IDALContext
+    public interface IDaoContext : IDalContext
     {
         /// <summary>
         /// Obtiene la conexión de base de datos asociada al contexto.

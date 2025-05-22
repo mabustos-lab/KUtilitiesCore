@@ -10,17 +10,11 @@ namespace KUtilitiesCore.Tracking.Collection
     /// <typeparam name="TEntity">
     /// El tipo de los elementos en la colección, que debe implementar <see cref="INotifyPropertyChanged"/>.
     /// </typeparam>
-    public class TrackedCollection<TEntity> : ObservableCollection<TEntity>
-        where TEntity : class, INotifyPropertyChanged
+    public class TrackedCollection<TEntity> : ObservableCollection<TEntity>,ITrackedCollection<TEntity> where TEntity : class, INotifyPropertyChanged
     {
-        #region Fields
 
         private readonly Dictionary<TEntity, EntityTracked<TEntity>> _entityItems;
         private bool BeginInsertUnmodifiedItems;
-
-        #endregion Fields
-
-        #region Constructors
 
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="TrackedCollection{TEntity}"/>.
@@ -31,9 +25,11 @@ namespace KUtilitiesCore.Tracking.Collection
             _entityItems = [];
         }
 
-        #endregion Constructors
-
-        #region Methods
+        /// <summary>
+        /// Indica si alguno de los elementos rastrados fue modificado.
+        /// </summary>
+        public bool HasChanges
+            => _entityItems.Count > 0 && _entityItems.Values.Any(x => x.Status != TrackedStatus.UnModified);
 
         /// <summary>
         /// Indica el inicio de un bloque donde todos los elementos insertados son marcados como no modificados.
@@ -95,7 +91,7 @@ namespace KUtilitiesCore.Tracking.Collection
         protected override void InsertItem(int index, TEntity item)
         {
             TrackedStatus status = BeginInsertUnmodifiedItems
-            ? TrackedStatus.None
+            ? TrackedStatus.UnModified
             : TrackedStatus.Added;
 
             if (!_entityItems.TryGetValue(item, out EntityTracked<TEntity>? wrapper))
@@ -156,7 +152,7 @@ namespace KUtilitiesCore.Tracking.Collection
 
             // Agregar el nuevo item
             TrackedStatus status = BeginInsertUnmodifiedItems
-                ? TrackedStatus.None
+                ? TrackedStatus.UnModified
                 : TrackedStatus.Added;
 
             EntityTracked<TEntity> newWrapper = new(item, status);
@@ -186,6 +182,5 @@ namespace KUtilitiesCore.Tracking.Collection
             wrapper.Status = TrackedStatus.Modified;
         }
 
-        #endregion Methods
     }
 }
