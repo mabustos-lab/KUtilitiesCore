@@ -70,7 +70,7 @@ namespace KUtilitiesCore.Extensions.Tests
         [TestMethod()]
         public void ConvertToDataTableTest()
         {
-            DataTable result = SourceDataTableTest.ToDataTable();
+            DataTable result = SourceTest.ToDataTable();
             Assert.IsNotNull(result);
         }
         private class TestConvert

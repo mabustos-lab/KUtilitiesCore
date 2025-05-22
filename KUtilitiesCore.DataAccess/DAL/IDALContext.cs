@@ -11,7 +11,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Define una interfaz para interactuar con el contexto de acceso a datos.
     /// </summary>
-    public interface IDALContext:IDisposable
+    public interface IDalContext:IDisposable
     {
         /// <summary>
         /// Inicia una nueva transacción con el nivel de aislamiento especificado.

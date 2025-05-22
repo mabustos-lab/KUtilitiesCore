@@ -16,8 +16,8 @@ using SqlClient = Microsoft.Data.SqlClient;
 namespace KUtilitiesCore.DataAccess.BulkInsert
 {
     /// <summary>
-    /// Implementación de IBulkInsertService para realizar inserciones masivas en SQL Server
-    /// utilizando SqlBulkCopy y DbConnection. También soporta estrategias genéricas para otros
+    /// Implementación de <see cref="IBulkOperationsService"/> para realizar inserciones masivas en SQL Server
+    /// utilizando <see cref="SqlClient.SqlBulkCopy"/> y <see cref="DbConnection"/>. También soporta estrategias genéricas para otros
     /// proveedores de bases de datos.
     /// </summary>
     /// <remarks>
@@ -25,16 +25,17 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
     /// </remarks>
     /// <param name="config">Configuración para la inserción masiva.</param>
     /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
-    public class SqlBulkInsertService(BulkInsertConfig config) : IBulkInsertService
+    public class BulkOperationsService(BulkOperationsConfig config,IConnectionString connectionString) : IBulkOperationsService
     {
-        private readonly BulkInsertConfig _config = config ?? throw new ArgumentNullException(nameof(config));
+        private readonly BulkOperationsConfig _config = config ?? throw new ArgumentNullException(nameof(config));
+        private readonly IConnectionString _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
 
         /// <summary>
         /// Realiza una inserción masiva de datos desde un DataTable a la base de datos.
         /// </summary>
         /// <param name="dataTable">El DataTable que contiene los datos a insertar.</param>
         /// <exception cref="ArgumentException">Se lanza si el DataTable es nulo o está vacío.</exception>
-        public void BulkInsert(DataTable dataTable)
+        public void BulkCopy(DataTable dataTable)
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
                 throw new ArgumentException("El DataTable no puede estar vacío.");
@@ -42,7 +43,7 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
             using DbConnection connection = CreateDbConnection();
             connection.Open();
 
-            if (_config.ConnectionString.ProviderName is "System.Data.SqlClient" or "Microsoft.Data.SqlClient")
+            if (_connectionString.ProviderName is "System.Data.SqlClient" or "Microsoft.Data.SqlClient")
             {
                 using (DbTransaction transaction = connection.BeginTransaction())
                 {
@@ -50,7 +51,6 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
                     {
                         // SqlBulkCopy solo se ejecuta si el proveedor es SQL Server
                         using var bulkCopy = new SqlClient.SqlBulkCopy((SqlClient.SqlConnection)connection);
-
                         bulkCopy.DestinationTableName = _config.DestinationTableName;
                         bulkCopy.BatchSize = _config.BatchSize;
                         bulkCopy.BulkCopyTimeout = _config.BulkCopyTimeout;
@@ -83,9 +83,9 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
         /// <returns>Una instancia de DbConnection configurada.</returns>
         private DbConnection CreateDbConnection()
         {
-            DbProviderFactory factory = DbProviderFactories.GetFactory(_config.ConnectionString.ProviderName);
+            DbProviderFactory factory = DbProviderFactories.GetFactory(_connectionString.ProviderName);
             DbConnection connection = factory.CreateConnection();
-            connection.ConnectionString = _config.ConnectionString.CnnString;
+            connection.ConnectionString = _connectionString.CnnString;
             return connection;
         }
 
