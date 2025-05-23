@@ -313,5 +313,6 @@ namespace KUtilitiesCore.Logger
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
+
     }
 }
