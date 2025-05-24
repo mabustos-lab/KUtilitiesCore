@@ -27,12 +27,12 @@ namespace KUtilitiesCore.MVVM
         /// Evento que se usa para actualizar el estado en pantalla cuando <see cref="IsLoading"/>
         /// es True
         /// </summary>
-        public event EventHandler<string> MessageStatusLoadingChanged;
+        public event EventHandler<string>? MessageStatusLoadingChanged;
 
         /// <inheritdoc/>
-        public event EventHandler ParentViewModelChanged;
+        public event EventHandler? ParentViewModelChanged;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion Events
 
@@ -42,10 +42,10 @@ namespace KUtilitiesCore.MVVM
         [Display(AutoGenerateField = false)]
         public IViewModelDocumentOwner DocumentOwner
         {
-            get => documentOwner;
+            get => documentOwner ?? throw new InvalidOperationException("DocumentOwner is not initialized.");
             set
             {
-                documentOwner = value;
+                documentOwner = value ?? throw new ArgumentNullException(nameof(value));
                 if (documentOwner != null)
                     documentOwner.Content = this;
             }

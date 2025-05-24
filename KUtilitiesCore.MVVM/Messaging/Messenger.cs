@@ -371,7 +371,7 @@ namespace KUtilitiesCore.MVVM.Messaging
             }
             else
             {
-                action.ExecuteWithObject(message);
+                action.ExecuteWithObject(message ?? throw new ArgumentNullException(nameof(message)));
             }
         }
 
