@@ -377,36 +377,20 @@ namespace KUtilitiesCore.MVVM.Messaging
 
         private static void UnregisterFromLists(object recipient, Dictionary<Type, List<WeakActionAndToken>> lists)
         {
-            if ((recipient != null && lists != null && lists.Count != 0))
+            if (recipient == null || lists == null || lists.Count == 0)
+                return;
+
+            lock (lists)
             {
-                lock (lists)
+                foreach (var pair in lists)
                 {
-                    foreach (Type key in lists.Keys)
+                    foreach (var item in pair.Value)
                     {
-                        foreach (WeakActionAndToken item in lists[key])
+                        if (item.Action?.Target == recipient)
                         {
-                            WeakAction action = item.Action;
-                            if (action != null && recipient == action.Target)
-                            {
-                                action.MarkForDeletion();
-                            }
+                            item.Action.MarkForDeletion();
                         }
                     }
-                }
-            }
-        }
-
-        private static void UnregisterFromLists<TMessage>(
-            object recipient,
-            Action<TMessage> action,
-            Dictionary<Type, List<Messenger.WeakActionAndToken>> lists)
-        {
-            foreach (Type key in lists.Keys.ToList())
-            {
-                lists[key] = RemoveDeadActions(lists[key], recipient);
-                if (lists[key].Count == 0)
-                {
-                    lists.Remove(key);
                 }
             }
         }
