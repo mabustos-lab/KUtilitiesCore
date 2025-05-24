@@ -7,29 +7,40 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.DataAccess.Paging
 {
     /// <summary>
-    /// Representa las opciones de configuración para realizar una solicitud de datos paginados.
+    /// Define las opciones para solicitar una página de datos, soportando diferentes estrategias.
     /// </summary>
     public interface IPagingOptions
     {
         /// <summary>
-        /// Obtiene el número de la página solicitada (basado en 1).
-        /// Este valor debe ser mayor que 0.
+        /// Estrategia de paginación a utilizar. Por defecto es Offset.
+        /// </summary>
+        PagingStrategy Strategy { get; }
+
+        /// <summary>
+        /// Número de página solicitada (basado en 1). Usado principalmente para PagingStrategy.Offset.
+        /// Para Keyset, puede ser ignorado o usado como referencia si AfterValue no se provee (para la primera página).
         /// </summary>
         int PageNumber { get; }
 
         /// <summary>
-        /// Obtiene el número de elementos que se incluirán en cada página.
-        /// Este valor debe ser mayor que 0.
+        /// Número de elementos por página.
         /// </summary>
         int PageSize { get; }
 
-
         /// <summary>
-        /// Indica si se debe omitir la paginación.
-        /// Si es true, se ignorarán PageNumber y PageSize y se devolverán todos los resultados
-        /// que coincidan con la especificación (después de aplicar filtros y ordenación).
-        /// Por defecto es false.
+        /// Indica si se debe omitir la paginación por completo.
+        /// Si es true, se ignorarán otros parámetros de paginación y se devolverán todos los resultados.
         /// </summary>
         bool SkipPagination { get; }
+
+        /// <summary>
+        /// El valor del último elemento de la página anterior, usado para PagingStrategy.Keyset.
+        /// El tipo de este objeto debe coincidir con el tipo de la propiedad por la que se ordena.
+        /// Para la primera página de Keyset, este valor puede ser null.
+        /// </summary>
+        object AfterValue { get; }
+
+        // Opcional: Podría añadirse KeysetPropertyName si la inferencia desde ISpecification.OrderBy no es suficiente
+        // string KeysetPropertyName { get; }
     }
 }

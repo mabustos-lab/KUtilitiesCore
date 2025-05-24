@@ -9,79 +9,95 @@ namespace KUtilitiesCore.DataAccess.Paging
     /// <typeparam name="TEntity">El tipo de entidad.</typeparam>
     public class PagedResult<TEntity> : IPagedResult<TEntity>
     {
-        /// <summary>
-        /// Obtiene la lista de solo lectura de elementos para la página actual.
-        /// </summary>
+        /// <inheritdoc/>
         public IReadOnlyList<TEntity> Items { get; }
-
-        /// <summary>
-        /// Obtiene el número de la página actual (basado en 1).
-        /// </summary>
+        /// <inheritdoc/>
         public int PageNumber { get; }
-
-        /// <summary>
-        /// Obtiene el tamaño de página solicitado.
-        /// </summary>
+        /// <inheritdoc/>
         public int PageSize { get; }
-
-        /// <summary>
-        /// Obtiene el número total de elementos que coinciden con la consulta.
-        /// </summary>
+        /// <inheritdoc/>
         public int TotalCount { get; }
-
-        /// <summary>
-        /// Obtiene el número total de páginas disponibles.
-        /// </summary>
+        /// <inheritdoc/>
         public int TotalPages { get; }
+        /// <inheritdoc/>
+        public object LastKeyValue { get; }
 
-        /// <summary>
-        /// Obtiene un valor que indica si existe una página anterior.
-        /// </summary>
+        /// <inheritdoc/>
         public bool HasPreviousPage => PageNumber > 1;
 
-        /// <summary>
-        /// Obtiene un valor que indica si existe una página siguiente.
-        /// </summary>
-        public bool HasNextPage => PageNumber < TotalPages;
+        /// <inheritdoc/>
+        public bool HasNextPage { get; }
+
 
         /// <summary>
         /// Constructor para inicializar el resultado paginado.
         /// </summary>
-        /// <param name="items">Los elementos de la página actual (como lista de solo lectura).</param>
-        /// <param name="totalCount">El número total de elementos que coinciden con la consulta.</param>
+        /// <param name="items">Los elementos de la página actual.</param>
+        /// <param name="totalCount">El número total de elementos. Para Keyset, puede ser -1 si no se calcula.</param>
         /// <param name="pageNumber">El número de la página actual.</param>
         /// <param name="pageSize">El tamaño de la página.</param>
-        /// <exception cref="ArgumentNullException">Si <paramref name="items"/> es null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Si <paramref name="pageNumber"/> o <paramref name="pageSize"/> no son positivos.</exception>
-        public PagedResult(IReadOnlyList<TEntity> items, int totalCount, int pageNumber, int pageSize)
+        /// <param name="lastKeyValue">El valor clave del último elemento para paginación Keyset.</param>
+        /// <param name="hasNextPageOverride">Permite sobreescribir el cálculo de HasNextPage, útil para Keyset.</param>
+        public PagedResult(IReadOnlyList<TEntity> items, int totalCount, int pageNumber, int pageSize, object lastKeyValue = null, bool? hasNextPageOverride = null)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
             if (pageNumber <= 0) throw new ArgumentOutOfRangeException(nameof(pageNumber), "El número de página debe ser mayor que 0.");
-            if (pageSize <= 0) throw new ArgumentOutOfRangeException(nameof(pageSize), "El tamaño de página debe ser mayor que 0.");
+            // Si pageSize es 0 y totalCount > 0, es una situación anómala si no se está omitiendo la paginación
+            // y hay elementos. Si se omite la paginación, pageSize se ajusta a totalCount.
+            if (pageSize <= 0 && totalCount > 0 && items.Any())
+            {
+                // Esta validación podría ser demasiado estricta si SkipPagination=true y pageSize no se ajustó correctamente antes.
+                // throw new ArgumentOutOfRangeException(nameof(pageSize), "El tamaño de página debe ser mayor que 0 si hay elementos y no se omite la paginación.");
+            }
 
-            // IReadOnlyList<T> ya proporciona la inmutabilidad deseada.
+
             Items = items;
-            TotalCount = totalCount;
+            TotalCount = totalCount; // Para Keyset, esto podría ser el recuento de la página actual si no se conoce el total.
             PageNumber = pageNumber;
-            PageSize = pageSize;
-            // Calcula el número total de páginas. Ceiling asegura que incluso una fracción de página cuente como una página completa.
-            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            // Si pageSize es 0 (y totalCount es 0), o si pageSize es igual a totalCount (caso de SkipPagination),
+            // TotalPages es 1 (o 0 si no hay items).
+            PageSize = pageSize > 0 ? pageSize : (totalCount == 0 ? 0 : totalCount);
+            
+            LastKeyValue = lastKeyValue;
+
+            if (this.PageSize > 0 && TotalCount >= 0) // Solo calcular si TotalCount es válido
+            {
+                TotalPages = (int)Math.Ceiling(TotalCount / (double)this.PageSize);
+            }
+            else if (TotalCount == -1) // Keyset sin conteo total
+            {
+                TotalPages = -1; // Indicar desconocido
+            }
+            else // totalCount es 0 o PageSize es 0
+            {
+                TotalPages = TotalCount > 0 ? 1 : 0;
+            }
+
+            // HasNextPage:
+            // Si se proporciona un override (útil para Keyset donde se sabe si hay más por el número de items devueltos vs pageSize)
+            if (hasNextPageOverride.HasValue)
+            {
+                HasNextPage = hasNextPageOverride.Value;
+            }
+            // Para Offset pagination, o si TotalCount es conocido
+            else if (TotalCount >= 0)
+            {
+                HasNextPage = PageNumber < TotalPages;
+            }
+            // Para Keyset sin TotalCount, si Items.Count == PageSize, es probable que haya más.
+            // Esto es una heurística y puede no ser siempre precisa si la última página coincide exactamente con PageSize.
+            else // TotalCount == -1 (Keyset sin conteo)
+            {
+                HasNextPage = Items.Count == this.PageSize && this.PageSize > 0;
+            }
         }
 
         /// <summary>
         /// Constructor alternativo que acepta IList<T> y lo convierte internamente.
-        /// Útil si la fuente de datos devuelve IList<T> pero quieres exponer IReadOnlyList<T>.
         /// </summary>
-        /// <param name="items">Los elementos de la página actual (como lista modificable).</param>
-        /// <param name="totalCount">El número total de elementos que coinciden con la consulta.</param>
-        /// <param name="pageNumber">El número de la página actual.</param>
-        /// <param name="pageSize">El tamaño de la página.</param>
-        public PagedResult(IList<TEntity> items, int totalCount, int pageNumber, int pageSize)
-            : this(items as IReadOnlyList<TEntity> ?? new List<TEntity>(items).AsReadOnly(), totalCount, pageNumber, pageSize)
+        public PagedResult(IList<TEntity> items, int totalCount, int pageNumber, int pageSize, object lastKeyValue = null, bool? hasNextPageOverride = null)
+            : this(items as IReadOnlyList<TEntity> ?? new List<TEntity>(items).AsReadOnly(), totalCount, pageNumber, pageSize, lastKeyValue, hasNextPageOverride)
         {
-            // La lógica principal está en el otro constructor.
-            // Se convierte IList<T> a IReadOnlyList<T>. Si ya es IReadOnlyList<T>, se usa directamente.
-            // Si no, se crea una copia en un List<T> y se expone su wrapper AsReadOnly().
         }
     }
 }

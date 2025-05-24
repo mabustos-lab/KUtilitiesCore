@@ -7,42 +7,38 @@ namespace KUtilitiesCore.DataAccess.Paging
     /// Representa el resultado de una consulta paginada.
     /// </summary>
     /// <typeparam name="TEntity">El tipo de entidad en la colección.</typeparam>
-    public interface IPagedResult<out TEntity> // Usamos 'out' para covarianza
+    public interface IPagedResult<out TEntity>
     {
-        /// <summary>
-        /// Lista de solo lectura de elementos para la página actual.
-        /// Requiere .NET Framework 4.5 o superior.
-        /// </summary>
+        /// <inheritdoc/>
         IReadOnlyList<TEntity> Items { get; }
-
-        /// <summary>
-        /// Número de la página actual devuelta (basado en 1).
-        /// </summary>
+        /// <inheritdoc/>
         int PageNumber { get; }
-
-        /// <summary>
-        /// Tamaño de página solicitado.
-        /// </summary>
+        /// <inheritdoc/>
         int PageSize { get; }
 
         /// <summary>
         /// Número total de elementos que coinciden con la consulta (sin paginar).
+        /// Para PagingStrategy.Keyset, este valor puede ser -1 o no ser fiable si no se calcula explícitamente,
+        /// ya que Keyset no requiere conocer el conteo total para funcionar.
         /// </summary>
         int TotalCount { get; }
 
         /// <summary>
         /// Número total de páginas disponibles.
+        /// Para PagingStrategy.Keyset, este valor puede ser -1 o no ser fiable.
         /// </summary>
         int TotalPages { get; }
 
-        /// <summary>
-        /// Indica si existe una página anterior.
-        /// </summary>
-        bool HasPreviousPage { get; }
+        /// <inheritdoc/>
+        bool HasPreviousPage { get; } // Para Keyset, la paginación hacia atrás es más compleja y no se aborda aquí.
+        /// <inheritdoc/>
+        bool HasNextPage { get; }
 
         /// <summary>
-        /// Indica si existe una página siguiente.
+        /// El valor de la propiedad de ordenación del último elemento en <see cref="Items"/>.
+        /// Se utiliza para solicitar la siguiente página cuando se usa PagingStrategy.Keyset.
+        /// Es null si Items está vacío o si la estrategia no es Keyset.
         /// </summary>
-        bool HasNextPage { get; }
+        object LastKeyValue { get; }
     }
 }

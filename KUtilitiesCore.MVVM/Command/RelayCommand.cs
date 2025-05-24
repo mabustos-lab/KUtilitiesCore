@@ -62,7 +62,7 @@ namespace KUtilitiesCore.MVVM.Command
             if(executeExpression == null)
                 throw new ArgumentNullException(nameof(executeExpression));
             RelayCommand<TViewModel, TParam> relayCommand = new();
-            RelayCommandBase.ValidateViewModelMemberExpression(parameterPropertyExpression,typeof(TViewModel));
+            relayCommand.InitializeMemberMetaData(parameterPropertyExpression);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 1);
             relayCommand.CompileParametrizedExecuteLogic(viewModel, executeExpression);
             relayCommand.CompileParametrizedCanExecuteLogic(viewModel, canExecuteExpression);
@@ -119,7 +119,10 @@ namespace KUtilitiesCore.MVVM.Command
             var executeDelegate = executeExpression.Compile();
             _executeWithParamAction = param => executeDelegate(viewModel, param);
         }
-        
+        internal void InitializeMemberMetaData(LambdaExpression parameterPropertyExpression)
+        {
+            ValidateViewModelMemberExpression(parameterPropertyExpression, typeof(TViewModel));
+        }
     }
 
     /// <summary>
@@ -309,5 +312,6 @@ namespace KUtilitiesCore.MVVM.Command
 
             IsParametrizedCommand = expectedParameters > 0;
         }
+  
     }
 }

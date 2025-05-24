@@ -4,62 +4,72 @@ using System.Linq;
 namespace KUtilitiesCore.DataAccess.Paging
 {
     /// <summary>
-    /// Implementación concreta simple de las opciones de paginación.
+    /// Implementación concreta de las opciones de paginación.
     /// </summary>
     public class PagingOptions : IPagingOptions
     {
-        #region Fields
-
         private const int DefaultPageNumber = 1;
-        private const int DefaultPageSize = 100;
-        private const int MaxPageSize = 1000; // Límite opcional para el tamaño de página
+        private const int DefaultPageSize = 10;
+        private const int MaxPageSize = 100;
 
         private int _pageNumber = DefaultPageNumber;
         private int _pageSize = DefaultPageSize;
 
-        #endregion Fields
-
-        #region Constructors
-
-        /// <summary>
-        /// Constructor por defecto.
-        /// </summary>
-        public PagingOptions()
-        { }
-
-        /// <summary>
-        /// Constructor para inicializar las opciones de paginación.
-        /// </summary>
-        /// <param name="pageNumber">Número de página (basado en 1).</param>
-        /// <param name="pageSize">Tamaño de la página.</param>
-        public PagingOptions(int pageNumber, int pageSize)
-        {
-            PageNumber = pageNumber;
-            PageSize = pageSize;
-        }
-
-        #endregion Constructors
-
-        #region Properties
+        /// <inheritdoc/>
+        public PagingStrategy Strategy { get; set; } = PagingStrategy.Offset;
 
         /// <inheritdoc/>
         public int PageNumber
         {
             get => _pageNumber;
-            set => _pageNumber = value > 0 ? value : DefaultPageNumber;
+            set => _pageNumber = (value > 0) ? value : DefaultPageNumber;
         }
 
         /// <inheritdoc/>
         public int PageSize
         {
             get => _pageSize;
-            // Limita el tamaño máximo de página para evitar sobrecargas
-            set => _pageSize = value > 0 ? Math.Min(value, MaxPageSize) : DefaultPageSize;
+            set => _pageSize = (value > 0) ? Math.Min(value, MaxPageSize) : DefaultPageSize;
         }
 
         /// <inheritdoc/>
         public bool SkipPagination { get; set; } = false;
 
-        #endregion Properties
+        /// <inheritdoc/>
+        public object AfterValue { get; set; } = null;
+
+        /// <summary>
+        /// Constructor por defecto, usa PagingStrategy.Offset.
+        /// </summary>
+        public PagingOptions() { }
+
+        /// <summary>
+        /// Constructor para inicializar las opciones de paginación con estrategia Offset.
+        /// </summary>
+        /// <param name="pageNumber">Número de página (basado en 1).</param>
+        /// <param name="pageSize">Tamaño de la página.</param>
+        /// <param name="skipPagination">Indica si se debe omitir la paginación (opcional, por defecto false).</param>
+        public PagingOptions(int pageNumber, int pageSize, bool skipPagination = false)
+        {
+            Strategy = PagingStrategy.Offset;
+            PageNumber = pageNumber;
+            PageSize = pageSize;
+            SkipPagination = skipPagination;
+        }
+
+        /// <summary>
+        /// Constructor para inicializar las opciones de paginación con estrategia Keyset.
+        /// </summary>
+        /// <param name="pageSize">Tamaño de la página.</param>
+        /// <param name="afterValue">El valor del último elemento de la página anterior (null para la primera página).</param>
+        /// <param name="skipPagination">Indica si se debe omitir la paginación (opcional, por defecto false).</param>
+        public PagingOptions(int pageSize, object afterValue, bool skipPagination = false)
+        {
+            Strategy = PagingStrategy.Keyset;
+            PageSize = pageSize;
+            AfterValue = afterValue;
+            SkipPagination = skipPagination;
+            PageNumber = 1; // Para Keyset, PageNumber es menos relevante, se puede setear a 1 o ignorar.
+        }
     }
 }
