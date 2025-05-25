@@ -25,13 +25,13 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <summary>
         /// Obtiene una instancia de un repositorio genérico para un tipo de entidad específico.
         /// </summary>
-        IRepository<TEntity, TPrimaryKey> GetRepository<TEntity, TPrimaryKey>() where TEntity : class;
+        IRepository<TEntity> GetRepository<TEntity>() where TEntity : class;
 
         /// <summary>
         /// Obtiene una instancia de un repositorio con capacidades de EF Core (operaciones masivas)
         /// si la implementación lo soporta. Devuelve null o lanza excepción si no.
         /// </summary>
-        IEfCoreRepository<TEntity, TPrimaryKey> GetEfCoreRepository<TEntity, TPrimaryKey>() where TEntity : class;
+        IEfCoreRepository<TEntity> GetEfCoreRepository<TEntity>() where TEntity : class;
 
 
         /// <summary>

@@ -11,8 +11,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
     /// Hereda de IRepository para incluir todas las operaciones estándar.
     /// </summary>
     /// <typeparam name="TEntity">El tipo de la entidad.</typeparam>
-    /// <typeparam name="TPrimaryKey">El tipo de la clave primaria de la entidad.</typeparam>
-    public interface IEfCoreRepository<TEntity, TPrimaryKey> : IRepository<TEntity, TPrimaryKey>
+    public interface IEfCoreRepository<TEntity> : IRepository<TEntity>
         where TEntity : class
     {
 #if NETCOREAPP // Estos métodos son específicos de EF Core 7+
