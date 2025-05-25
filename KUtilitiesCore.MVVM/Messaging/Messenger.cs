@@ -1,448 +1,611 @@
 ﻿using System;
 using System.Linq;
+#if NET8_0_OR_GREATER
+using System.Threading.Channels;
+#else
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+#endif
 
 namespace KUtilitiesCore.MVVM.Messaging
 {
-    public class Messenger : IMessenger
+    /// <summary>
+    /// Implementación del servicio de mensajería <see cref="IMessenger"/>.
+    /// Permite la comunicación desacoplada mediante el envío y recepción de mensajes.
+    /// </summary>
+    public class Messenger : IMessenger, IDisposable
     {
         private static IMessenger _defaultInstance;
+        private static readonly object _defaultInstanceLock = new();
 
-        private readonly object _registerLock;
-        private static SynchronizationContext _ctx;
-        private Dictionary<Type, List<WeakActionAndToken>> _recipientsOfSubclassesAction;
-        private Dictionary<Type, List<WeakActionAndToken>> _recipientsStrictAction;
+        private readonly object _subscriptionsLock = new();
+        private readonly SynchronizationContext _capturedSyncContext;
 
-        private Messenger()
-        {
-            _registerLock = new object();
-            _ctx = SynchronizationContext.Current;
-            _recipientsOfSubclassesAction = new Dictionary<Type, List<WeakActionAndToken>>();
-            _recipientsStrictAction = new Dictionary<Type, List<WeakActionAndToken>>();
-        }
+        // Almacena suscripciones donde el tipo de mensaje debe coincidir exactamente.
+        private readonly Dictionary<Type, List<Subscription>> _strictSubscriptions;
+        // Almacena suscripciones donde se aceptan tipos derivados o implementaciones de interfaz.
+        private readonly Dictionary<Type, List<Subscription>> _derivedSubscriptions;
+
+#if NET8_0_OR_GREATER
+        private readonly Channel<MessageEnvelope> _messageQueue;
+#else
+        private readonly BlockingCollection<MessageEnvelope> _messageQueue;
+        private readonly Task _processingTask;
+#endif
+        private readonly CancellationTokenSource _cancellationTokenSource;
+
+        private readonly Timer _cleanupTimer;
+        private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(1); // Limpiar cada minuto por defecto
+        private const int ModificationsCleanupThreshold = 20; // Limpiar después de N modificaciones
+        private int _modificationsSinceLastCleanup ;
 
         /// <summary>
-        /// Obtiene la instancia predeterminada de Messenger, que permite registrar y enviar mensajes de forma estática.
+        /// Ocurre cuando ocurre una excepción durante la ejecución de la acción de un suscriptor.
+        /// </summary>
+        public event EventHandler<MessengerErrorEventArgs>? ErrorOccurred;
+
+        /// <summary>
+        /// Obtiene la instancia predeterminada (Singleton) del Messenger.
         /// </summary>
         public static IMessenger Default
         {
             get
             {
                 if (_defaultInstance == null)
-                    _defaultInstance = new Messenger();
+                {
+                    lock (_defaultInstanceLock)
+                    {
+                        if (_defaultInstance == null) // Doble verificación de bloqueo
+                        {
+                            _defaultInstance = new Messenger();
+                        }
+                    }
+                }
                 return _defaultInstance;
             }
         }
 
         /// <summary>
-        /// Proporciona una forma de invalidar la instancia de Messenger.Default con una instancia personalizada, por
-        /// ejemplo, con fines de pruebas unitarias.
+        /// Inicializa una nueva instancia de la clase <see cref="Messenger"/>.
         /// </summary>
-        /// <param name="newMessenger"></param>
-        public static void OverrideDefault(Messenger newMessenger) { _defaultInstance = newMessenger; }
-
-
-        /// <summary>
-        /// Establece la instancia predeterminada (estática) de Messenger en null.
-        /// </summary>
-        public static void Reset() { _defaultInstance = null; }
-
-        /// <summary>
-        /// Registra un destinatario para un tipo de mensaje <typeparamref name="TTypeMessage"/>. El parámetro de acción
-        /// se ejecutará cuando se envíe un mensaje correspondiente. Consulte el parámetro receiveDerivedMessagesToo
-        /// para obtener detalles sobre cómo se pueden recibir también los mensajes derivados de <typeparamref
-        /// name="TTypeMessage"/> (o, si <typeparamref name="TTypeMessage"/> es una interfaz, mensajes que implementan
-        /// <typeparamref name="TTypeMessage"/>). <para> El registro de un destinatario no crea una referencia dura a
-        /// él, por lo que si se elimina este destinatario, no se produce ninguna pérdida de memoria.</para>
-        /// </summary>
-        /// <typeparam name="TTypeMessage">Tipo de mensaje para el que se registra el destinatario.</typeparam>
-        /// <param name="recipient">El destinatario que recibirá los mensajes.</param>
-        /// <param name="token">
-        /// Un token para un canal de mensajería. Si un destinatario se registra con un token y un remitente envía un
-        /// mensaje con el mismo token, este mensaje se entregará al destinatario. Otros destinatarios que no usaron un
-        /// token al registrarse (o que usaron un token diferente) no recibirán el mensaje. Del mismo modo, los mensajes
-        /// enviados sin ningún token, o con un token diferente, no se entregarán a ese destinatario.
-        /// </param>
-        /// <param name="receiveDerivedMessagesToo">
-        /// Si es true, los tipos de mensajes derivados de <typeparamref name="TTypeMessage"/> también se transmitirán
-        /// al destinatario. Por ejemplo, si SendOrderMessage y ExecuteOrderMessage derivan de OrderMessage, registrarse
-        /// en OrderMessage y establecer receiveDerivedMessagesToo en true enviará SendOrderMessage y
-        /// ExecuteOrderMessage al destinatario que se registró. <para> Además, si <typeparamref name="TTypeMessage"/>
-        /// es una interfaz, los tipos de mensajes que implementan <typeparamref name="TTypeMessage"/> también se
-        /// transmitirán al destinatario. Por ejemplo, si SendOrderMessage y ExecuteOrderMessage implementan
-        /// IOrderMessage, registrarse en IOrderMessage y establecer receiveDerivedMessagesToo en true enviará
-        /// SendOrderMessage y ExecuteOrderMessage al destinatario que se registró.</para>
-        /// </param>
-        /// <param name="action">
-        /// La acción que se ejecutará cuando se envíe un mensaje de tipo TMessage.
-        /// </param>
-        public virtual void Register<TTypeMessage>(
-            object recipient,
-            Action<TTypeMessage> action,
-            bool receiveDerivedMessagesToo = false,
-            object token = null)
+        public Messenger()
         {
-            Dictionary<Type, List<WeakActionAndToken>> recipientList = GetRecipientList(receiveDerivedMessagesToo);
+            _strictSubscriptions = new Dictionary<Type, List<Subscription>>();
+            _derivedSubscriptions = new Dictionary<Type, List<Subscription>>();
+            _capturedSyncContext = SynchronizationContext.Current ?? new SynchronizationContext();
+            _cancellationTokenSource = new CancellationTokenSource();
 
-            lock (_registerLock)
-            {
-                Type messageType = typeof(TTypeMessage);
-
-                List<WeakActionAndToken> currentList = GetOrAddRecipientList(recipientList, messageType);
-
-                var weakActionAndToken = CreateWeakActionAndToken(recipient, action, token);
-                currentList.Add(weakActionAndToken);
-            }
-
-            Cleanup();
+#if NET8_0_OR_GREATER
+            _messageQueue = Channel.CreateUnbounded<MessageEnvelope>(new UnboundedChannelOptions { SingleReader = true });
+            Task.Run(() => ProcessMessageQueueAsync(_cancellationTokenSource.Token));
+#else
+            _messageQueue = new BlockingCollection<MessageEnvelope>(new ConcurrentQueue<MessageEnvelope>());
+            _processingTask = Task.Factory.StartNew(() => ProcessMessageQueue(_cancellationTokenSource.Token),
+                                                   _cancellationTokenSource.Token,
+                                                   TaskCreationOptions.LongRunning,
+                                                   TaskScheduler.Default);
+#endif
+            // Iniciar temporizador para limpieza periódica.
+            // El estado 'this' se pasa para que el delegado pueda llamar a Cleanup en esta instancia.
+            _cleanupTimer = new Timer(state => ((Messenger)state!).Cleanup(), this, _cleanupInterval, _cleanupInterval);
         }
 
         /// <summary>
-        /// Obtiene o crea una lista de destinatarios para el tipo especificado.
+        /// Permite reemplazar la instancia predeterminada del Messenger, útil para pruebas unitarias.
         /// </summary>
-        private List<WeakActionAndToken> GetOrAddRecipientList(
-            Dictionary<Type, List<WeakActionAndToken>> recipientList,
-            Type type)
+        /// <param name="newMessenger">La nueva instancia del Messenger a usar como predeterminada. Si es null, se lanzará ArgumentNullException.</param>
+        public static void OverrideDefault(IMessenger newMessenger)
         {
-            if (!recipientList.TryGetValue(type, out List<WeakActionAndToken> list))
+            lock (_defaultInstanceLock)
             {
-                list = new List<WeakActionAndToken>();
-                recipientList[type] = list;
+                _defaultInstance = newMessenger ?? throw new ArgumentNullException(nameof(newMessenger));
+            }
+        }
+
+        /// <summary>
+        /// Restablece la instancia predeterminada del Messenger a null.
+        /// La próxima vez que se acceda a `Default`, se creará una nueva instancia de `Messenger`.
+        /// </summary>
+        public static void Reset()
+        {
+            lock (_defaultInstanceLock)
+            {
+                if (_defaultInstance is IDisposable disposable)
+                {
+                    disposable.Dispose(); // Disponer la instancia anterior si es IDisposable
+                }
+                _defaultInstance = null;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Register<TMessage>(object recipient, Action<TMessage> action)
+        {
+            RegisterInternal(recipient, null, false, action);
+        }
+
+        /// <inheritdoc/>
+        public void Register<TMessage>(object recipient, bool receiveDerivedMessagesToo, Action<TMessage> action)
+        {
+            RegisterInternal(recipient, null, receiveDerivedMessagesToo, action);
+        }
+
+        /// <inheritdoc/>
+        public void Register<TMessage>(object recipient, object token, Action<TMessage> action)
+        {
+            RegisterInternal(recipient, token, false, action);
+        }
+
+        /// <inheritdoc/>
+        public void Register<TMessage>(object recipient, object token, bool receiveDerivedMessagesToo, Action<TMessage> action)
+        {
+            RegisterInternal(recipient, token, receiveDerivedMessagesToo, action);
+        }
+
+        private void RegisterInternal<TMessage>(object recipient, object token, bool receiveDerivedMessagesToo, Action<TMessage> action)
+        {
+            if (recipient == null) throw new ArgumentNullException(nameof(recipient));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+
+            Type messageType = typeof(TMessage);
+            var weakAction = new WeakAction<TMessage>(recipient, action);
+            var subscription = new Subscription(weakAction, token);
+
+            lock (_subscriptionsLock)
+            {
+                var subscriptionsList = receiveDerivedMessagesToo ? GetOrCreateSubscriptionList(_derivedSubscriptions, messageType)
+                                                              : GetOrCreateSubscriptionList(_strictSubscriptions, messageType);
+                subscriptionsList.Add(subscription);
+                RequestCleanupIfNeeded();
+            }
+        }
+
+        private List<Subscription> GetOrCreateSubscriptionList(Dictionary<Type, List<Subscription>> dictionary, Type messageType)
+        {
+            // Asume que ya se tiene el _subscriptionsLock
+            if (!dictionary.TryGetValue(messageType, out var list))
+            {
+                list = new List<Subscription>();
+                dictionary[messageType] = list;
             }
             return list;
         }
 
-        /// <summary>
-        /// Crea la acción débil con su token.
-        /// </summary>
-        private WeakActionAndToken CreateWeakActionAndToken<TTypeMessage>(
-            object recipient,
-            Action<TTypeMessage> action,
-            object token)
-        { return new WeakActionAndToken() { Action = new WeakAction<TTypeMessage>(recipient, action), Token = token }; }
-        /// <summary>
-        /// Obtiene la lista de destinatarios según el tipo de registro.
-        /// </summary>
-        private Dictionary<Type, List<WeakActionAndToken>> GetRecipientList(bool includeSubclasses)
-        { return includeSubclasses ? _recipientsOfSubclassesAction : _recipientsStrictAction; }
-
-
-        /// <summary>
-        /// Envía un mensaje a los destinatarios registrados. El mensaje llegará a todos los destinatarios que se
-        /// registraron para este tipo de mensaje mediante uno de los métodos Register.
-        /// </summary>
-        /// <typeparam name="TTypeMessage">El tipo de mensaje que se enviará.</typeparam>
-        /// <param name="message">El mensaje que se enviará a los destinatarios registrados.</param>
-        public virtual void Send<TTypeMessage>(TTypeMessage message)
-        { this.SendWithCriteria<TTypeMessage>(message, null, null); }
-
-        /// <summary>
-        /// Envía un mensaje a los destinatarios registrados. El mensaje solo llegará a los destinatarios que se
-        /// registraron para este tipo de mensaje mediante uno de los métodos Register y que son de targetType.
-        /// </summary>
-        /// <typeparam name="TTypeMessage">The type of message that will be sent.</typeparam>
-        /// <typeparam name="TTarget">
-        /// El tipo de destinatarios que recibirán el mensaje. El mensaje no se enviará a destinatarios de otro tipo.
-        /// </typeparam>
-        /// <param name="message">El mensaje que se enviará a los destinatarios registrados.</param>
-        public virtual void Send<TTypeMessage, TTarget>(TTypeMessage message)
-        { this.SendWithCriteria<TTypeMessage>(message, typeof(TTarget), null); }
-
-        /// <summary>
-        /// Envía un mensaje a los destinatarios registrados. El mensaje solo llegará a los destinatarios que se
-        /// registraron para este tipo de mensaje mediante uno de los métodos Register y que son de targetType.
-        /// </summary>
-        /// <typeparam name="TTypeMessage">El tipo de mensaje que se enviará.</typeparam>
-        /// <param name="message">El mensaje que se debe enviar a los destinatarios registrados.</param>
-        /// <param name="token">
-        /// Un token para un canal de mensajería. Si un destinatario se registra con un token y un remitente envía un
-        /// mensaje con el mismo token, este mensaje se entregará al destinatario. Otros destinatarios que no usaron un
-        /// token al registrarse (o que usaron un token diferente) no recibirán el mensaje. Del mismo modo, los mensajes
-        /// enviados sin ningún token, o con un token diferente, no se entregarán a ese destinatario.
-        /// </param>
-        public virtual void Send<TTypeMessage>(TTypeMessage message, object token)
-        { this.SendWithCriteria<TTypeMessage>(message, null, token); }
-
-        private void SendWithCriteria<TTypeMessage>(TTypeMessage message, Type messageTargetType, object token)
+        /// <inheritdoc/>
+        public void Send<TMessage>(TMessage message)
         {
-            Type typeMessage = typeof(TTypeMessage);
-            //if (_recipientsOfSubclassesAction != null)
-            //{
-            //    List<Type> lstTypes = _recipientsOfSubclassesAction.Keys.ToList();
-            //    foreach (Type type1 in lstTypes)
-            //    {
-            //        List<WeakActionAndToken> item = null;
-            //        if (typeMessage == type1 || typeMessage.IsSubclassOf(type1) || Implements(typeMessage, type1))
-            //        {
-            //            item = _recipientsOfSubclassesAction[type1];
-            //        }
-            //        SendToList<TTypeMessage>(message, item, messageTargetType, token);
-            //    }
-            //}
-            //if (_recipientsStrictAction != null)
-            //{
-            //    if (this._recipientsStrictAction.ContainsKey(typeMessage))
-            //    {
-            //        List<WeakActionAndToken> weakActionAndTokens =
-            //            _recipientsStrictAction[typeMessage];
-            //        SendToList<TTypeMessage>(message, weakActionAndTokens, messageTargetType, token);
-            //    }
-            //}
-            List<WeakActionAndToken> actions = GetMessageActions(typeMessage);
-            SendToList(message, actions, messageTargetType, token);
-            Cleanup();
+            SendInternalEnvelope(message, null, null);
         }
 
-        /// <summary>
-        /// Obtiene las acciones asociadas a un tipo de mensaje.
-        /// </summary>
-        private List<WeakActionAndToken> GetMessageActions(Type messageType)
+        /// <inheritdoc/>
+        public void Send<TMessage, TTarget>(TMessage message)
         {
-            List<WeakActionAndToken> actions = GetActionsFromSubclasses(messageType);
-            actions.AddRange(GetActionsFromStrictRegistry(messageType));
-            return actions;
+            SendInternalEnvelope(message, typeof(TTarget), null);
         }
 
-        /// <summary>
-        /// Obtiene acciones de la lista de clases derivadas.
-        /// </summary>
-        private List<WeakActionAndToken> GetActionsFromSubclasses(Type messageType)
+        /// <inheritdoc/>
+        public void Send<TMessage>(TMessage message, object token)
         {
-            List<WeakActionAndToken> actions = new List<WeakActionAndToken>();
-            if (_recipientsOfSubclassesAction.ContainsKey(messageType))
+            SendInternalEnvelope(message, null, token);
+        }
+
+        private void SendInternalEnvelope<TMessage>(TMessage messageContent, Type targetTypeFilter, object token)
+        {
+            if (messageContent is null) 
+                throw new ArgumentNullException(nameof(messageContent));
+
+            Type declaredMessageType = typeof(TMessage);
+            Type actualMessageType = messageContent.GetType();
+
+            var envelope = new MessageEnvelope(messageContent, actualMessageType, targetTypeFilter, token, declaredMessageType);
+
+#if NET8_0_OR_GREATER
+            if (!_messageQueue.Writer.TryWrite(envelope))
             {
-                actions.AddRange(_recipientsOfSubclassesAction[messageType]);
+                // Log o manejo de error si la escritura falla (improbable con UnboundedChannel).
+                OnErrorOccurred(null, envelope.MessageContent, new InvalidOperationException("Failed to write message to queue."));
             }
-            return actions;
-        }
-
-        /// <summary>
-        /// Obtiene acciones de la lista estricta.
-        /// </summary>
-        private List<WeakActionAndToken> GetActionsFromStrictRegistry(Type messageType)
-        {
-            if (_recipientsStrictAction.TryGetValue(messageType, out List<WeakActionAndToken> actions))
+#else
+            try
             {
-                return actions;
+                _messageQueue.Add(envelope, _cancellationTokenSource.Token);
             }
-            return new List<WeakActionAndToken>();
-        }
-
-        /// <summary>
-        /// Cancela completamente el registro de un destinatario del mensajer. Después de ejecutar este método, el
-        /// destinatario ya no recibirá ningún mensaje.
-        /// </summary>
-        /// <param name="recipient">El destinatario que debe estar dado de baja.</param>
-        public virtual void Unregister(object recipient)
-        {
-            Messenger.UnregisterFromLists(recipient, this._recipientsOfSubclassesAction);
-            Messenger.UnregisterFromLists(recipient, this._recipientsStrictAction);
-        }
-
-        /// <summary>
-        /// Anular el registro de un destinatario de mensaje solo para un tipo determinado de mensajes. Después de
-        /// ejecutar este método, el destinatario ya no recibirá mensajes de tipo <typeparamref name="TTypeMessage"/>,
-        /// pero seguirá recibiendo otros tipos de mensajes (si se registró para ellos anteriormente).
-        /// </summary>
-        /// <param name="recipient">El destinatario que debe estar dado de baja.</param>
-        /// <typeparam name="TTypeMessage">
-        /// El tipo de mensajes de los que el destinatario desea darse de baja.
-        /// </typeparam>
-        public virtual void Unregister<TTypeMessage>(object recipient) { Unregister<TTypeMessage>(recipient, null); }
-
-        /// <summary>
-        /// Unregisters a message recipient for a given type of messages only and for a given token.  After this method
-        /// is executed, the recipient will not receive messages of type TMessage anymore with the given token, but will
-        /// still receive other message types or messages with other tokens (if it registered for them previously).
-        /// </summary>
-        /// <param name="recipient">The recipient that must be unregistered.</param>
-        /// <param name="token">The token for which the recipient must be unregistered.</param>
-        /// <typeparam name="TTypeMessage">The type of messages that the recipient wants to unregister from.</typeparam>
-        public virtual void Unregister<TTypeMessage>(object recipient, object token)
-        { Unregister<TTypeMessage>(recipient, token, null); }
-
-        /// <summary>
-        /// Unregisters a message recipient for a given type of messages and for a given action. Other message types
-        /// will still be transmitted to the recipient (if it registered for them previously). Other actions that have
-        /// been registered for the message type TMessage and for the given recipient (if available) will also remain
-        /// available.
-        /// </summary>
-        /// <typeparam name="TTypeMessage">The type of messages that the recipient wants to unregister from.</typeparam>
-        /// <param name="recipient">The recipient that must be unregistered.</param>
-        /// <param name="action">The action that must be unregistered for the recipient and for the message type TMessage.</param>
-        public virtual void Unregister<TTypeMessage>(object recipient, Action<TTypeMessage> action)
-        {
-            Messenger.UnregisterFromLists<TTypeMessage>(recipient, action, this._recipientsStrictAction);
-            Messenger.UnregisterFromLists<TTypeMessage>(recipient, action, this._recipientsOfSubclassesAction);
-            Cleanup();
-        }
-
-        /// <summary>
-        /// Unregisters a message recipient for a given type of messages, for a given action and a given token. Other
-        /// message types will still be transmitted to the recipient (if it registered for them previously). Other
-        /// actions that have been registered for the message type TMessage, for the given recipient and other tokens
-        /// (if available) will also remain available.
-        /// </summary>
-        /// <typeparam name="TMessage">
-        /// The type of messages that the recipient wants to unregister from.
-        /// </typeparam>
-        /// <param name="recipient">The recipient that must be unregistered.</param>
-        /// <param name="token">The token for which the recipient must be unregistered.</param>
-        /// <param name="action">The action that must be unregistered for the recipient and for the message type TMessage.</param>
-        public virtual void Unregister<TTypeMessage>(object recipient, object token, Action<TTypeMessage> action)
-        {
-            Messenger.UnregisterFromLists<TTypeMessage>(recipient, token, action, this._recipientsStrictAction);
-            Messenger.UnregisterFromLists<TTypeMessage>(recipient, token, action, this._recipientsOfSubclassesAction);
-            Cleanup();
-        }
-
-        /// <summary>
-        /// Limpia una lista de destinatarios removiendo entradas obsoletas.
-        /// </summary>
-        private static void CleanupList(IDictionary<Type, List<WeakActionAndToken>> recipientList)
-        {
-            List<Type> typesToRemove = new List<Type>();
-            foreach (var entry in recipientList)
+            catch (OperationCanceledException) { /* La adición fue cancelada, la cola se está cerrando */ }
+            catch (Exception ex) // Otras excepciones de Add, ej. si la colección está marcada como completa y es acotada.
             {
-                entry.Value.RemoveAll(item => item.Action == null || !item.Action.IsAlive);
-                if (entry.Value.Count == 0)
+                OnErrorOccurred(null, envelope.MessageContent, new InvalidOperationException("Failed to add message to queue.", ex));
+            }
+#endif
+        }
+
+#if NET8_0_OR_GREATER
+        private async Task ProcessMessageQueueAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await foreach (var envelope in _messageQueue.Reader.ReadAllAsync(cancellationToken))
                 {
-                    typesToRemove.Add(entry.Key);
+                    ProcessSingleEnvelope(envelope);
                 }
             }
-            foreach (Type type in typesToRemove)
+            catch (OperationCanceledException) { /* Comportamiento esperado al cerrar. */ }
+            catch (Exception ex)
             {
-                recipientList.Remove(type);
+                OnErrorOccurred(null, null, new Exception("Unhandled error in message processing loop.", ex));
             }
         }
-
-        /// <summary>
-        /// Verifica si un tipo implementa una interfaz específica.
-        /// </summary>
-        private static bool Implements(Type instanceType, Type interfaceType)
-        { return instanceType.IsAssignableFrom(interfaceType); }
-
-        /// <summary>
-        /// Envia un mensaje a una lista de destinatarios específicos.
-        /// </summary>
-        private static void SendToList<TTypeMessage>(
-            TTypeMessage message,
-            IEnumerable<WeakActionAndToken> actions,
-            Type messageTargetType,
-            object token)
+#else
+        private void ProcessMessageQueue(CancellationToken cancellationToken)
         {
-            foreach (WeakActionAndToken actionToken in actions)
+            try
             {
-                if (ShouldSendMessage(actionToken, messageTargetType, token))
+                foreach (var envelope in _messageQueue.GetConsumingEnumerable(cancellationToken))
                 {
-                    ExecuteAction((IExecuteWithObject)actionToken.Action, message);
+                    ProcessSingleEnvelope(envelope);
                 }
             }
-        }
-
-        /// <summary>
-        /// Verifica si un mensaje debe ser enviado a un destinatario específico.
-        /// </summary>
-        private static bool ShouldSendMessage(WeakActionAndToken actionToken, Type messageType, object token)
-        {
-            WeakAction action = actionToken.Action;
-            return action != null &&
-                action.IsAlive &&
-                action.Target != null &&
-                (messageType == null ||
-                    action.Target.GetType() == messageType ||
-                    Implements(action.Target.GetType(), messageType)) &&
-                TokensMatch(actionToken.Token, token);
-        }
-
-        /// <summary>
-        /// Verifica si los tokens coinciden.
-        /// </summary>
-        private static bool TokensMatch(object token1, object token2)
-        { return (token1 == null && token2 == null) || (token1 != null && token1.Equals(token2)); }
-
-        /// <summary>
-        /// Ejecuta una acción con el mensaje proporcionado.
-        /// </summary>
-        private static void ExecuteAction(IExecuteWithObject action, object message)
-        {
-            if (_ctx != null)
+            catch (OperationCanceledException) { /* Comportamiento esperado al cerrar. */ }
+            catch (Exception ex)
             {
-                _ctx.Send(_ => action.ExecuteWithObject(message), null);
-            }
-            else
-            {
-                action.ExecuteWithObject(message ?? throw new ArgumentNullException(nameof(message)));
+                OnErrorOccurred(null, null, new Exception("Unhandled error in message processing loop.", ex));
             }
         }
+#endif
 
-        private static void UnregisterFromLists(object recipient, Dictionary<Type, List<WeakActionAndToken>> lists)
+        private void ProcessSingleEnvelope(MessageEnvelope envelope)
         {
-            if (recipient == null || lists == null || lists.Count == 0)
-                return;
+            var recipientsToExecute = new HashSet<Subscription>(); // Usar HashSet para evitar duplicados
 
-            lock (lists)
+            lock (_subscriptionsLock)
             {
-                foreach (var pair in lists)
+                // Procesar suscripciones estrictas
+                if (_strictSubscriptions.TryGetValue(envelope.DeclaredMessageType, out var strictList))
                 {
-                    foreach (var item in pair.Value)
+                    foreach (var sub in strictList)
                     {
-                        if (item.Action?.Target == recipient)
+                        if (sub.IsAliveAndMatches(envelope.Token, envelope.TargetTypeFilter))
+                            recipientsToExecute.Add(sub);
+                    }
+                }
+
+                // Procesar suscripciones que aceptan tipos derivados/implementaciones
+                foreach (var entry in _derivedSubscriptions)
+                {
+                    Type subscribedType = entry.Key;
+                    // Comprueba herencia e implementación de interfaz (ActualMessageType hereda/implementa subscribedType)
+                    if (subscribedType.IsAssignableFrom(envelope.ActualMessageType))
+                    {
+                        foreach (var sub in entry.Value)
                         {
-                            item.Action.MarkForDeletion();
+                            if (sub.IsAliveAndMatches(envelope.Token, envelope.TargetTypeFilter))
+                                recipientsToExecute.Add(sub);
                         }
                     }
                 }
             }
-        }
-        private static void UnregisterFromLists<TMessage>(
-            object recipient,
-            object token,
-            Action<TMessage> action,
-            Dictionary<Type, List<Messenger.WeakActionAndToken>> lists)
-        {
-            bool flag;
-            Type type = typeof(TMessage);
-            if (recipient != null && lists != null && lists.Count != 0 && lists.ContainsKey(type))
-            {
-                foreach (WeakActionAndToken item in lists[type])
-                {
-                    flag = item.Action is WeakAction<TMessage> weakAction &&
-                        recipient == weakAction.Target &&
-                        (action == null || action == weakAction.Action) &&
-                        (token == null || token.Equals(item.Token));
-                    if (flag)
-                    {
-                        item.Action.MarkForDeletion();
-                    }
-                }
 
+            foreach (var sub in recipientsToExecute)
+            {
+                try
+                {
+                    if (envelope.MessageContent is IConditionalMessage conditionalMessage &&
+                        sub.Action.Target != null &&
+                        !conditionalMessage.ShouldProcess(sub.Action.Target))
+                    {
+                        continue;
+                    }
+                    sub.Execute(envelope.MessageContent, _capturedSyncContext, OnErrorOccurred);
+                }
+                catch (Exception ex) // Captura excepciones directas de sub.Execute si no usa el errorHandler
+                {
+                    OnErrorOccurred(sub.Action.Target, envelope.MessageContent, ex);
+                }
             }
         }
-        /// <summary>
-        /// Implementaciónde forEach element removal.ige removal.
-        /// </summary>
-        private static List<WeakActionAndToken> RemoveDeadActions(List<WeakActionAndToken> actions,
-            object recipient)
-        { return actions.Where(action => !IsActionDead(action.Action, recipient)).ToList(); }
-        /// <summary>
-        /// Verifica si una acción debe ser removida.
-        /// </summary>
-        private static bool IsActionDead(WeakAction action, object recipient)
-        { return action == null || !action.IsAlive || action.Target != recipient; }
 
-
-        private void Cleanup()
+        /// <inheritdoc/>
+        public void Unregister(object recipient)
         {
-            CleanupList(this._recipientsOfSubclassesAction);
-            CleanupList(this._recipientsStrictAction);
+            if (recipient == null) return; // No hacer nada si el destinatario es null
+            lock (_subscriptionsLock)
+            {
+                RemoveFromAllSubscriptions(sub => sub.Action.Target == recipient);
+                RequestCleanupIfNeeded();
+            }
+        }
+
+        private void RemoveFromAllSubscriptions(Predicate<Subscription> match)
+        {
+            // Asume que ya se tiene el _subscriptionsLock
+            CleanupDictionary(_strictSubscriptions, match);
+            CleanupDictionary(_derivedSubscriptions, match);
         }
 
 
-        private struct WeakActionAndToken
+        /// <inheritdoc/>
+        public void Unregister<TMessage>(object recipient)
         {
-            public WeakAction Action;
+            Unregister<TMessage>(recipient, null, null);
+        }
 
-            public object Token;
+        /// <inheritdoc/>
+        public void Unregister<TMessage>(object recipient, object token)
+        {
+            Unregister<TMessage>(recipient, token, null);
+        }
+
+        /// <inheritdoc/>
+        public void Unregister<TMessage>(object recipient, Action<TMessage> action)
+        {
+            Unregister(recipient, null, action);
+        }
+
+        /// <inheritdoc/>
+        public void Unregister<TMessage>(object recipient, object token, Action<TMessage> action)
+        {
+            // Al menos uno debe ser no nulo para evitar desregistrar todo accidentalmente
+            if (recipient == null && token == null && action == null)
+            {
+                // Podría ser una operación válida para limpiar todas las suscripciones de un tipo TMessage,
+                // pero es potencialmente peligrosa. Se podría requerir una confirmación o un método explícito.
+                // Por ahora, si todos son null, no hacemos nada o lanzamos excepción.
+                // throw new ArgumentException("At least one of recipient, token, or action must be non-null to unregister.");
+                return;
+            }
+
+            Type messageType = typeof(TMessage);
+            lock (_subscriptionsLock)
+            {
+                Predicate<Subscription> match = sub =>
+                {
+                    bool recipientMatch = recipient == null || sub.Action.Target == recipient;
+                    if (!recipientMatch) return false;
+
+                    bool tokenMatch = token == null && sub.Token == null || token != null && token.Equals(sub.Token);
+                    if (!tokenMatch) return false;
+
+                    bool actionMatch = action == null;
+                    if (!actionMatch && sub.Action is WeakAction<TMessage> typedWeakAction)
+                    {
+                        actionMatch = typedWeakAction.TypedActionHandler.Equals(action);
+                    }
+                    else if (!actionMatch && action != null) // action especificada pero WeakAction no es del tipo correcto
+                    {
+                        return false;
+                    }
+                    return actionMatch;
+                };
+
+                CleanupDictionary(_strictSubscriptions, messageType, match);
+                CleanupDictionary(_derivedSubscriptions, messageType, match);
+                // Nota: Si TMessage es una interfaz, y se registró un tipo concreto que implementa TMessage
+                // en _derivedSubscriptions, la clave del diccionario sería la interfaz TMessage.
+                // Si se registró un tipo derivado, la clave sería el tipo base.
+                // Esta lógica de CleanupDictionary(type, match) funciona bien para estos casos.
+                RequestCleanupIfNeeded();
+            }
+        }
+
+        private void RequestCleanupIfNeeded()
+        {
+            // Asume que se llama dentro de un lock de _subscriptionsLock si es necesario para _modificationsSinceLastCleanup
+            // Pero _modificationsSinceLastCleanup puede ser interlocked si se accede fuera del lock principal.
+            // Por simplicidad, se asume que se llama desde un contexto ya bloqueado o que el riesgo es bajo.
+            Interlocked.Increment(ref _modificationsSinceLastCleanup);
+            if (_modificationsSinceLastCleanup >= ModificationsCleanupThreshold)
+            {
+                // Ejecutar en ThreadPool para no bloquear el hilo actual si Cleanup es largo.
+                // El lock dentro de Cleanup manejará la concurrencia.
+                ThreadPool.QueueUserWorkItem(state => ((Messenger)state).Cleanup(), this);
+                Interlocked.Exchange(ref _modificationsSinceLastCleanup, 0);
+            }
+        }
+
+        /// <summary>
+        /// Limpia las suscripciones inactivas (cuyo Target ha sido recolectado por el GC).
+        /// </summary>
+        private void Cleanup()
+        {
+            lock (_subscriptionsLock)
+            {
+                CleanupDictionary(_strictSubscriptions, sub => !sub.IsAlive);
+                CleanupDictionary(_derivedSubscriptions, sub => !sub.IsAlive);
+            }
+        }
+
+        private void CleanupDictionary(Dictionary<Type, List<Subscription>> dictionary, Predicate<Subscription> matchToRemove)
+        {
+            // Asume que ya se tiene el _subscriptionsLock
+            if (dictionary == null || dictionary.Count == 0) return;
+
+            var typesWithEmptyLists = new List<Type>();
+            foreach (var entry in dictionary)
+            {
+                entry.Value.RemoveAll(matchToRemove);
+                if (entry.Value.Count == 0)
+                {
+                    typesWithEmptyLists.Add(entry.Key);
+                }
+            }
+
+            foreach (Type typeKey in typesWithEmptyLists)
+            {
+                dictionary.Remove(typeKey);
+            }
+        }
+
+        private void CleanupDictionary(Dictionary<Type, List<Subscription>> dictionary, Type messageTypeFilter, Predicate<Subscription> matchToRemove)
+        {
+            // Asume que ya se tiene el _subscriptionsLock
+            if (dictionary == null || !dictionary.TryGetValue(messageTypeFilter, out var subscriptions))
+            {
+                return;
+            }
+
+            subscriptions.RemoveAll(matchToRemove);
+            if (subscriptions.Count == 0)
+            {
+                dictionary.Remove(messageTypeFilter);
+            }
+        }
+
+        private void OnErrorOccurred(object? recipient, object? message, Exception error)
+        {
+            ErrorOccurred?.Invoke(this, new MessengerErrorEventArgs(recipient, message, error));
+            // Considerar loggear aquí también, independientemente de si hay suscriptores al evento.
+            // System.Diagnostics.Debug.WriteLine($"Messenger Error: Recipient='{recipient}', Message='{message}', Error='{error}'");
+        }
+
+        /// <summary>
+        /// Libera los recursos utilizados por el Messenger, deteniendo el procesamiento de mensajes.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Libera los recursos.
+        /// </summary>
+        /// <param name="disposing">True si se llama desde Dispose(), false si se llama desde el finalizador.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _cleanupTimer?.Dispose();
+                _cancellationTokenSource.Cancel();
+#if NET8_0_OR_GREATER
+                _messageQueue.Writer.TryComplete();
+#else
+                _messageQueue.CompleteAdding();
+                try
+                {
+                    // Esperar un tiempo prudencial a que la tarea de procesamiento termine.
+                    _processingTask?.Wait(TimeSpan.FromSeconds(2));
+                }
+                catch (OperationCanceledException) { /* Esperado */ }
+                catch (AggregateException ae) when (ae.InnerExceptions.All(e => e is OperationCanceledException || e is TaskCanceledException)) { /* Esperado */ }
+                _messageQueue?.Dispose();
+#endif
+                _cancellationTokenSource?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Representa un mensaje en la cola interna del Messenger.
+        /// </summary>
+        private class MessageEnvelope
+        {
+            /// <summary>El contenido del mensaje.</summary>
+            public object MessageContent { get; }
+            /// <summary>El tipo real del mensaje en tiempo de ejecución.</summary>
+            public Type ActualMessageType { get; }
+            /// <summary>El tipo declarado del mensaje al momento del envío (puede ser una clase base o interfaz).</summary>
+            public Type DeclaredMessageType { get; }
+            /// <summary>El tipo de destino opcional para el mensaje.</summary>
+            public Type TargetTypeFilter { get; }
+            /// <summary>El token opcional asociado con el mensaje.</summary>
+            public object Token { get; }
+
+            public MessageEnvelope(object messageContent, Type actualMessageType, Type targetTypeFilter, object token, Type declaredMessageType)
+            {
+                MessageContent = messageContent;
+                ActualMessageType = actualMessageType;
+                TargetTypeFilter = targetTypeFilter;
+                Token = token;
+                DeclaredMessageType = declaredMessageType;
+            }
+        }
+
+        /// <summary>
+        /// Representa una suscripción individual a un mensaje.
+        /// </summary>
+        private sealed class Subscription
+        {
+            public WeakAction Action { get; }
+            public object Token { get; }
+
+            public Subscription(WeakAction action, object token)
+            {
+                Action = action ?? throw new ArgumentNullException(nameof(action));
+                Token = token;
+            }
+
+            public bool IsAlive => Action.IsAlive;
+
+            public bool IsAliveAndMatches(object messageToken, Type messageTargetType)
+            {
+                if (!IsAlive) return false;
+                // Comprobar token
+                bool tokenMatch = Token == null && messageToken == null || Token != null && Token.Equals(messageToken);
+                if (!tokenMatch) return false;
+
+                // Comprobar tipo de target
+                if (messageTargetType != null)
+                {
+                    object? targetInstance = Action.Target;
+                    if (targetInstance == null || !messageTargetType.IsInstanceOfType(targetInstance))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public void Execute(object messageContent, SynchronizationContext syncContext, Action<object?, object?, Exception> errorHandler)
+            {
+                if (!IsAlive) return;
+
+                if (Action is IExecuteWithObject executableAction)
+                {
+                    try
+                    {
+                        if (syncContext != null && syncContext != SynchronizationContext.Current)
+                        {
+                            syncContext.Post(state =>
+                            {
+                                try
+                                {
+                                    executableAction.ExecuteWithObject(state);
+                                }
+                                catch (Exception ex)
+                                {
+                                    errorHandler?.Invoke(Action.Target, state, ex);
+                                }
+                            }, messageContent);
+                        }
+                        else
+                        {
+                            executableAction.ExecuteWithObject(messageContent);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorHandler?.Invoke(Action.Target, messageContent, ex);
+                    }
+                }
+            }
+
+            public override bool Equals(object? obj)
+                => obj is Subscription other
+                    && ReferenceEquals(Action, other.Action)
+                    && (Token == null && other.Token == null || Token?.Equals(other.Token) == true);
+
+            public override int GetHashCode()
+            {
+#if NET8_0_OR_GREATER
+                return HashCode.Combine(Action, Token);
+#else
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 23 + (Action != null ? Action.GetHashCode() : 0);
+                    hash = hash * 23 + (Token != null ? Token.GetHashCode() : 0);
+                    return hash;
+                }
+#endif
+            }
         }
     }
 }

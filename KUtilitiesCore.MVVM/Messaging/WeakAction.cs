@@ -1,167 +1,128 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.MVVM.Messaging
 {
     /// <summary>
-    /// Almacena una acción sin causar una referencia dura al propietario de la acción.
-    /// Permite que el propietario sea recolectado por el Garbage Collector en cualquier momento.
+    /// Almacena una <see cref="Action"/> sin crear una referencia fuerte a su propietario,
+    /// permitiendo que el propietario sea recolectado por el GC.
     /// </summary>
     internal class WeakAction
     {
-        #region Campos
-
-        private readonly Action action;
-        private WeakReference reference;
-
-        #endregion
-
-        #region Constructores
+        private readonly Action? _action;
+        private readonly WeakReference _targetReference;
 
         /// <summary>
-        /// Inicializa una nueva instancia de <see cref="WeakAction"/>.
+        /// Obtiene un valor que indica si el propietario de la acción (Target) sigue vivo.
         /// </summary>
-        /// <param name="target">El objeto que posee la acción.</param>
-        /// <param name="action">La acción asociada a este WeakAction.</param>
-        public WeakAction(object target, Action action)
+        public bool IsAlive => _targetReference != null && _targetReference.IsAlive;
+
+        /// <summary>
+        /// Obtiene el propietario de la acción. Devuelve <c>null</c> si ha sido recolectado.
+        /// </summary>
+        public object? Target => _targetReference?.Target;
+
+        /// <summary>
+        /// Obtiene la acción almacenada como un delegado base.
+        /// </summary>
+        protected virtual Delegate ActionHandlerDelegate => _action;
+
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="WeakAction"/>.
+        /// </summary>
+        /// <param name="target">El propietario de la acción.</param>
+        /// <param name="action">La acción a almacenar.</param>
+        public WeakAction(object target, Action action) // Acepta Action (no genérico)
         {
-            reference = new WeakReference(target);
-            this.action = action;
+            _targetReference = new WeakReference(target);
+            _action = action;
         }
-
-        #endregion
-
-        #region Propiedades
-
-        /// <summary>
-        /// Obtiene la acción asociada a esta instancia.
-        /// </summary>
-        public Action Action => action;
-
-        /// <summary>
-        /// Obtiene si el propietario de la acción sigue vivo.
-        /// </summary>
-        public bool IsAlive => reference != null && reference.IsAlive;
-
-        /// <summary>
-        /// Obtiene el propietario de la acción.
-        /// </summary>
-        public object Target => reference?.Target;
-
-        #endregion
-
-        #region Métodos
 
         /// <summary>
         /// Ejecuta la acción si el propietario sigue vivo.
         /// </summary>
         public void Execute()
         {
-            if (action == null || !IsAlive) return;
-
-            try
+            if (_action != null && IsAlive)
             {
-                action();
-            }
-            catch (Exception ex)
-            {
-                // Log the exception if needed
-                Debug.WriteLine(ex);
-                throw;
+                _action();
             }
         }
-
-        /// <summary>
-        /// Marca la instancia para su eliminación.
-        /// </summary>
-        public void MarkForDeletion()
-        {
-            reference = null;
-        }
-
-        #endregion
     }
+
     /// <summary>
-    /// Almacena una acción genérica sin causar una referencia dura al propietario de la acción.
-    /// Implementa <see cref="IExecuteWithObject"/> para permitir ejecutar la acción con parámetros.
+    /// Almacena una <see cref="Action{T}"/> sin crear una referencia fuerte a su propietario.
     /// </summary>
-    /// <typeparam name="T">Tipo del parámetro de la acción.</typeparam>
+    /// <typeparam name="T">El tipo del parámetro de la acción.</typeparam>
     internal class WeakAction<T> : WeakAction, IExecuteWithObject
     {
-        #region Campos
-
-        private readonly Action<T> action;
-
-        #endregion
-
-        #region Constructores
+        private readonly Action<T> _typedAction;
 
         /// <summary>
-        /// Inicializa una nueva instancia de <see cref="WeakAction{T}}"/>.
+        /// Obtiene la acción tipada almacenada.
         /// </summary>
-        /// <param name="target">El objeto que posee la acción.</param>
-        /// <param name="action">La acción genérica asociada a esta instancia.</param>
-        public WeakAction(object target, Action<T> action) : base(target, null)
+        public Action<T> TypedActionHandler => _typedAction;
+
+        /// <inheritdoc/>
+        protected override Delegate ActionHandlerDelegate => _typedAction;
+
+        /// <summary>
+        /// Inicializa una nueva instancia de la clase <see cref="WeakAction{T}"/>.
+        /// </summary>
+        /// <param name="target">El propietario de la acción.</param>
+        /// <param name="action">La acción tipada a almacenar.</param>
+        public WeakAction(object target, Action<T> action)
+            : base(target, null) // La acción base no genérica no se usa directamente aquí
         {
-            this.action = action;
-        }
-
-        #endregion
-
-        #region Propiedades
-
-        /// <summary>
-        /// Obtiene la acción genérica asociada a esta instancia.
-        /// </summary>
-        public new Action<T> Action => action;
-
-        #endregion
-
-        #region Métodos
-
-        /// <summary>
-        /// Ejecuta la acción con el valor predeterminado del tipo T.
-        /// </summary>
-        public new void Execute()
-        {
-            if (action == null || !base.IsAlive) return;
-            action(default(T));
+            _typedAction = action ?? throw new ArgumentNullException(nameof(action));
         }
 
         /// <summary>
-        /// Ejecuta la acción con el parámetro especificado.
+        /// Ejecuta la acción con el valor predeterminado de <typeparamref name="T"/> si el propietario sigue vivo.
         /// </summary>
-        /// <param name="parameter">Parámetro a pasar a la acción.</param>
+        public new void Execute() // Oculta el Execute base
+        {
+            if (_typedAction != null && IsAlive)
+            {
+                _typedAction(default);
+            }
+        }
+
+        /// <summary>
+        /// Ejecuta la acción con el parámetro proporcionado si el propietario sigue vivo.
+        /// </summary>
+        /// <param name="parameter">El parámetro para la acción.</param>
         public void Execute(T parameter)
         {
-            if (action == null || !base.IsAlive) return;
-            action(parameter);
+            if (_typedAction != null && IsAlive)
+            {
+                _typedAction(parameter);
+            }
         }
 
         /// <summary>
-        /// Ejecuta la acción con un parámetro de objeto, que será casteado a T.
-        /// Implementa <see cref="IExecuteWithObject.ExecuteWithObject(object)"/>.
+        /// Ejecuta la acción con un parámetro de tipo object, que será casteado a <typeparamref name="T"/>.
         /// </summary>
-        /// <param name="parameter">Parámetro a pasar a la acción.</param>
+        /// <param name="parameter">El parámetro para la acción.</param>
         public void ExecuteWithObject(object parameter)
         {
-            if (parameter == null || action == null || !base.IsAlive) return;
-
-            try
+            if (_typedAction != null && IsAlive)
             {
-                Execute((T)parameter);
-            }
-            catch (InvalidCastException ex)
-            {
-                // Log the exception if needed
-                throw new ArgumentException("Invalid parameter type", ex);
+                if (parameter is T typedParameter)
+                {
+                    _typedAction(typedParameter);
+                }
+                else if (parameter == null && !typeof(T).IsValueType) // Permite null para tipos de referencia
+                {
+                    _typedAction(default); // default(T) será null para tipos de referencia
+                }
+                else
+                {
+                    // Considerar lanzar InvalidCastException o notificar error si el casteo falla y es crítico.
+                    // Por ahora, no se ejecuta si el casteo no es posible (excepto null para ref types).
+                    // Console.WriteLine($"WeakAction: Type mismatch. Expected {typeof(T)}, got {parameter?.GetType()}.");
+                }
             }
         }
-
-        #endregion
     }
 }
