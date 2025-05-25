@@ -13,15 +13,9 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
     /// </summary>
     /// <typeparam name="TEntity">El tipo de la entidad gestionada por el repositorio.</typeparam>
     /// <typeparam name="TPrimaryKey">El tipo de la clave primaria de la entidad.</typeparam>
-    public interface IRepository<TEntity, TPrimaryKey> : IReadOnlyDbRepository<TEntity>
+    public interface IRepository<TEntity> : IReadOnlyDbRepository<TEntity>
         where TEntity : class
     {
-        /// <summary>
-        /// Obtiene una entidad por su clave primaria de forma asíncrona.
-        /// </summary>
-        /// <param name="id">La clave primaria de la entidad.</param>
-        /// <returns>La entidad encontrada, o null si no existe.</returns>
-        Task<TEntity> GetByIdAsync(TPrimaryKey id);
 
         /// <summary>
         /// Añade una nueva entidad al repositorio.
@@ -49,12 +43,8 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <param name="entity">La entidad a eliminar.</param>
         /// <returns>Devuelve true si la entidad fue encontrada y marcada para eliminar, false si no.</returns>
         bool Delete(TEntity entity);
-
-        /// <summary>
-        /// Marca una entidad existente para ser eliminada del repositorio usando su clave primaria.
-        /// </summary>
-        /// <param name="id">La clave primaria de la entidad a eliminar.</param>
-        /// <returns>Devuelve true si la entidad fue encontrada y marcada para eliminar, false si no.</returns>
-        bool Delete(TPrimaryKey id);
+        // Se eliminó DeleteAsync(TPrimaryKey id). Para eliminar por ID (simple o compuesto)
+        // se debe usar una especificación para encontrarlo y luego llamar a DeleteAsync(entity),
+        // o usar ExecuteDeleteAsync de IEfCoreRepository si está disponible.
     }
 }

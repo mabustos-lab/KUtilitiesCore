@@ -129,15 +129,47 @@ namespace KUtilitiesCore.DataAccess
 
         public void SaveChanges()
         {
+            if (string.IsNullOrWhiteSpace(_filePath))
+                throw new InvalidOperationException("La ruta del archivo de configuración no está especificada.");
+
+            string directory = Path.GetDirectoryName(_filePath);
+            if (string.IsNullOrWhiteSpace(directory))
+                throw new InvalidOperationException("No se pudo determinar el directorio del archivo de configuración.");
+
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(_filePath));
-                string jsonEncrypted = EncryptAndSerialize();
-                File.WriteAllText(_filePath, jsonEncrypted, Encoding.UTF8);
+                Directory.CreateDirectory(directory);
+
+                string jsonEncrypted;
+                try
+                {
+                    jsonEncrypted = EncryptAndSerialize();
+                }
+                catch (Exception ex)
+                {
+                    throw new DataAccessException("Error al serializar y encriptar la configuración de conexión.", ex);
+                }
+
+                try
+                {
+                    File.WriteAllText(_filePath, jsonEncrypted, Encoding.UTF8);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    throw new DataAccessException("No se tienen permisos para escribir el archivo de configuración.", ex);
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    throw new DataAccessException("El directorio especificado para el archivo de configuración no existe.", ex);
+                }
+                catch (IOException ex)
+                {
+                    throw new DataAccessException("Ocurrió un error de E/S al guardar el archivo de configuración.", ex);
+                }
             }
-            catch (Exception)
+            catch (Exception ex) when (!(ex is DataAccessException))
             {
-                throw;
+                throw new DataAccessException("Error inesperado al guardar la configuración de conexión.", ex);
             }
         }
 

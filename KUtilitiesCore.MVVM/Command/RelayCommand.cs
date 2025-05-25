@@ -1,25 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Windows.Input;
 
 namespace KUtilitiesCore.MVVM.Command
 {
-    /// <summary>
-    /// Interfaz que extiende ICommand para exponer metadatos adicionales de comandos en ViewModels.
-    /// </summary>
-    public interface IViewModelCommand : ICommand
-    {
-        /// <summary>
-        /// Nombre del método asociado al comando.
-        /// </summary>
-        public string CommandName { get; }
-
-        /// <summary>
-        /// Indica si el comando requiere un parámetro.
-        /// </summary>
-        public bool IsParametrizedCommand { get; }
-    }
 
     /// <summary>
     /// Comando genérico que permite enlazar métodos con parámetros en un ViewModel.
@@ -31,13 +17,22 @@ namespace KUtilitiesCore.MVVM.Command
         /// <summary>
         /// Función que determina si el comando puede ejecutarse con el parámetro proporcionado.
         /// </summary>
-        private Func<TParam?, bool>? _canExecuteWithParamFunc = null;
+        private Func<TParam?, bool>? _canExecuteWithParamFunc ;
 
         /// <summary>
         /// Acción que se ejecuta cuando se invoca el comando con parámetro.
         /// </summary>
-        private Action<TParam?>? _executeWithParamAction = null;
-
+        private Action<TParam?>? _executeWithParamAction ;
+        // <summary>
+        /// Obtiene el nombre de la propiedad del ViewModel que este comando observa como parámetro.
+        /// Es null si el comando no tiene parámetros o no se especificó una propiedad de parámetro.
+        /// </summary>
+        public string? WatchedParameterPropertyName { get; private set; }
+        /// <summary>
+        /// Obtiene el tipo de la propiedad del ViewModel que este comando observa como parámetro.
+        /// Es null si el comando no tiene parámetros o no se especificó una propiedad de parámetro.
+        /// </summary>
+        public Type? WatchedParameterPropertyType { get; private set; }
         /// <summary>
         /// Crea un comando que ejecuta un método con parámetro en el ViewModel.
         /// </summary>
@@ -54,7 +49,7 @@ namespace KUtilitiesCore.MVVM.Command
         public static RelayCommand<TViewModel, TParam> Create(
             TViewModel viewModel,
             Expression<Action<TViewModel, TParam?>> executeExpression,
-            Expression<Func<TViewModel, TParam?>> parameterPropertyExpression,
+            Expression<Func<TViewModel, TParam>> parameterPropertyExpression,
             Expression<Func<TViewModel, TParam?, bool>>? canExecuteExpression = null)
         {
             if(viewModel == null)
@@ -119,9 +114,33 @@ namespace KUtilitiesCore.MVVM.Command
             var executeDelegate = executeExpression.Compile();
             _executeWithParamAction = param => executeDelegate(viewModel, param);
         }
-        internal void InitializeMemberMetaData(LambdaExpression parameterPropertyExpression)
+        private void InitializeMemberMetaData(Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
         {
             ValidateViewModelMemberExpression(parameterPropertyExpression, typeof(TViewModel));
+            WatchedParameterPropertyName=GetMemberNameFromExpression(parameterPropertyExpression);
+            WatchedParameterPropertyType = typeof(TParam);
+        }
+        private static string? GetMemberNameFromExpression(Expression<Func<TViewModel, TParam>> expression)
+        {
+            Expression expressionBody = expression.Body;
+            // Si la propiedad es un tipo de valor y la expresión la convierte a object (ej. vm => (object)vm.MyIntProp),
+            // el MemberExpression estará dentro de un UnaryExpression (Convert).
+            if (expressionBody is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
+            {
+                if (unaryExpression.Operand is MemberExpression innerMemberExpression)
+                {
+                    return innerMemberExpression.Member.Name;
+                }
+            }
+            else if (expressionBody is MemberExpression memberExpression)
+            {
+                // Esto cubre propiedades de tipos de referencia y tipos de valor que no se convierten.
+                return memberExpression.Member.Name;
+            }
+            // Podría no ser una expresión de miembro simple (ej. vm => vm.MyObject.Property),
+            // en cuyo caso este método simple no funcionará. Se podría hacer más robusto o lanzar excepción.
+            Debug.WriteLine($"RelayCommand: La expresión '{expression}' no parece ser una expresión de miembro simple para obtener un nombre de propiedad.");
+            return null;
         }
     }
 
@@ -135,12 +154,12 @@ namespace KUtilitiesCore.MVVM.Command
         /// <summary>
         /// Función que determina si el comando puede ejecutarse.
         /// </summary>
-        private Func<bool>? _canExecuteFunc = null;
+        private Func<bool>? _canExecuteFunc;
 
         /// <summary>
         /// Acción que se ejecuta cuando se invoca el comando.
         /// </summary>
-        private Action? _executeAction = null;
+        private Action? _executeAction;
 
         /// <summary>
         /// Crea un comando que ejecuta un método sin parámetros en el ViewModel.
@@ -215,103 +234,5 @@ namespace KUtilitiesCore.MVVM.Command
             var executeDelegate = executeExpression.Compile();
             _executeAction = () => executeDelegate(viewModel);
         }
-    }
-
-    /// <summary>
-    /// Clase base abstracta para comandos Relay, implementando IViewModelCommand y lógica común.
-    /// </summary>
-    public abstract class RelayCommandBase : IViewModelCommand
-    {
-        /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="RelayCommandBase"/>.
-        /// </summary>
-        protected RelayCommandBase()
-        {
-        }
-
-        /// <inheritdoc/>
-        public event EventHandler? CanExecuteChanged;
-
-        /// <inheritdoc/>
-        public virtual string CommandName { get; internal set; } = string.Empty;
-
-        /// <inheritdoc/>
-        public virtual bool IsParametrizedCommand { get; internal set; }
-
-        /// <inheritdoc/>
-        public abstract bool CanExecute(object? parameter);
-
-        /// <inheritdoc/>
-        public abstract void Execute(object? parameter);
-
-        /// <summary>
-        /// Notifica a la interfaz de usuario que el estado de ejecución del comando ha cambiado.
-        /// </summary>
-        public virtual void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-
-        /// <summary>
-        /// Valida que la expresión sea una llamada a método con la firma esperada.
-        /// </summary>
-        /// <param name="expression">Expresión lambda.</param>
-        /// <param name="expectedReturnType">Tipo de retorno esperado.</param>
-        /// <param name="expectedParameterCount">Cantidad de parámetros esperada.</param>
-        /// <exception cref="ArgumentException">Si la expresión no cumple con la firma esperada.</exception>
-        internal static void ValidateMethodExpression(
-            LambdaExpression expression,
-            Type expectedReturnType,
-            int expectedParameterCount)
-        {
-            if(expression.Body is not MethodCallExpression methodCall)
-            {
-                throw new ArgumentException("La expresión debe ser una llamada a método.", nameof(expression));
-            }
-
-            if(methodCall.Method.ReturnType != expectedReturnType)
-            {
-                throw new ArgumentException($"El método debe retornar {expectedReturnType.Name}.", nameof(expression));
-            }
-
-            if(methodCall.Method.GetParameters().Length != expectedParameterCount)
-            {
-                throw new ArgumentException($"Se requieren {expectedParameterCount} parámetro(s).", nameof(expression));
-            }
-        }
-        /// <summary>
-        /// Valida que la expresión sea un MemberExpression sobre el ViewModel.
-        /// </summary>
-        /// <param name="expression">Expresión lambda.</param>
-        /// <param name="viewModelType">Tipo del ViewModel esperado.</param>
-        /// <exception cref="ArgumentException">Si la expresión no es un MemberExpression sobre el ViewModel.</exception>
-        internal static void ValidateViewModelMemberExpression(
-            LambdaExpression expression,
-            Type viewModelType)
-        {
-            if (expression.Body is not MemberExpression memberExpr)
-                throw new ArgumentException("La expresión debe ser un acceso a miembro (propiedad o campo) del ViewModel.", nameof(expression));
-
-            if (memberExpr.Expression is not ParameterExpression paramExpr || paramExpr.Type != viewModelType)
-                throw new ArgumentException("La expresión debe referenciar un miembro del ViewModel.", nameof(expression));
-        }
-        /// <summary>
-        /// Indica si existe lógica de ejecución asociada al comando.
-        /// </summary>
-        /// <returns>True si existe lógica de ejecución; de lo contrario, false.</returns>
-        internal abstract bool HasExecuteLogic();
-
-        /// <summary>
-        /// Inicializa los metadatos del comando, como el nombre y si es parametrizado.
-        /// </summary>
-        /// <param name="expression">Expresión lambda del método.</param>
-        /// <param name="expectedParameters">Cantidad esperada de parámetros.</param>
-        internal void InitializeCommandMetadata(LambdaExpression expression, int expectedParameters)
-        {
-            if(expression.Body is MethodCallExpression methodCall)
-            {
-                CommandName = methodCall.Method.Name;
-            }
-
-            IsParametrizedCommand = expectedParameters > 0;
-        }
-  
     }
 }
