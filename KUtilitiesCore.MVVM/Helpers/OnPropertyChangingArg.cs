@@ -17,7 +17,7 @@ namespace KUtilitiesCore.MVVM.Helpers
         /// <param name="propertyName">El nombre de la propiedad que está cambiando.</param>
         /// <param name="oldValue">El valor anterior de la propiedad antes del cambio.</param>
         /// <param name="newValue">El nuevo valor de la propiedad después del cambio.</param>
-        public PropertyChangingEventArgs(string propertyName, object oldValue, object newValue)
+        public PropertyChangingEventArgs(string propertyName, object? oldValue, object? newValue)
         {
             PropertyName = propertyName;
             OldValue = oldValue;
@@ -33,12 +33,12 @@ namespace KUtilitiesCore.MVVM.Helpers
         /// <summary>
         /// Obtiene el valor anterior de la propiedad antes del cambio.
         /// </summary>
-        public object OldValue { get; }
+        public object? OldValue { get; }
 
         /// <summary>
         /// Obtiene el nuevo valor de la propiedad después del cambio.
         /// </summary>
-        public object NewValue { get; }
+        public object? NewValue { get; }
 
         /// <summary>
         /// Establece un valor que indica si el cambio de propiedad debe cancelarse.

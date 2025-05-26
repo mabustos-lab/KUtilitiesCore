@@ -80,53 +80,70 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Simplifica la actualización de una propiedad en el ViewModel.
+        /// Actualiza una propiedad en el ViewModel notificando los cambios y validando la modificación
         /// </summary>
-        /// <typeparam name="TSource">Tipo del ViewModel.</typeparam>
-        /// <typeparam name="TProperty">Tipo de la propiedad.</typeparam>
-        /// <param name="source">Objeto fuente.</param>
-        /// <param name="oldValue">Valor antiguo de la propiedad.</param>
-        /// <param name="newValue">Valor nuevo de la propiedad.</param>
-        /// <param name="onPropertyChanging">Delegado para el evento de cambio de propiedad.</param>
-        /// <param name="onPropertyChanged">Acción para el evento de cambio de propiedad.</param>
-        /// <param name="propertyName">Nombre de la propiedad (impleméntalo con CallerMemberName).</param>
-        /// <returns>true si se permitió el cambio, false en caso contrario.</returns>
+        /// <returns>true si el cambio fue aplicado, false si fue cancelado o no hubo cambios</returns>
         public static bool SetVMValue<TSource, TProperty>(
             this TSource source,
-            ref TProperty oldValue,
-            TProperty newValue,
-            OnPropertyChangingDelegate onPropertyChanging = null,
-            Action onPropertyChanged = null,
+            ref TProperty? currentValue,
+            TProperty? newValue,
+            OnPropertyChangingDelegate? onPropertyChanging = null,
+            Action? onPropertyChanged = null,
             [CallerMemberName] string propertyName = "")
         {
-            IViewModelChanged viewModelChanged = null;
-            IViewModelChanging viewModelChanging = null;
+            if (source is null) throw new ArgumentNullException(nameof(source));
 
-            if (source is IViewModelChanged changed) viewModelChanged = changed;
-            if (source is IViewModelChanging changing) viewModelChanging = changing;
+            // Detección de interfaces en una sola operación
+            var isChangeNotifier = source is IViewModelChanged;
+            var isChangingNotifier = source is IViewModelChanging;
+            
+            if (!isChangeNotifier && !isChangingNotifier)
+                throw new ViewModelSourceException("El objeto debe implementar al menos una interfaz de notificación");
 
-            if (viewModelChanged == null && viewModelChanging == null)
-                throw new ViewModelSourceException("El objeto no implementa IViewModelChanged ni IViewModelChanging.");
+            if (object.Equals(currentValue, newValue))
+                return false;
 
-            bool allowChange = !Equals(oldValue, newValue);
+            var changingArgs = new Helpers.PropertyChangingEventArgs(propertyName, currentValue, newValue);
+            onPropertyChanging?.Invoke(source, changingArgs);
 
-            if (allowChange)
-            {
-                var args = new Helpers.PropertyChangingEventArgs(propertyName, oldValue, newValue);
+            if (changingArgs.Cancel)
+                return false;
 
-                onPropertyChanging?.Invoke(source, args);
-                allowChange = !args.Cancel;
+            // Actualización atómica con notificaciones
+            ExecutePropertyUpdate(
+                source: source,
+                currentValue: ref currentValue,
+                newValue: newValue,
+                propertyName: propertyName,
+                isChangingNotifier: isChangingNotifier,
+                isChangeNotifier: isChangeNotifier,
+                onPropertyChanged: onPropertyChanged);
 
-                if (!args.Cancel)
-                {
-                    if (viewModelChanging != null) viewModelChanging.RaisePropertyChanging(propertyName);
-                    oldValue = newValue;
-                    if (viewModelChanged != null) viewModelChanged.RaisePropertyChanged(propertyName);
-                    onPropertyChanged?.Invoke();
-                }
-            }
+            return true;
+        }
 
-            return allowChange;
+        private static void ExecutePropertyUpdate<TSource, TProperty>(
+       TSource source,
+       ref TProperty? currentValue,
+       TProperty? newValue,
+       string propertyName,
+       bool isChangingNotifier,
+       bool isChangeNotifier,
+       Action? onPropertyChanged)
+        {
+            // Notificación previa al cambio
+            if (isChangingNotifier)
+                ((IViewModelChanging)source!).RaisePropertyChanging(propertyName);
+
+            // Actualización del valor
+            currentValue = newValue;
+
+            // Notificación post-cambio
+            if (isChangeNotifier)
+                ((IViewModelChanged)source!).RaisePropertyChanged(propertyName);
+
+            // Callback final
+            onPropertyChanged?.Invoke();
         }
 
         private static MethodInfo GetMethodCore(Type sourceType, string memberName)

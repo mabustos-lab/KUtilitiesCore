@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.DataAccess.UOW.Interfaces
+namespace KUtilitiesCore.DataAccess.UOW
 {
     /// <summary>
     /// Describe una actualización de propiedad para operaciones masivas.

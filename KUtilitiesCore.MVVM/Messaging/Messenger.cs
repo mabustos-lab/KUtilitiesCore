@@ -15,7 +15,7 @@ namespace KUtilitiesCore.MVVM.Messaging
     /// </summary>
     public class Messenger : IMessenger, IDisposable
     {
-        private static IMessenger _defaultInstance;
+        private static IMessenger? _defaultInstance;
         private static readonly object _defaultInstanceLock = new();
 
         private readonly object _subscriptionsLock = new();

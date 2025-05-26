@@ -1,20 +1,28 @@
-﻿using KUtilitiesCore.DataAccess.Paging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KUtilitiesCore.DataAccess.UOW.Interfaces
+namespace KUtilitiesCore.DataAccess.UOW
 {
     /// <summary>
-    /// Clase base para implementaciones de ISpecification. Proporciona una estructura común para definir
-    /// especificaciones.
+    /// Clase base para implementaciones de ISpecification. Proporciona una estructura común para
+    /// definir especificaciones.
     /// </summary>
     /// <typeparam name="T">El tipo de entidad.</typeparam>
     public abstract class Specification<T> : ISpecification<T>
     {
+        #region Constructors
+
+        /// <summary>
+        /// Constructor base para especificaciones.
+        /// </summary>
+        /// <param name="criteria">La expresión de criterio inicial (opcional).</param>
+        protected Specification(Expression<Func<T, bool>> criteria = null)
+        { Criteria = criteria; }
+
+        #endregion Constructors
+
+        #region Properties
+
         /// <inheritdoc/>
         public virtual Expression<Func<T, bool>> Criteria { get; protected set; }
 
@@ -30,12 +38,32 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <inheritdoc/>
         public Expression<Func<T, object>> OrderByDescending { get; private set; }
 
+        #endregion Properties
+
+        #region Methods
 
         /// <summary>
-        /// Constructor base para especificaciones.
+        /// Combina esta especificación con otra usando un operador AND lógico.
         /// </summary>
-        /// <param name="criteria">La expresión de criterio inicial (opcional).</param>
-        protected Specification(Expression<Func<T, bool>> criteria = null) { Criteria = criteria; }
+        /// <param name="other">La otra especificación a combinar.</param>
+        /// <returns>Una nueva especificación que representa la combinación AND.</returns>
+        public ISpecification<T> And(ISpecification<T> other)
+        { return new AndSpecification<T>(this, other); }
+
+        /// <summary>
+        /// Niega esta especificación.
+        /// </summary>
+        /// <returns>Una nueva especificación que representa la negación de la actual.</returns>
+        public ISpecification<T> Not()
+        { return new NotSpecification<T>(this); }
+
+        /// <summary>
+        /// Combina esta especificación con otra usando un operador OR lógico.
+        /// </summary>
+        /// <param name="other">La otra especificación a combinar.</param>
+        /// <returns>Una nueva especificación que representa la combinación OR.</returns>
+        public ISpecification<T> Or(ISpecification<T> other)
+        { return new OrSpecification<T>(this, other); }
 
         /// <summary>
         /// Añade una expresión de inclusión de propiedad de navegación.
@@ -48,7 +76,8 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// Añade una cadena de inclusión de propiedad de navegación.
         /// </summary>
         /// <param name="includeString">La cadena de inclusión (ej. "Orders.OrderItems").</param>
-        protected virtual void AddInclude(string includeString) { IncludeStrings.Add(includeString); }
+        protected virtual void AddInclude(string includeString)
+        { IncludeStrings.Add(includeString); }
 
         /// <summary>
         /// Aplica la ordenación ascendente.
@@ -70,25 +99,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
             OrderBy = null; // Asegurar que solo uno esté activo
         }
 
-        /// <summary>
-        /// Combina esta especificación con otra usando un operador AND lógico.
-        /// </summary>
-        /// <param name="other">La otra especificación a combinar.</param>
-        /// <returns>Una nueva especificación que representa la combinación AND.</returns>
-        public ISpecification<T> And(ISpecification<T> other) { return new AndSpecification<T>(this, other); }
-
-        /// <summary>
-        /// Combina esta especificación con otra usando un operador OR lógico.
-        /// </summary>
-        /// <param name="other">La otra especificación a combinar.</param>
-        /// <returns>Una nueva especificación que representa la combinación OR.</returns>
-        public ISpecification<T> Or(ISpecification<T> other) { return new OrSpecification<T>(this, other); }
-
-        /// <summary>
-        /// Niega esta especificación.
-        /// </summary>
-        /// <returns>Una nueva especificación que representa la negación de la actual.</returns>
-        public ISpecification<T> Not() { return new NotSpecification<T>(this); }
+        #endregion Methods
     }
 
     /// <summary>
@@ -96,8 +107,14 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
     /// </summary>
     internal class AndSpecification<T> : Specification<T>
     {
+        #region Fields
+
         private readonly ISpecification<T> _left;
         private readonly ISpecification<T> _right;
+
+        #endregion Fields
+
+        #region Constructors
 
         public AndSpecification(ISpecification<T> left, ISpecification<T> right)
         {
@@ -114,15 +131,49 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
             // Combinar Includes (evitando duplicados)
             Includes.AddRange(left.Includes.Union(right.Includes));
             IncludeStrings.AddRange(left.IncludeStrings.Union(right.IncludeStrings));
-            if(left.OrderBy != null)
+            if (left.OrderBy != null)
                 ApplyOrderBy(left.OrderBy);
-            else if(left.OrderByDescending != null)
+            else if (left.OrderByDescending != null)
                 ApplyOrderByDescending(left.OrderByDescending);
-            else if(right.OrderBy != null)
+            else if (right.OrderBy != null)
                 ApplyOrderBy(right.OrderBy);
-            else if(right.OrderByDescending != null)
+            else if (right.OrderByDescending != null)
                 ApplyOrderByDescending(right.OrderByDescending);
         }
+
+        #endregion Constructors
+    }
+
+    /// <summary>
+    /// Especificación para negar otra especificación.
+    /// </summary>
+    internal class NotSpecification<T> : Specification<T>
+    {
+        #region Fields
+
+        private readonly ISpecification<T> _original;
+
+        #endregion Fields
+
+        #region Constructors
+
+        public NotSpecification(ISpecification<T> original)
+        {
+            _original = original ?? throw new ArgumentNullException(nameof(original));
+
+            var paramExpr = Expression.Parameter(typeof(T));
+            var exprBody = Expression.Not(Expression.Invoke(original.Criteria, paramExpr));
+            Criteria = Expression.Lambda<Func<T, bool>>(exprBody, paramExpr);
+
+            Includes.AddRange(original.Includes);
+            IncludeStrings.AddRange(original.IncludeStrings);
+            if (original.OrderBy != null)
+                ApplyOrderBy(original.OrderBy);
+            if (original.OrderByDescending != null)
+                ApplyOrderByDescending(original.OrderByDescending);
+        }
+
+        #endregion Constructors
     }
 
     /// <summary>
@@ -130,8 +181,14 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
     /// </summary>
     internal class OrSpecification<T> : Specification<T>
     {
+        #region Fields
+
         private readonly ISpecification<T> _left;
         private readonly ISpecification<T> _right;
+
+        #endregion Fields
+
+        #region Constructors
 
         public OrSpecification(ISpecification<T> left, ISpecification<T> right)
         {
@@ -146,38 +203,16 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 
             Includes.AddRange(left.Includes.Union(right.Includes));
             IncludeStrings.AddRange(left.IncludeStrings.Union(right.IncludeStrings));
-            if(left.OrderBy != null)
+            if (left.OrderBy != null)
                 ApplyOrderBy(left.OrderBy);
-            else if(left.OrderByDescending != null)
+            else if (left.OrderByDescending != null)
                 ApplyOrderByDescending(left.OrderByDescending);
-            else if(right.OrderBy != null)
+            else if (right.OrderBy != null)
                 ApplyOrderBy(right.OrderBy);
-            else if(right.OrderByDescending != null)
+            else if (right.OrderByDescending != null)
                 ApplyOrderByDescending(right.OrderByDescending);
         }
-    }
 
-    /// <summary>
-    /// Especificación para negar otra especificación.
-    /// </summary>
-    internal class NotSpecification<T> : Specification<T>
-    {
-        private readonly ISpecification<T> _original;
-
-        public NotSpecification(ISpecification<T> original)
-        {
-            _original = original ?? throw new ArgumentNullException(nameof(original));
-
-            var paramExpr = Expression.Parameter(typeof(T));
-            var exprBody = Expression.Not(Expression.Invoke(original.Criteria, paramExpr));
-            Criteria = Expression.Lambda<Func<T, bool>>(exprBody, paramExpr);
-
-            Includes.AddRange(original.Includes);
-            IncludeStrings.AddRange(original.IncludeStrings);
-            if(original.OrderBy != null)
-                ApplyOrderBy(original.OrderBy);
-            if(original.OrderByDescending != null)
-                ApplyOrderByDescending(original.OrderByDescending);
-        }
+        #endregion Constructors
     }
 }
