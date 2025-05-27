@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging;
 
 namespace KUtilitiesCore.Logger
 {
+
     /// <summary>
     /// Interfaz para un servicio de logging genérico.
     /// Abstrae la implementación de logging específica (ILogger<T>) para facilitar
     /// la inyección de dependencias y las pruebas unitarias.
     /// </summary>
-    /// <typeparam name="TCategoryName">El tipo de la clase que realiza el logging.</typeparam>
-    public interface ILoggerService<TCategoryName>
+    public interface ILoggerService<out TCategory>:ILogger<TCategory>
     {
         /// <summary>
         /// Escribe un mensaje de log con el nivel de severidad especificado.
@@ -103,12 +103,5 @@ namespace KUtilitiesCore.Logger
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
         void LogCritical(string message, params object[] args);
         void LogCritical(Exception exception, string message, params object[] args);
-
-        /// <summary>
-        /// Verifica si el nivel de log especificado está habilitado.
-        /// </summary>
-        /// <param name="logLevel">Nivel de log a verificar.</param>
-        /// <returns>true si está habilitado, false en caso contrario.</returns>
-        bool IsEnabled(LogLevel logLevel);
     }
 }

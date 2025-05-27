@@ -18,13 +18,22 @@ namespace KUtilitiesCore.Logger
         /// <param name="logger">La instancia de ILogger proporcionada por el framework de logging.</param>
         /// <param name="categoryName">El tipo de la clase que realiza el logging, usado para categorizar los mensajes.</param>
         /// <exception cref="ArgumentNullException">Se lanza si logger es null.</exception>
-        protected LoggerServiceAbstract(ILoggerOptions? options= null)
+        protected LoggerServiceAbstract(ILoggerOptions? options = null)
         {
             Options = options ?? new LoggerOptions();
             CategoryName = typeof(TCategoryName).Name;
         }
-
-        internal abstract void WriteLog(LogLevel logLevel, EventId eventId, Exception? exception, string message,params object[] args);
+        /// <inheritdoc/>
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            throw new NotImplementedException();
+        }
+        /// <inheritdoc/>
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        {
+            return LoggerScope.Instance;
+        }
+        internal abstract void WriteLog(LogLevel logLevel, EventId eventId, Exception? exception, string message, params object[] args);
         /// <inheritdoc/>
         public void Log(LogLevel logLevel, EventId eventId, Exception exception, string message, params object[] args)
         {
@@ -101,5 +110,17 @@ namespace KUtilitiesCore.Logger
         /// <inheritdoc/>
         public bool IsEnabled(LogLevel logLevel)
         => logLevel >= Options.MinimumLogLevel;
+
+
+
+    }
+    internal sealed class LoggerScope : IDisposable
+    {
+        public static readonly LoggerScope Instance = new();
+        private LoggerScope() { }
+        public void Dispose()
+        {
+            
+        }
     }
 }

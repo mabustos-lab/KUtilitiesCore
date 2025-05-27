@@ -11,7 +11,7 @@ namespace KUtilitiesCore.Logger
             EventId eventId,
             Exception? exception,
             string message,
-            object[] args)
+            params object[] args)
         {
             if(!IsEnabled(logLevel))
                 return;
