@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
+using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -54,26 +55,11 @@ namespace KUtilitiesCore.Logger
         public FileLoggerOptions GetOptions
                     => (FileLoggerOptions)Options;
 
-
-
-        internal override void WriteLog(
-            LogLevel logLevel,
-            EventId eventId,
-            Exception? exception,
-            string message,
-            params object[] args)
+        internal override void WriteLog(LogEntry entry)
         {
-            if (!IsEnabled(logLevel)) return;
-
             try
             {
-                var formattedMessage = string.Format(message, args);
-                _logQueue.Add(new LogEntry(
-                    DateTime.Now,
-                    logLevel,
-                    eventId,
-                    exception,
-                    formattedMessage));
+                _logQueue.Add(entry);
             }
             catch (Exception ex)
             {
@@ -88,8 +74,9 @@ namespace KUtilitiesCore.Logger
 
             if (entry.Exception != null)
             {
+                var exception = new ExceptionInfo(entry.Exception);
                 sb.AppendLine($"EXCEPTION: {entry.Exception.GetType().Name}")
-                  .AppendLine(entry.Exception.ToString());
+                  .AppendLine(exception.GetReport());
             }
 
             return sb.ToString();
@@ -130,7 +117,7 @@ namespace KUtilitiesCore.Logger
                 Level = entry.Level.ToString(),
                 Category = CategoryName,
                 entry.Message,
-                Exception = entry.Exception?.ToString(),
+                Exception = entry.Exception is null ? null : new ExceptionInfo(entry.Exception),
                 EventId = entry.Event.Id,
                 EventName = entry.Event.Name
             };
@@ -270,25 +257,7 @@ namespace KUtilitiesCore.Logger
             }
         }
 
-        private struct LogEntry
-        {
 
-            public LogEntry(DateTime timestamp, LogLevel level, EventId @event, Exception? exception, string message)
-            {
-                Timestamp = timestamp;
-                Level = level;
-                Event = @event;
-                Exception = exception;
-                Message = message;
-            }
-
-            public EventId Event { get; set; }
-            public Exception? Exception { get; set; }
-            public LogLevel Level { get; set; }
-            public string Message { get; set; }
-            public DateTime Timestamp { get; set; }
-
-        }
 
         protected virtual void Dispose(bool disposing)
         {

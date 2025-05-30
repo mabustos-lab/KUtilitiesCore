@@ -6,33 +6,14 @@ namespace KUtilitiesCore.Logger
 {
     public class DebugWindowLogger<TCategoryName> : LoggerServiceAbstract<TCategoryName>
     {
-        internal override void WriteLog(
-            LogLevel logLevel,
-            EventId eventId,
-            Exception? exception,
-            string message,
-            params object[] args)
+        internal override void WriteLog(LogEntry entry)
         {
-            if(!IsEnabled(logLevel))
-                return;
-
-            try
+            Debug.WriteLine(entry.ToString());
+            if (entry.Exception != null)
             {
-                var formattedMessage = string.Format(message, args);
-                var eventIdInfo = eventId.Id != 0 ? $"| EventID: {eventId.Id} {eventId.Name}" : string.Empty;
-                var logLine = $"[{DateTime.Now:HH:mm:ss.fff}] [{logLevel}] [{CategoryName}] {eventIdInfo} {formattedMessage}";
-
-                if(exception != null)
-                {
-                    logLine += $"\n   {exception.GetType().Name}: {exception.Message}\n   {exception.StackTrace}";
-                }
-
-                Debug.WriteLine(logLine);
-            } catch(Exception ex)
-            {
-                Debug.WriteLine($"[Error formatting log message] {ex.Message}");
+                var exception = new ExceptionInfo(entry.Exception);
+                Debug.WriteLine(exception.GetReport());
             }
         }
-        
     }
 }

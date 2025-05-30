@@ -14,79 +14,43 @@ namespace KUtilitiesCore.Logger
     public interface ILoggerService<out TCategory>:ILogger<TCategory>
     {
         /// <summary>
-        /// Escribe un mensaje de log con el nivel de severidad especificado.
-        /// </summary>
-        /// <param name="logLevel">Nivel de entrada.</param>
-        /// <param name="eventId">Id del evento.</param>
-        /// <param name="exception">La excepción a registrar.</param>
-        /// <param name="message">Formato de cadena del mensaje. Puede contener placeholders para argumentos.</param>
-        /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void Log(LogLevel logLevel, EventId eventId, Exception exception, string message, params object[] args);
-
-        /// <summary>
-        /// Escribe un mensaje de log con el nivel de severidad especificado.
-        /// </summary>
-        /// <param name="logLevel">Nivel de entrada.</param>
-        /// <param name="eventId">Id del evento.</param>
-        /// <param name="message">Formato de cadena del mensaje.</param>
-        /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void Log(LogLevel logLevel, EventId eventId, string message, params object[] args);
-
-        /// <summary>
-        /// Escribe un mensaje de log con el nivel de severidad especificado.
-        /// </summary>
-        /// <param name="logLevel">Nivel de entrada.</param>
-        /// <param name="exception">La excepción a registrar.</param>
-        /// <param name="message">Formato de cadena del mensaje.</param>
-        /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void Log(LogLevel logLevel, Exception exception, string message, params object[] args);
-
-        /// <summary>
-        /// Escribe un mensaje de log con el nivel de severidad especificado.
-        /// </summary>
-        /// <param name="logLevel">Nivel de entrada.</param>
-        /// <param name="message">Formato de cadena del mensaje.</param>
-        /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void Log(LogLevel logLevel, string message, params object[] args);
-
-        /// <summary>
         /// Formatea y escribe un mensaje de log de Trace.
         /// </summary>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogTrace(string message, params object[] args);
-        void LogTrace(Exception exception, string message, params object[] args);
+        void LogTrace(string message, EventId? eventId, params object[] args);
+        void LogTrace(Exception exception, string message, EventId? eventId, params object[] args);
 
         /// <summary>
         /// Formatea y escribe un mensaje de log de Debug.
         /// </summary>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogDebug(string message, params object[] args);
-        void LogDebug(Exception exception, string message, params object[] args);
+        void LogDebug(string message, EventId? eventId, params object[] args);
+        void LogDebug(Exception exception, string message, EventId? eventId, params object[] args);
 
         /// <summary>
         /// Formatea y escribe un mensaje de log de Information.
         /// </summary>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogInformation(string message, params object[] args);
-        void LogInformation(Exception exception, string message, params object[] args);
+        void LogInformation(string message, EventId? eventId, params object[] args);
+        void LogInformation(Exception exception, string message, EventId? eventId, params object[] args);
 
         /// <summary>
         /// Formatea y escribe un mensaje de log de Warning.
         /// </summary>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogWarning(string message, params object[] args);
-        void LogWarning(Exception exception, string message, params object[] args);
+        void LogWarning(string message, EventId? eventId, params object[] args);
+        void LogWarning(Exception exception, string message, EventId? eventId, params object[] args);
 
         /// <summary>
         /// Formatea y escribe un mensaje de log de Error.
         /// </summary>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogError(string message, params object[] args);
+        void LogError(string message, EventId? eventId, params object[] args);
 
         /// <summary>
         /// Formatea y escribe un mensaje de log de Error.
@@ -94,14 +58,14 @@ namespace KUtilitiesCore.Logger
         /// <param name="exception">La excepción a registrar.</param>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogError(Exception exception, string message, params object[] args);
+        void LogError(Exception exception, string message, EventId? eventId, params object[] args);
 
         /// <summary>
         /// Formatea y escribe un mensaje de log de Critical.
         /// </summary>
         /// <param name="message">Formato de cadena del mensaje.</param>
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
-        void LogCritical(string message, params object[] args);
-        void LogCritical(Exception exception, string message, params object[] args);
+        void LogCritical(string message, EventId? eventId, params object[] args);
+        void LogCritical(Exception exception, string message, EventId? eventId, params object[] args);
     }
 }
