@@ -14,9 +14,8 @@ namespace KUtilitiesCore.Extensions
         /// Devuelve el argumento de tipo subyacente del tipo que acepta valores NULL especificado.
         /// </summary>
         /// <param name="type"></param>
-        /// <returns></returns>
         public static Type GetUnderlyingType(this Type type)
-            => type.IsNullable() ? Nullable.GetUnderlyingType(type) : type;
+      => type.IsNullable() ? Nullable.GetUnderlyingType(type)! : type;
 
         /// <summary>
         /// Regresa true si el tipo es System.Nulable que envuelbe el tipo de valor

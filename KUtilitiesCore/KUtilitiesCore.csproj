@@ -4,7 +4,7 @@
     <TargetFrameworks>net48;net8.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 <PropertyGroup>
@@ -20,16 +20,31 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Diagnostics\**" />
     <Compile Remove="MVVM\**" />
+    <EmbeddedResource Remove="Diagnostics\**" />
     <EmbeddedResource Remove="MVVM\**" />
+    <None Remove="Diagnostics\**" />
     <None Remove="MVVM\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <Compile Remove="OrderedInfo\PNameInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="MVVM\ActionResult\ActionResult.cs" />
+    <Compile Include="MVVM\ActionResult\ActionResultBase.cs" />
+    <Compile Include="MVVM\ActionResult\ActionResultExtensions.cs" />
+    <Compile Include="MVVM\ActionResult\ActionResultStatus.cs" />
+    <Compile Include="MVVM\ActionResult\IActionResult.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.4" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup>

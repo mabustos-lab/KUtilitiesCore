@@ -61,9 +61,9 @@ namespace KUtilitiesCore.Data
         /// <returns>
         /// Una instancia de <see cref="PropertyValidator"/> o null si no hay atributos de validación.
         /// </returns>
-        public static PropertyValidator CreateFromAttributes(IEnumerable<ValidationAttribute> attributes, string propertyName)
+        public static PropertyValidator? CreateFromAttributes(IEnumerable<ValidationAttribute> attributes, string propertyName)
         {
-            if (!attributes?.Any() ?? false)
+            if (attributes?.Any() != true)
                 return null;
 
             string displayName = GetDisplayName(attributes) ?? propertyName;
@@ -76,7 +76,7 @@ namespace KUtilitiesCore.Data
         /// <param name="value">Valor de la propiedad que se está validando.</param>
         /// <param name="instance">Instancia del objeto que contiene la propiedad.</param>
         /// <returns>Mensaje de error de validación como cadena.</returns>
-        public virtual string GetValidationErrorMessage(object value, object instance)
+        public virtual string GetValidationErrorMessage(object? value, object instance)
         {
             return string.Join(" ", GetValidationErrors(value, instance));
         }
@@ -87,13 +87,13 @@ namespace KUtilitiesCore.Data
         /// <param name="value">Valor de la propiedad que se está validando.</param>
         /// <param name="instance">Instancia del objeto que contiene la propiedad.</param>
         /// <returns>Colección de cadenas con los mensajes de error.</returns>
-        public virtual IEnumerable<string> GetValidationErrors(object value, object instance)
+        public virtual IEnumerable<string> GetValidationErrors(object? value, object instance)
         {
             return attributes.Select(
                 attribute =>
                 {
                     var result = attribute.GetValidationResult(value, CreateValidationContext(instance));
-                    return result?.ErrorMessage;
+                    return result?.ErrorMessage??string.Empty;
                 }
             ).Where(error => !string.IsNullOrEmpty(error));
         }
@@ -103,7 +103,7 @@ namespace KUtilitiesCore.Data
         /// </summary>
         /// <param name="attributes">Colección de atributos.</param>
         /// <returns>El nombre desplegado de la propiedad o null si no se encuentra.</returns>
-        private static string GetDisplayName(IEnumerable<Attribute> attributes)
+        private static string? GetDisplayName(IEnumerable<Attribute> attributes)
         {
             return attributes
                 .OfType<DisplayAttribute>()

@@ -41,7 +41,7 @@ namespace KUtilitiesCore.Extensions
 
             var typePair = GetTypesPair(source, destination);
 
-            var propertyMapping = GetPropertyMapping(typePair, source, destination);
+            var propertyMapping = GetPropertyMapping(typePair);
 
             CopyPropertyValues(source, destination, propertyMapping);
 
@@ -73,9 +73,7 @@ namespace KUtilitiesCore.Extensions
         /// <param name="destination">La instancia destino.</param>
         /// <returns>Un diccionario que mapea propiedades de origen a destino.</returns>
         private static Dictionary<PropertyInfo, PropertyInfo> GetPropertyMapping(
-            Tuple<Type, Type> typePair,
-            object source,
-            object destination)
+            Tuple<Type, Type> typePair)
         {
             return _propertyCache.GetOrAdd(typePair, ComputePropertyMapping);
 
@@ -99,8 +97,7 @@ namespace KUtilitiesCore.Extensions
             return destinationProperties
                 .Select(destProp => FindMatchingProperty(destProp, sourceProperties))
                 .Where(match => match != null)
-                .Cast<Tuple<PropertyInfo, PropertyInfo>>()
-                .ToDictionary(match => match.Item1, match => match.Item2);
+                .ToDictionary(match => match!.Item1, match => match!.Item2);
         }
 
         /// <summary>
@@ -122,7 +119,6 @@ namespace KUtilitiesCore.Extensions
             {
                 return Tuple.Create(sourceProp, destinationProperty);
             }
-
             return null;
         }
 
@@ -157,7 +153,8 @@ namespace KUtilitiesCore.Extensions
         /// <param name="obj">Objeto origen para la copia.</param>
         /// <returns>Nueva instancia que es una copia profunda del objeto original.</returns>
         /// <exception cref="ArgumentNullException">Se produce si el objeto es nulo.</exception>
-        public static T CreateDeepCopy<T>(this T obj)
+        public static T? CreateDeepCopy<T>(this T obj)
+            where T : class
         {
             if (obj == null)
             {

@@ -12,6 +12,7 @@ namespace KUtilitiesCore.Data.DataAnnotations
     /// <summary>
     /// Extension de <see cref="DisplayNameAttribute"/> que permite extraer el texto de un Recurso
     /// </summary>
+    [AttributeUsage( AttributeTargets.Property)]
     public class DisplayNameLocalizedAttribute : DisplayNameAttribute
     {
         #region Constructors
@@ -26,15 +27,15 @@ namespace KUtilitiesCore.Data.DataAnnotations
         /// Representa el tipo del Recurso donde se buscará el texto para la FormatString, FormatString representa la
         /// propiedad de Acceso al recurso, si este no es nulo.
         /// </summary>
-        public Type ResourceType { get; set; }
+        public Type? ResourceType { get; set; }
         #endregion Properties
 
         #region Methods
         public string GetDisplayName()
         {
-            if(ResourceType != null)
+            if(ResourceType is not null)
             {
-                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(base.DisplayName));
+                return Helpers.ResourceHelpers.GetFromResource(ResourceType, c => c.GetString(base.DisplayName))??string.Empty;
             }
             return base.DisplayName;
         }

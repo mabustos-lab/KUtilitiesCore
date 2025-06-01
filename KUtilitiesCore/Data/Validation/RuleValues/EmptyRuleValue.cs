@@ -8,6 +8,5 @@ namespace KUtilitiesCore.Data.Validation.RuleValues
     /// </summary>
     public sealed class EmptyRuleValue : BaseRuleValue
     {
-
     }
 }

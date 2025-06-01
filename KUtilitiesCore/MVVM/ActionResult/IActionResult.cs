@@ -5,7 +5,6 @@
     /// </summary>
     public interface IActionResult
     {
-        #region Properties
 
         /// <summary>
         /// Obtiene el mensaje de error.
@@ -15,7 +14,7 @@
         /// <summary>
         /// Obtiene la excepción asociada.
         /// </summary>
-        Exception Ex { get; }
+        Exception? Exception { get; }
 
         /// <summary>
         /// Indica si ocurrió una excepción.
@@ -25,8 +24,7 @@
         /// <summary>
         /// Establece el estado de resultado
         /// </summary>
-        EnumResulResult Status { get; }
+        ActionResultStatus Status { get; }
 
-        #endregion Properties
     }
 }

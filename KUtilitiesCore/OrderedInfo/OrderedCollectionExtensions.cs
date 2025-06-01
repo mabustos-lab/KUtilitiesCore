@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -6,7 +7,16 @@ namespace KUtilitiesCore.OrderedInfo
 {
     internal static class OrderedCollectionExtensions
     {
-        #region Methods
+        private static readonly Type[] SupportedTypes =
+        {
+            typeof(int),
+            typeof(string),
+            typeof(decimal),
+            typeof(double),
+            typeof(DateTime),
+            typeof(bool),
+            typeof(Guid)
+        };
 
         /// <summary>
         /// Obtiene las propiedades de un tipo con sus nombres y nombres(display) para mostrar
@@ -14,45 +24,24 @@ namespace KUtilitiesCore.OrderedInfo
         /// <typeparam name="T">Tipo del que se recuperarán las propiedades</typeparam>
         /// <param name="onlySupportedTypes">Indica si solo se considerarán tipos soportados</param>
         /// <returns>Una colección de <see cref="PNameInfo"/> con las propiedades</returns>
-        public static IEnumerable<PNameInfo> GetPropertyNames<T>(bool onlySupportedTypes = true)
+        public static IEnumerable<PropertyNameInfo> GetPropertyNames<T>(bool onlySupportedTypes = true)
             where T : class
         {
-            var properties = typeof(T).GetProperties();
-            var supportedTypes = new[] { typeof(int), typeof(string), typeof(decimal), typeof(double),
-                                     typeof(DateTime), typeof(bool), typeof(Guid) };
-
-            return properties
-                .Where(p => p.GetMethod?.IsPublic == true)
-                .Where(p => !onlySupportedTypes || supportedTypes.Contains(p.PropertyType))
-                .Select(p =>
-                {
-                    var displayName = p.GetCustomAttributes(typeof(DisplayAttribute), false)
-                        .Cast<DisplayAttribute>()
-                        .FirstOrDefault()?.Name
-                        ?? p.Name;
-
-                    return new PNameInfo(p.Name, displayName);
-                });
+            return typeof(T)
+              .GetProperties()
+                .Where(p => IsPublicReadable(p) && IsSupportedType(p, onlySupportedTypes))
+                .Select(ToPropertyNameInfo);
         }
         /// <summary>
         /// Ordena de manera ascendente los elementos de una secuencia en funcion del nombre de una propiedad.
         /// </summary>
-        public static IQueryable<T> OrderBy<T>(
-            this IQueryable<T> source,
-            string property)
-        {
-            return ApplyOrder<T>(source, property, "OrderBy");
-        }
-
+        public static IQueryable<T> OrderBy<T>(this IQueryable<T> source, string propertyName)
+        { return ApplyOrder(source, propertyName, "OrderBy"); }
         /// <summary>
         /// Ordena de manera Decendente los elementos de una secuencia en funcion del nombre de una propiedad.
         /// </summary>
-        public static IQueryable<T> OrderByDescending<T>(
-            this IQueryable<T> source,
-            string property)
-        {
-            return ApplyOrder<T>(source, property, "OrderByDescending");
-        }
+        public static IQueryable<T> OrderByDescending<T>(this IQueryable<T> source, string property)
+        { return ApplyOrder<T>(source, property, "OrderByDescending"); }
 
         /// <summary>
         /// Ordena de manera ascendente los elementos de una secuencia en funcion del nombre de una propiedad.
@@ -61,52 +50,84 @@ namespace KUtilitiesCore.OrderedInfo
         /// <param name="source"></param>
         /// <param name="property"></param>
         /// <returns></returns>
-        public static IQueryable<T> ThenBy<T>(
-            this IQueryable<T> source,
-            string property)
-        {
-            return ApplyOrder<T>(source, property, "ThenBy");
-        }
+        public static IQueryable<T> ThenBy<T>(this IQueryable<T> source, string property)
+        { return ApplyOrder<T>(source, property, "ThenBy"); }
 
         /// <summary>
         /// Ordena de manera desendente los elementos de una secuencia en funcion del nombre de una propiedad.
         /// </summary>
-        public static IQueryable<T> ThenByDescending<T>(
-            this IQueryable<T> source,
-            string property)
+        public static IQueryable<T> ThenByDescending<T>(this IQueryable<T> source, string property)
+        { return ApplyOrder<T>(source, property, "ThenByDescending"); }
+
+        private static IQueryable<T> ApplyOrder<T>(IQueryable<T> source, string propertyName, string methodName)
         {
-            return ApplyOrder<T>(source, property, "ThenByDescending");
+            var (lambdaExpression, propertyType) = CreatePropertyExpression<T>(propertyName);
+
+            var method = QueryableMethodsCache.GetOrAddMethod<T>(methodName, propertyType);
+            IOrderedQueryable<T>? result = method.Invoke(null, new object[] { source, lambdaExpression }) as IOrderedQueryable<T>;
+            if (result is null)
+                throw new InvalidOperationException("No se pudo aplicar el método de ordenación. El resultado fue nulo.");
+            return result;
         }
 
-        private static IQueryable<T> ApplyOrder<T>(
-             IQueryable<T> source,
-             string property,
-             string methodName)
+        private static (LambdaExpression, Type) CreatePropertyExpression<T>(string propertyName)
         {
-            PropertyInfo pi = null;
-            Type type = typeof(T);
-            ParameterExpression arg = Expression.Parameter(type, "x");
-            Expression expr = arg;
-            string[] props = property.Split('.');
+            var parameter = Expression.Parameter(typeof(T), "x");
+            var property = ResolvePropertyPath(typeof(T), propertyName, parameter);
+            return (Expression.Lambda(property.expression, parameter), property.propertyType);
+        }
 
-            foreach (string prop in props)
+        private static (Expression expression, Type propertyType) ResolvePropertyPath(
+            Type rootType,
+            string propertyPath,
+            ParameterExpression parameter)
+        {
+            Expression currentExpression = parameter;
+            Type currentType = rootType;
+
+            foreach (var prop in propertyPath.Split('.'))
             {
-                pi = type.GetProperty(prop);
-                if (pi == null) throw new Exception($"No se encuentra la propiedad: {prop}");
-                expr = Expression.Property(expr, pi);
-                type = pi.PropertyType;
+                var propertyInfo = currentType.GetProperty(prop) ??
+                    throw new InvalidOperationException($"Propiedad no encontrada: {prop}");
+                currentExpression = Expression.Property(currentExpression, propertyInfo);
+                currentType = propertyInfo.PropertyType;
             }
-            Type delegateType = typeof(Func<,>).MakeGenericType(typeof(T), type);
-            LambdaExpression lambda = Expression.Lambda(delegateType, expr, arg);
-            object result = typeof(Queryable).GetMethods().Single(
-            method => method.Name == methodName
-                    && method.IsGenericMethodDefinition
-                    && method.GetGenericArguments().Length == 2
-                    && method.GetParameters().Length == 2)
-            .MakeGenericMethod(typeof(T), type)
-            .Invoke(null, new object[] { source, lambda });
-            return (IOrderedQueryable<T>)result;
+
+            return (currentExpression, currentType);
         }
-        #endregion Methods
+
+        private static bool IsPublicReadable(PropertyInfo property) => property.GetMethod?.IsPublic == true;
+
+        private static bool IsSupportedType(PropertyInfo property, bool filterEnabled) => !filterEnabled ||
+            SupportedTypes.Contains(property.PropertyType);
+
+        private static PropertyNameInfo ToPropertyNameInfo(PropertyInfo property)
+        {
+            var displayName = property.GetCustomAttributes<DisplayAttribute>().FirstOrDefault()?.Name ?? property.Name;
+
+            return new PropertyNameInfo(property.Name, displayName);
+        }
+
+        private static class QueryableMethodsCache
+        {
+            private static readonly ConcurrentDictionary<string, MethodInfo> _methods = new();
+
+            public static MethodInfo GetOrAddMethod<T>(string methodName, Type propertyType)
+            {
+                var key = $"{typeof(T).Name}_{methodName}_{propertyType.Name}";
+
+                return _methods.GetOrAdd(key, _ =>
+                {
+                    return typeof(Queryable).GetMethods()
+                        .Single(m => m.Name == methodName
+                                  && m.IsGenericMethodDefinition
+                                  && m.GetGenericArguments().Length == 2
+                                  && m.GetParameters().Length == 2)
+                        .MakeGenericMethod(typeof(T), propertyType);
+                });
+            }
+        }
+
+        
     }
 }

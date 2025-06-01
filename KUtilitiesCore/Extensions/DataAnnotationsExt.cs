@@ -34,21 +34,21 @@ namespace KUtilitiesCore.Extensions
         /// <summary>
         /// Proporciona el texto de la propiedad que corresponde a la Descripción que se mostrará al usuario
         /// </summary>
-        public static string DataAnnotationsDescription<TSource>(this TSource Source, string propertyName)
-            => DataAnnotationsHelpers.GetDescriptionCore(Source.GetType(), propertyName);
+        public static string DataAnnotationsDescription<TSource>(this TSource source, string propertyName)
+        => DataAnnotationsHelpers.GetDescriptionCore(typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto de la propiedad que corresponde a la Descripción que se mostrará al usuario
         /// </summary>
         public static string DataAnnotationsDescription(this PropertyInfo pi)
         {
-            DisplayAttribute ret = DataAnnotationsHelpers.GetAttribCore<DisplayAttribute>(pi);
-            if (ret == null)
+            DisplayAttribute? ret = DataAnnotationsHelpers.GetAttribCore<DisplayAttribute>(pi);
+            if (ret is null)
             {
-                DescriptionAttribute ret2 = DataAnnotationsHelpers.GetAttribCore<DescriptionAttribute>(pi);
-                return ret2?.Description ?? "";
+                DescriptionAttribute? ret2 = DataAnnotationsHelpers.GetAttribCore<DescriptionAttribute>(pi);
+                return ret2?.Description ?? string.Empty;
             }
-            return ret?.GetDescription() ?? "";
+            return ret?.GetDescription() ?? string.Empty;
         }
 
         /// <summary>
@@ -69,15 +69,15 @@ namespace KUtilitiesCore.Extensions
         /// <summary>
         /// Proporciona el texto de presentación de una propiedad.
         /// </summary>
-        public static string DataAnnotationsDisplayFormat<TSource>(this TSource Source, string propertyName)
-            => DataAnnotationsHelpers.GetDisplayFormatCore(Source.GetType(), propertyName);
+        public static string DataAnnotationsDisplayFormat<TSource>(this TSource source, string propertyName)
+            => DataAnnotationsHelpers.GetDisplayFormatCore(typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto de presentación de una propiedad.
         /// </summary>
         public static string DataAnnotationsDisplayFormat(this PropertyInfo pi)
         {
-            DisplayFormatAttribute ret = DataAnnotationsHelpers.GetAttribCore<DisplayFormatAttribute>(pi);
+            DisplayFormatAttribute? ret = DataAnnotationsHelpers.GetAttribCore<DisplayFormatAttribute>(pi);
             return ret?.DataFormatString ?? pi.Name;
         }
 
@@ -93,8 +93,8 @@ namespace KUtilitiesCore.Extensions
         /// <summary>
         /// Proporciona el texto para mostrar de un propiedad.
         /// </summary>
-        public static string DataAnnotationsDisplayName<TSource>(this TSource Source, string propertyName)
-            => DataAnnotationsHelpers.GetDisplayNameCore(Source.GetType(), propertyName);
+        public static string DataAnnotationsDisplayName<TSource>(this TSource source, string propertyName)
+            => DataAnnotationsHelpers.GetDisplayNameCore(typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto para mostrar de un propiedad.
@@ -109,10 +109,10 @@ namespace KUtilitiesCore.Extensions
         /// </summary>
         public static string DataAnnotationsDisplayName(this PropertyInfo pi)
         {
-            DisplayAttribute ret = DataAnnotationsHelpers.GetAttribCore<DisplayAttribute>(pi);
-            if (ret == null)
+            DisplayAttribute? ret = DataAnnotationsHelpers.GetAttribCore<DisplayAttribute>(pi);
+            if (ret is null)
             {
-                DisplayNameAttribute ret2 = DataAnnotationsHelpers.GetAttribCore<DisplayNameAttribute>(pi);
+                DisplayNameAttribute? ret2 = DataAnnotationsHelpers.GetAttribCore<DisplayNameAttribute>(pi);
                 return ret2?.DisplayName ?? pi.Name;
             }
             return ret?.GetName() ?? pi.Name;
@@ -136,15 +136,15 @@ namespace KUtilitiesCore.Extensions
         /// <summary>
         /// Proporciona el texto para mostrar de un propiedad.
         /// </summary>
-        public static string DataAnnotationsDisplayShortName<TSource>(this TSource Source, string propertyName)
-            => DataAnnotationsHelpers.GetShortNameCore(Source.GetType(), propertyName);
+        public static string DataAnnotationsDisplayShortName<TSource>(this TSource source, string propertyName)
+            => DataAnnotationsHelpers.GetShortNameCore(typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto para mostrar de un propiedad.
         /// </summary>
         public static string DataAnnotationsDisplayShortName(this PropertyInfo pi)
         {
-            DisplayAttribute ret = DataAnnotationsHelpers.GetAttribCore<DisplayAttribute>(pi);
+            DisplayAttribute? ret = DataAnnotationsHelpers.GetAttribCore<DisplayAttribute>(pi);
             return ret?.GetShortName() ?? pi.Name;
         }
 
@@ -166,7 +166,7 @@ namespace KUtilitiesCore.Extensions
         /// Nombre de la propiedad, soporta recurrencia de propiedades separados por un punto
         /// </param>
         /// <returns></returns>
-        public static TAttrib GetAttribute<TSource, TAttrib>(string propertyName)
+        public static TAttrib? GetAttribute<TSource, TAttrib>(string propertyName)
             where TAttrib : Attribute => DataAnnotationsHelpers.GetAttribCore<TSource, TAttrib>(propertyName);
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace KUtilitiesCore.Extensions
         /// <typeparam name="TAttrib">El tipo de propiedad que se busca</typeparam>
         /// <param name="PropertyAccesor"></param>
         /// <returns></returns>
-        public static TAttrib GetAttribute<TAttrib, TSource, TProperty>(this Expression<Func<TSource, TProperty>> PropertyAccesor)
+        public static TAttrib? GetAttribute<TAttrib, TSource, TProperty>(this Expression<Func<TSource, TProperty>> PropertyAccesor)
       where TAttrib : Attribute
         {
             MemberInfo mi = ExpressionsHelpers.GetPropertyInformation(PropertyAccesor.Body);
@@ -191,7 +191,7 @@ namespace KUtilitiesCore.Extensions
         /// <typeparam name="TAttrib"></typeparam>
         /// <param name="propertyInfo"></param>
         /// <returns></returns>
-        public static TAttrib GetCustomAttribute<TAttrib>(this PropertyInfo propertyInfo)
+        public static TAttrib? GetCustomAttribute<TAttrib>(this PropertyInfo propertyInfo)
             where TAttrib : Attribute
             => DataAnnotationsHelpers.GetCustomAttributeCore<TAttrib>(propertyInfo);
 

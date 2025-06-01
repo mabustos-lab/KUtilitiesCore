@@ -7,8 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using KUtilitiesCore.Data;
+using System.ComponentModel;
 
-namespace KUtilitiesCore.MVVM.Tests
+namespace KUtilitiesCore.MVVMTests
 {
     [TestClass()]
     public class ViewModelHelperBaseTests
@@ -16,7 +17,7 @@ namespace KUtilitiesCore.MVVM.Tests
         [TestMethod()]
         public void ViewModelHelperBase_HasError()
         {
-            MyClass myClass = new MyClass();
+            MyClass myClass = new();
             myClass.OnLoaded();
             myClass.Age = 0;
             
@@ -45,6 +46,11 @@ namespace KUtilitiesCore.MVVM.Tests
             protected override void UpdateCommands()
             {
                 
+            }
+
+            protected override void OnClose(CancelEventArgs e)
+            {
+               
             }
         }
     }

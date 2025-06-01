@@ -12,7 +12,6 @@ namespace KUtilitiesCore.MVVM
     {
         #region Fields
 
-        //private readonly object errorDictionaryLock = new();
         private IViewModelDocumentOwner documentOwner;
         private string error;
         private ConcurrentDictionary<string, string> errorMessages;
@@ -25,14 +24,15 @@ namespace KUtilitiesCore.MVVM
         #region Events
 
         /// <summary>
-        /// Indica cuando se llama el metodo OnDestroy para comunicar que se termino el Modelo
+        /// Evento que se usa para actualizar el estado en pantalla cuando <see cref="IsLoading"/>
+        /// es True
         /// </summary>
-        public event EventHandler DestroyViewModel;
+        public event EventHandler<string>? MessageStatusLoadingChanged;
 
         /// <inheritdoc/>
-        public event EventHandler ParentViewModelChanged;
+        public event EventHandler? ParentViewModelChanged;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion Events
 
@@ -42,10 +42,10 @@ namespace KUtilitiesCore.MVVM
         [Display(AutoGenerateField = false)]
         public IViewModelDocumentOwner DocumentOwner
         {
-            get => documentOwner;
+            get => documentOwner ?? throw new InvalidOperationException("DocumentOwner is not initialized.");
             set
             {
-                documentOwner = value;
+                documentOwner = value ?? throw new ArgumentNullException(nameof(value));
                 if (documentOwner != null)
                     documentOwner.Content = this;
             }
@@ -66,12 +66,6 @@ namespace KUtilitiesCore.MVVM
             get { return isLoading; }
             set { this.SetVMValue(ref isLoading, value, null, OnIsLoadingChanged); }
         }
-
-        /// <summary>
-        /// Delegado que se usa para actualizar el estado en pantalla
-        /// </summary>
-        [Display(AutoGenerateField = false)]
-        public Action<string> MessageStatusLoading { get; set; }
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
@@ -103,7 +97,7 @@ namespace KUtilitiesCore.MVVM
         {
             hasValidationErrors = false;
             error = string.Empty;
-            if (errorMessages != null && errorMessages.Count > 0)
+            if (errorMessages != null && !errorMessages.IsEmpty)
                 errorMessages.Clear();
         }
 
@@ -140,15 +134,14 @@ namespace KUtilitiesCore.MVVM
         /// <inheritdoc/>
         void IViewModelDataErrorInfo.SetError(string propertyName, string errorMessage)
         {
-            if (errorMessages == null)
-                errorMessages = new ConcurrentDictionary<string, string>();
+            errorMessages ??= new ConcurrentDictionary<string, string>();
             errorMessages[propertyName] = errorMessage;
         }
 
         /// <inheritdoc/>
-        void IViewModelDataErrorInfo.SetError(string errMessage)
+        void IViewModelDataErrorInfo.SetError(string errorMessage)
         {
-            error = errMessage;
+            error = errorMessage;
         }
 
         /// <summary>
@@ -172,13 +165,12 @@ namespace KUtilitiesCore.MVVM
         protected internal void SendMessageStatus(string message)
         {
             if (IsLoading)
-                MessageStatusLoading?.Invoke(message ?? "");
+                MessageStatusLoadingChanged?.Invoke(this, message ?? "");
         }
 
         protected virtual void Close()
         {
-            if (DocumentOwner != null)
-                DocumentOwner.Close(this);
+            DocumentOwner?.Close(this);
         }
 
         /// <summary>
@@ -203,11 +195,11 @@ namespace KUtilitiesCore.MVVM
         { }
 
         /// <inheritdoc/>
-        protected virtual void OnClose(CancelEventArgs e)
-        { }
+        protected abstract void OnClose(CancelEventArgs e);
 
         /// <inheritdoc/>
         protected abstract void OnDestroy();
+
 
         /// <summary>
         /// Es invocado cuando cambia de estado la propiedad <see cref="IsLoading"/>
@@ -231,9 +223,8 @@ namespace KUtilitiesCore.MVVM
 
         private string GetErrorMessageCore(string columnName)
         {
-            if (errorMessages == null)
-                errorMessages = new ConcurrentDictionary<string, string>();
-            string ret = string.Empty;
+            errorMessages ??= new ConcurrentDictionary<string, string>();
+            string ret;
             if (!errorMessages.ContainsKey(columnName))
             {
                 ret = this.GetErrorText(columnName);
@@ -253,7 +244,7 @@ namespace KUtilitiesCore.MVVM
             CustomMessageError(this);
             hasValidationErrors = DataErrorInfoExt.HasErrors(this)
                 || !string.IsNullOrEmpty(error)
-                || (errorMessages != null && errorMessages.Count > 0);
+                || (errorMessages != null && !errorMessages.IsEmpty);
         }
 
         /// <summary>

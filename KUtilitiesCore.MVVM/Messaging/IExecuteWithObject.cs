@@ -1,24 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.MVVM.Messaging
 {
     /// <summary>
-    /// Esta interfaz está destinada para el <see cref="WeakAction{T}"/> clase y puede ser útil si
-    /// almacena múltiples <see cref="WeakReference{T}"/> {t} pero no se sabe de antemano qué El
-    /// tipo T representa.
+    /// Permite ejecutar una acción almacenada débilmente con un parámetro de tipo object.
     /// </summary>
     public interface IExecuteWithObject
     {
         /// <summary>
-        /// Ejecuta una acción.
+        /// Ejecuta la acción con el parámetro proporcionado.
         /// </summary>
-        /// <param name="parameter">
-        /// Un parámetro pasó como un objeto, para ser modeado al tipo apropiado.
-        /// </param>
-        void ExecuteWithObject(object parameter);
+        /// <param name="parameter">El parámetro para la acción, que será casteado al tipo apropiado.</param>
+        void ExecuteWithObject(object? parameter);
     }
 }

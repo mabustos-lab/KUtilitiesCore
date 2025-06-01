@@ -8,11 +8,10 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Extensions
 {
     /// <summary>
- /// Proporciona extensiones de reflexión para trabajar con tipos y propiedades.
- /// </summary>
+    /// Proporciona extensiones de reflexión para trabajar con tipos y propiedades.
+    /// </summary>
     public static class ReflectionExtensions
     {
-        #region Methods
 
         /// <summary>
         /// Obtiene una colección de <see cref="PropertyInfo"/> para las propiedades del tipo especificado.
@@ -23,7 +22,7 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         public static IEnumerable<PropertyInfo> GetPropertiesInfo(this Type type,
             bool onlySupportedTypes = true,
-            Func<PropertyInfo, bool> filter = null)
+            Func<PropertyInfo, bool>? filter = null)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
@@ -34,21 +33,8 @@ namespace KUtilitiesCore.Extensions
         }
 
         /// <summary>
-        /// Obtiene una colección de <see cref="PropertyInfo"/> filtrada por nombre para las propiedades del tipo especificado.
-        /// </summary>
-        /// <param name="type">El tipo del cual se obtenerán las propiedades.</param>
-        /// <param name="onlySupportedTypes">Indica si solo se incluirán tipos soportados.</param>
-        /// <param name="nameFilter">Un predicado para filtrar las propiedades por su nombre.</param>
-        /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
-        public static IEnumerable<PropertyInfo> GetPropertiesInfoFilteredByName(this Type type,
-            bool onlySupportedTypes = true,
-            Func<string, bool> nameFilter = null)
-        {
-            return GetPropertiesInfoCore(type, onlySupportedTypes, nameFilter);
-        }
-
-        /// <summary>
-        /// Obtiene una colección de <see cref="PropertyInfo"/> para las propiedades de la instancia del objeto especificado.
+        /// Obtiene una colección de <see cref="PropertyInfo"/> para las propiedades de la instancia
+        /// del objeto especificado.
         /// </summary>
         /// <typeparam name="T">El tipo del objeto.</typeparam>
         /// <param name="obj">La instancia del objeto.</param>
@@ -57,9 +43,24 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         public static IEnumerable<PropertyInfo> GetPropertiesInfo<T>(this T obj,
             bool onlySupportedTypes = true,
-            Func<PropertyInfo, bool> filter = null)
+            Func<PropertyInfo, bool>? filter = null)
         {
             return GetPropertiesInfo(typeof(T), onlySupportedTypes, filter);
+        }
+
+        /// <summary>
+        /// Obtiene una colección de <see cref="PropertyInfo"/> filtrada por nombre para las
+        /// propiedades del tipo especificado.
+        /// </summary>
+        /// <param name="type">El tipo del cual se obtenerán las propiedades.</param>
+        /// <param name="onlySupportedTypes">Indica si solo se incluirán tipos soportados.</param>
+        /// <param name="nameFilter">Un predicado para filtrar las propiedades por su nombre.</param>
+        /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
+        public static IEnumerable<PropertyInfo> GetPropertiesInfoFilteredByName(this Type type,
+            bool onlySupportedTypes = true,
+            Func<string, bool>? nameFilter = null)
+        {
+            return GetPropertiesInfoCore(type, onlySupportedTypes, nameFilter);
         }
 
         /// <summary>
@@ -71,11 +72,11 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         internal static IEnumerable<PropertyInfo> GetPropertiesInfoCore(Type type,
             bool onlySupportedTypes,
-            Func<string, bool> nameFilter = null)
+            Func<string, bool>? nameFilter = null)
         {
             var properties = type.GetProperties();
 
-            if (nameFilter!=null)
+            if (nameFilter != null)
             {
                 properties = properties.Where(p => nameFilter.Invoke(p.Name))
                     .ToArray();
@@ -87,35 +88,6 @@ namespace KUtilitiesCore.Extensions
         }
 
         /// <summary>
-        /// Aplica filtros de tipos soportados a una colección de <see cref="PropertyInfo"/>.
-        /// </summary>
-        /// <param name="properties">La colección de propiedades a filtrar.</param>
-        /// <returns>Una colección filtrada de <see cref="PropertyInfo"/>.</returns>
-        private static IEnumerable<PropertyInfo> ApplyTypeFilters(IEnumerable<PropertyInfo> properties)
-        {
-            var supportedTypes = GetSupportedTypes();
-
-            return properties.Where(p =>
-                IsSupportedType(p.PropertyType, supportedTypes));
-        }
-
-        /// <summary>
-        /// Verifica si un tipo es compatible con los tipos soportados.
-        /// </summary>
-        /// <param name="type">El tipo a verificar.</param>
-        /// <param name="supportedTypes">Los tipos soportados.</param>
-        /// <returns>True si el tipo es compatible, false en caso contrario.</returns>
-        private static bool IsSupportedType(Type type, IEnumerable<Type> supportedTypes)
-        {
-            var underlyingType = type.GetUnderlyingType();
-
-            return underlyingType != null && supportedTypes.Contains(underlyingType,
-                new TypeComparer()) ||
-                   supportedTypes.Contains(type,
-                        new TypeComparer());
-        }
-
-        /// <summary>
         /// Aplica filtros de tipos soportados y filtro personalizado a una colección de <see cref="PropertyInfo"/>.
         /// </summary>
         /// <param name="properties">La colección de propiedades a filtrar.</param>
@@ -124,7 +96,7 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Una colección filtrada de <see cref="PropertyInfo"/>.</returns>
         private static IEnumerable<PropertyInfo> ApplyPropertyFilters(IEnumerable<PropertyInfo> properties,
             bool onlySupportedTypes,
-            Func<PropertyInfo, bool> filter=null)
+            Func<PropertyInfo, bool>? filter = null)
         {
             var filtered = properties;
 
@@ -139,6 +111,19 @@ namespace KUtilitiesCore.Extensions
             }
 
             return filtered;
+        }
+
+        /// <summary>
+        /// Aplica filtros de tipos soportados a una colección de <see cref="PropertyInfo"/>.
+        /// </summary>
+        /// <param name="properties">La colección de propiedades a filtrar.</param>
+        /// <returns>Una colección filtrada de <see cref="PropertyInfo"/>.</returns>
+        private static IEnumerable<PropertyInfo> ApplyTypeFilters(IEnumerable<PropertyInfo> properties)
+        {
+            var supportedTypes = GetSupportedTypes();
+
+            return properties.Where(p =>
+                IsSupportedType(p.PropertyType, supportedTypes));
         }
 
         /// <summary>
@@ -165,24 +150,39 @@ namespace KUtilitiesCore.Extensions
             yield return typeof(Enum);
         }
 
-        #endregion methods
+        /// <summary>
+        /// Verifica si un tipo es compatible con los tipos soportados.
+        /// </summary>
+        /// <param name="type">El tipo a verificar.</param>
+        /// <param name="supportedTypes">Los tipos soportados.</param>
+        /// <returns>True si el tipo es compatible, false en caso contrario.</returns>
+        private static bool IsSupportedType(Type type, IEnumerable<Type> supportedTypes)
+        {
+            var underlyingType = type.GetUnderlyingType();
 
-        #region classes
+            return underlyingType != null && supportedTypes.Contains(underlyingType,
+                new TypeComparer()) ||
+                   supportedTypes.Contains(type,
+                        new TypeComparer());
+        }
 
         /// <summary>
         /// Implementa <see graphicre="IEqualityComparer{Type}"/> para comparar tipos.
         /// </summary>
-        private class TypeComparer : IEqualityComparer<Type>
+        private sealed class TypeComparer : IEqualityComparer<Type>
         {
+
             /// <summary>
             /// Compara dos tipos para determinar si son iguales.
             /// </summary>
             /// <param name="x">El primer tipo a comparar.</param>
             /// <param name="y">El segundo tipo a comparar.</param>
             /// <returns>True si los tipos son iguales, false en caso contrario.</returns>
-            public bool Equals(Type x, Type y)
+            public bool Equals(Type? x, Type? y)
             {
-                return x == y;
+                if (ReferenceEquals(x, y)) return true;
+                if (x is null || y is null) return false;
+                return x.Equals(y);
             }
 
             /// <summary>
@@ -194,8 +194,8 @@ namespace KUtilitiesCore.Extensions
             {
                 return obj.GetHashCode();
             }
+
         }
 
-        #endregion classes
     }
 }

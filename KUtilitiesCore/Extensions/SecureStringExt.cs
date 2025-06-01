@@ -25,7 +25,7 @@ namespace KUtilitiesCore.Extensions
         /// - El objeto <see cref="SecureString"/> resultante se marca como de solo lectura para mayor seguridad.
         /// - Este método es útil para manejar datos sensibles como contraseñas.
         /// </remarks>
-        public static SecureString ToSecureString(this string value)
+        public static SecureString? ToSecureString(this string value)
         {
             if (string.IsNullOrEmpty(value))
                 return null;
@@ -77,8 +77,8 @@ namespace KUtilitiesCore.Extensions
                 leftPtr = Marshal.SecureStringToGlobalAllocUnicode(left);
                 rightPtr = Marshal.SecureStringToGlobalAllocUnicode(right);
 
-                string leftString = Marshal.PtrToStringUni(leftPtr);
-                string rightString = Marshal.PtrToStringUni(rightPtr);
+                string leftString = Marshal.PtrToStringUni(leftPtr) ?? string.Empty;
+                string rightString = Marshal.PtrToStringUni(rightPtr) ?? string.Empty;
 
                 return leftString.Equals(rightString, StringComparison.Ordinal);
             }

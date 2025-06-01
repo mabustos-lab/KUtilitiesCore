@@ -8,7 +8,7 @@ namespace KUtilitiesCore.Encryption
     /// <remarks>
     /// La clase utiliza RandomNumberGenerator para generar bytes criptográficamente seguros.
     /// </remarks>
-    class SaltGenerator
+    static class SaltGenerator
     {
         /// <summary>
         /// Límite de longitud máximo para el arreglo de bytes generado.
@@ -50,5 +50,23 @@ namespace KUtilitiesCore.Encryption
 #endif
             return salt;
         }
+
+
+#if NET48
+        /// <summary>
+        /// Provee un <see cref="Random"/> thread-safe que puede ser usado concurrentemente en cualquier hilo
+        /// Provides a thread-safe System.Random instance that may be used concurrently from any thread.
+        /// </summary>
+        /// <returns></returns>
+        public static readonly ThreadLocal<Random> Random = new(() =>
+        {
+            // Se genera una semilla criptográficamente segura para cada instancia.
+            using var crypto = new System.Security.Cryptography.RNGCryptoServiceProvider();
+            byte[] seedBytes = new byte[4];
+            crypto.GetBytes(seedBytes);
+            int seed = BitConverter.ToInt32(seedBytes, 0);
+            return new Random(seed);
+        });
+#endif
     }
 }

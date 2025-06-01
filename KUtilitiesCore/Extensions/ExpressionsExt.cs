@@ -30,7 +30,7 @@ namespace KUtilitiesCore.Extensions
             if (member.Member is not PropertyInfo propInfo)
                 throw new ArgumentException($"La expresión '{propertyLambda}' hace referencia a un campo, no a una propiedad.");
 
-            if (type != propInfo.ReflectedType && !type.IsSubclassOf(propInfo.ReflectedType))
+            if (type != propInfo.ReflectedType && !type.IsSubclassOf(propInfo.ReflectedType!))
                 throw new ArgumentException($"La expresión '{propertyLambda}' hace referencia a una propiedad que no pertenece al tipo {type}.");
 
             return propInfo;
@@ -45,15 +45,16 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Ruta completa de la propiedad.</returns>
         public static string GetFullPathProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
-            MemberExpression memberExp = null;
+            MemberExpression? memberExp = null;
             if (!Helpers.ExpressionsHelpers.TryFindMemberExpression(expression.Body, ref memberExp))
                 return string.Empty;
 
             var memberNames = new Stack<string>();
             do
             {
-                memberNames.Push(memberExp.Member.Name);
-            } while (Helpers.ExpressionsHelpers.TryFindMemberExpression(memberExp.Expression, ref memberExp));
+                if (memberExp?.Member != null)
+                    memberNames.Push(memberExp.Member.Name);
+            } while (Helpers.ExpressionsHelpers.TryFindMemberExpression(memberExp?.Expression, ref memberExp));
 
             return string.Join(".", memberNames);
         }
@@ -66,9 +67,10 @@ namespace KUtilitiesCore.Extensions
         /// <param name="Source">Objeto fuente.</param>
         /// <param name="pathProperty">Ruta de la propiedad.</param>
         /// <returns>Valor de la propiedad.</returns>
-        public static TResult GetPropertyValueOfPath<TSource, TResult>(TSource Source, string pathProperty)
+        public static TResult? GetPropertyValueOfPath<TSource, TResult>(TSource Source, string pathProperty)
+            where TSource: class
         {
-            return (TResult)Source.GetPropertyValueOfPath(pathProperty);
+            return (TResult?)Source.GetPropertyValueOfPath(pathProperty);
         }
 
         /// <summary>
@@ -79,35 +81,39 @@ namespace KUtilitiesCore.Extensions
         /// <param name="Source">Objeto fuente.</param>
         /// <param name="expression">Expresión lambda que representa la propiedad.</param>
         /// <returns>Valor de la propiedad.</returns>
-        public static TResult GetPropertyValueOfPath<TSource, TResult>(this TSource Source, Expression<Func<TSource, TResult>> expression)
-            => (TResult)GetPropertyValueOfPath(Source, expression.GetFullPathProperty());
+        public static TResult? GetPropertyValueOfPath<TSource, TResult>(this TSource Source, Expression<Func<TSource, TResult>> expression)
+            where TSource : class
+            => (TResult?)Source.GetPropertyValueOfPath(expression.GetFullPathProperty());
 
         /// <summary>
         /// Obtiene el valor de una propiedad de un objeto dada una cadena de texto.
         /// </summary>
-        /// <typeparam name="TObject">Tipo del objeto.</typeparam>
-        /// <param name="Source">Objeto fuente.</param>
+        /// <typeparam name="TSource">Tipo del objeto.</typeparam>
+        /// <param name="source">Objeto fuente.</param>
         /// <param name="pathProperty">Ruta de la propiedad.</param>
         /// <returns>Valor de la propiedad.</returns>
-        public static object GetPropertyValueOfPath<TObject>(this TObject Source, string pathProperty)
+        public static object? GetPropertyValueOfPath<TSource>(this TSource source, string pathProperty)
+            where TSource :class
         {
-            object ParentSource = Source;
+            if (source  is null)
+                throw new ArgumentNullException(nameof(source));
+            object? ParentSource = source;
             string CorrectPropertyName = pathProperty;
 
             if (CorrectPropertyName.Contains('.'))
             {
                 var Properties = pathProperty.Split('.');
-                CorrectPropertyName = Properties.Last();
+                CorrectPropertyName = Properties[Properties.Length - 1];
 
                 foreach (var sProperty in Properties.Take(Properties.Length - 1))
                 {
-                    var currentpi = ParentSource.GetType().GetProperty(sProperty);
+                    var currentpi = ParentSource?.GetType().GetProperty(sProperty);
                     if (currentpi == null) return null;
                     ParentSource = currentpi.GetValue(ParentSource);
                 }
             }
 
-            var currentPI = ParentSource.GetType().GetProperty(CorrectPropertyName);
+            var currentPI = ParentSource?.GetType().GetProperty(CorrectPropertyName);
             return currentPI?.GetValue(ParentSource);
         }
 
@@ -133,18 +139,18 @@ namespace KUtilitiesCore.Extensions
         /// <typeparam name="TProperty">Tipo de la propiedad.</typeparam>
         /// <param name="expression">Expresión que representa la propiedad.</param>
         /// <returns>Información de la propiedad.</returns>
-        public static PropertyInfo ToPropertyInfo<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+        public static PropertyInfo? ToPropertyInfo<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
-            MemberExpression memberExp = null;
+            MemberExpression? memberExp = null;
             if (Helpers.ExpressionsHelpers.TryFindMemberExpression(expression.Body, ref memberExp))
             {
-                MemberExpression lastMember;
+                MemberExpression? lastMember;
                 do
                 {
                     lastMember = memberExp;
-                } while (Helpers.ExpressionsHelpers.TryFindMemberExpression(memberExp.Expression, ref memberExp));
+                } while (Helpers.ExpressionsHelpers.TryFindMemberExpression(memberExp?.Expression, ref memberExp));
 
-                return lastMember.Member as PropertyInfo;
+                return lastMember?.Member as PropertyInfo;
             }
 
             return null;

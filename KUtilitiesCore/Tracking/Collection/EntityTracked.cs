@@ -14,7 +14,7 @@ namespace KUtilitiesCore.Tracking.Collection
     {
         #region Constructors
 
-        public EntityTracked(TEntity entity, TrackedStatus status = TrackedStatus.None)
+        public EntityTracked(TEntity entity, TrackedStatus status = TrackedStatus.UnModified)
         {
             Entity = entity;
             Status = status;

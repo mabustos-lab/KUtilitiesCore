@@ -4,11 +4,16 @@
     <TargetFrameworks>net48;net8.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 <PropertyGroup>
    <LangVersion>latest</LangVersion>
  </PropertyGroup>
+<ItemGroup>
+  <Compile Remove="ActionResult\**" />
+  <EmbeddedResource Remove="ActionResult\**" />
+  <None Remove="ActionResult\**" />
+</ItemGroup>
 <ItemGroup>
   <Compile Remove="Helpers\ExpressionsExtCore.cs" />
 </ItemGroup>

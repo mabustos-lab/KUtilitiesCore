@@ -9,14 +9,14 @@ namespace KUtilitiesCore.Data.Validation.Core
     /// <summary>
     /// Representa un fallo de validación individual.
     /// </summary>
-    public class ValidationFailure(string propertyName, string errorMessage, object attemptedValue = null)
+    public class ValidationFailure(string propertyName, string errorMessage, object? attemptedValue = null)
     {
         #region Properties
 
         /// <summary>
         /// Valor que causó el fallo (opcional).
         /// </summary>
-        public object AttemptedValue { get; } = attemptedValue;
+        public object? AttemptedValue { get; } = attemptedValue;
 
         /// <summary>
         /// Mensaje de error descriptivo.

@@ -34,10 +34,10 @@ namespace KUtilitiesCore.Encryption
         /// </summary>
         /// <param name="ValueToEncrypt">Cadena a encriptar</param>
         /// <param name="maximumSaltLength">Tamaño en Bytes de la Sal</param>
-        /// <param name="UseSaltHashOrder">Indica si se debe usar el orden Sal-Hash</param>
+        /// <param name="UseSaltHashOrder">Indica si se debe usar el orden Sal + Hash, si es true o Hash + Salt si es false</param>
         /// <param name="Iterations">Número de iteraciones para derivar la clave</param>
         /// <returns></returns>
-        private string GetHashString(string ValueToEncrypt,
+        static string GetHashString(string ValueToEncrypt,
             int maximumSaltLength, bool UseSaltHashOrder = true, int Iterations = 10000)
         {
             byte[] salt = SaltGenerator.GetSalt(maximumSaltLength);
@@ -46,7 +46,7 @@ namespace KUtilitiesCore.Encryption
             byte[] hash = pbkdf2.GetBytes(20);
             //Para almacenar el valor hash ValueToEncrypt + sal
             byte[] hashBytes = new byte[20 + salt.Length];
-            //copiar Salt + Hash, el orden puede variar TODO: Podria parametrizar el orden
+            //copiar Salt + Hash, el orden puede variar
             if (UseSaltHashOrder)
             {
                 Array.Copy(salt, 0, hashBytes, 0, salt.Length);
@@ -70,7 +70,7 @@ namespace KUtilitiesCore.Encryption
         /// <param name="UseSaltHashOrder">Indica si se debe usar el orden Sal-Hash</param>
         /// <param name="Iterations">Número de iteraciones para derivar la clave</param>
         /// <returns></returns>
-        bool IsValidString(string NoEncrypedString, string HashedString,
+        static bool IsValidString(string NoEncrypedString, string HashedString,
             int maximumSaltLength, bool UseSaltHashOrder = true, int Iterations = 10000)
         {
             byte[] hashBytes = Convert.FromBase64String(HashedString);
