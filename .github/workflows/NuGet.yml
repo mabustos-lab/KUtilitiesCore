@@ -13,12 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 8 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            8.0.x
-            4.8.x
+          dotnet-version: 8.0.x
+
+      - name: Clean nupkgs folder
+        run: |
+          if (Test-Path ./nupkgs) { Remove-Item -Recurse -Force ./nupkgs/* }
+          else { New-Item -ItemType Directory -Path ./nupkgs }
+        shell: pwsh
 
       - name: Restore NuGet packages
         run: dotnet restore
@@ -29,19 +33,46 @@ jobs:
             $_.FullName -notmatch 'Test|Tests|\.Tests\' # Excluye proyectos de pruebas
           }
           foreach ($proj in $projects) {
-            dotnet build "$($proj.FullName)" --configuration Release --no-restore
+            $isNet48 = Select-String -Path $proj.FullName -Pattern '<TargetFramework.*>net48' -Quiet
+            if ($isNet48) {
+              msbuild "$($proj.FullName)" /p:Configuration=Release /t:Restore,Build
+            } else {
+              dotnet build "$($proj.FullName)" --configuration Release --no-restore
+            }
           }
         shell: pwsh
 
       - name: Pack all projects (except tests)
         run: |
-          $tag = '${{ github.ref }}' -replace 'refs/tags/v',''
+          # Obtén la versión desde el tag (maneja tags tipo v1.2.3 o release-1.2.3)
+          $tagRaw = '${{ github.ref }}'
+          $tag = if ($tagRaw -match 'refs/tags/(?:v|release-)?([\d\.]+)') { $matches[1] } else { $tagRaw -replace 'refs/tags/', '' }
           $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
             $_.FullName -notmatch 'Test|Tests|\.Tests\' # Excluye proyectos de pruebas
           }
           foreach ($proj in $projects) {
-            dotnet pack "$($proj.FullName)" --configuration Release --no-build --output ./nupkgs /p:PackageVersion=$tag
+            $isNet48 = Select-String -Path $proj.FullName -Pattern '<TargetFramework.*>net48' -Quiet
+            if ($isNet48) {
+              msbuild "$($proj.FullName)" /p:Configuration=Release /p:PackageVersion=$tag /t:Pack
+              $projDir = Split-Path $proj.FullName -Parent
+              $pkgFiles = Get-ChildItem -Path "$projDir\bin\Release" -Filter *.nupkg
+              foreach ($pkg in $pkgFiles) {
+                Move-Item $pkg.FullName ./nupkgs/ -Force
+              }
+            } else {
+              dotnet pack "$($proj.FullName)" --configuration Release --no-build --output ./nupkgs /p:PackageVersion=$tag
+            }
           }
+        shell: pwsh
+
+      - name: List NuGet packages to be pushed
+        run: |
+          if (!(Test-Path ./nupkgs) -or !(Get-ChildItem ./nupkgs -Filter *.nupkg)) {
+            Write-Error "No NuGet packages found to publish. Aborting workflow."
+            exit 1
+          }
+          Write-Host "Packages to be pushed:"
+          Get-ChildItem ./nupkgs -Filter *.nupkg | ForEach-Object { Write-Host $_.FullName }
         shell: pwsh
 
       - name: Push NuGet packages
@@ -49,6 +80,17 @@ jobs:
           $ErrorActionPreference = "Stop"
           $pkgs = Get-ChildItem -Path ./nupkgs -Filter *.nupkg
           foreach ($pkg in $pkgs) {
-            dotnet nuget push "$($pkg.FullName)" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+            dotnet nuget push "$($pkg.FullName)" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
           }
         shell: pwsh
+
+      - name: Upload NuGet packages as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./nupkgs/*.nupkg
+
+      - name: Check for vulnerable dependencies
+        run: |
+          dotnet list package --vulnerable || true
+        continue-on-error: true
