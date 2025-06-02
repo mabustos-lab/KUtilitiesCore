@@ -9,6 +9,8 @@
 
 <PropertyGroup>
    <LangVersion>latest</LangVersion>
+   <Title>KUtilitiesCore</Title>
+   <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
