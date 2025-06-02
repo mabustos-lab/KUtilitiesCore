@@ -1,25 +1,17 @@
 name: Publish NuGet
 
 on:
-  workflow_run:
-    workflows: [".NET"]
-    types:
-      - completed
-      
+  push:
+    tags:
+      - 'v*' # Solo ejecuta en push de tags que empiezan con 'v'
 
 jobs:
   publish:
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'refs/tags/') &&
-      contains(github.event.workflow_run.head_branch, 'NuGet')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -31,13 +23,14 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build
-        run: dotnet build --configuration Release
-
-      - name: Pack
-        run: dotnet pack --configuration Release --output ./nupkg
+      - name: Pack non-test projects
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          for proj in $(find . -name '*.csproj' ! -path '*Test*' ! -path '*Tests*'); do
+            dotnet pack "$proj" --configuration Release --output ./nupkg /p:PackageVersion=$VERSION
+          done
 
       - name: Publish to NuGet
-        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
