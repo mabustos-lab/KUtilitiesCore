@@ -1,12 +1,12 @@
-name: Publish NuGet
+name: Publish NuGet Packages
 
 on:
   push:
     tags:
-      - 'v*' # Solo ejecuta en push de tags que empiezan con 'v'
+      - 'v*.*.*' # Solo ejecuta cuando haya un tag de versión (ej: v1.2.3)
 
 jobs:
-  publish:
+  build-and-publish:
     runs-on: windows-latest
 
     steps:
@@ -20,17 +20,35 @@ jobs:
             8.0.x
             4.8.x
 
-      - name: Restore dependencies
+      - name: Restore NuGet packages
         run: dotnet restore
 
-      - name: Pack non-test projects
+      - name: Build all projects (except tests)
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          for proj in $(find . -name '*.csproj' ! -path '*Test*' ! -path '*Tests*'); do
-            dotnet pack "$proj" --configuration Release --output ./nupkg /p:PackageVersion=$VERSION
-          done
+          $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
+            $_.FullName -notmatch 'Test|Tests|\.Tests\' # Excluye proyectos de pruebas
+          }
+          foreach ($proj in $projects) {
+            dotnet build "$($proj.FullName)" --configuration Release --no-restore
+          }
+        shell: pwsh
 
-      - name: Publish to NuGet
-        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      - name: Pack all projects (except tests)
+        run: |
+          $tag = '${{ github.ref }}' -replace 'refs/tags/v',''
+          $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
+            $_.FullName -notmatch 'Test|Tests|\.Tests\' # Excluye proyectos de pruebas
+          }
+          foreach ($proj in $projects) {
+            dotnet pack "$($proj.FullName)" --configuration Release --no-build --output ./nupkgs /p:PackageVersion=$tag
+          }
+        shell: pwsh
+
+      - name: Push NuGet packages
+        run: |
+          $ErrorActionPreference = "Stop"
+          $pkgs = Get-ChildItem -Path ./nupkgs -Filter *.nupkg
+          foreach ($pkg in $pkgs) {
+            dotnet nuget push "$($pkg.FullName)" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+          }
+        shell: pwsh
