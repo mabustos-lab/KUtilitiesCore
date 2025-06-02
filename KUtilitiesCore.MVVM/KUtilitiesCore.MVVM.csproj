@@ -8,6 +8,7 @@
   </PropertyGroup>
 <PropertyGroup>
    <LangVersion>latest</LangVersion>
+   <Title>KUtilitiesCore.MVVM</Title>
  </PropertyGroup>
 <ItemGroup>
   <Compile Remove="ActionResult\**" />
