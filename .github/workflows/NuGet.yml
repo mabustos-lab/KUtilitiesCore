@@ -48,8 +48,8 @@ jobs:
           $tagRaw = '${{ github.ref }}'
           $tag = if ($tagRaw -match 'refs/tags/(?:v|release-)?([\d\.]+)') { $matches[1] } else { $tagRaw -replace 'refs/tags/', '' }
           $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
-            $_.FullName -notmatch 'Test|Tests|\.Tests\' # Excluye proyectos de pruebas
-          }
+            $_.FullName -notmatch 'Test|Tests|\.Tests\'} # Excluye proyectos de pruebas
+          
           foreach ($proj in $projects) {
             $isNet48 = Select-String -Path $proj.FullName -Pattern '<TargetFramework.*>net48' -Quiet
             if ($isNet48) {
