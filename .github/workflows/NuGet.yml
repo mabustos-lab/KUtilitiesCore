@@ -18,6 +18,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Clean nupkgs folder
         run: |
           if (Test-Path ./nupkgs) { Remove-Item -Recurse -Force ./nupkgs/* }
