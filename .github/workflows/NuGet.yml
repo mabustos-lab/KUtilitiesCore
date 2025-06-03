@@ -3,7 +3,7 @@ name: Publish NuGet Packages
 on:
   push:
     tags:
-      - 'v*.*.*' # Solo ejecuta cuando haya un tag de versión (ej: v1.2.3)
+      - 'v*.*.*' # Solo ejecuta cuando haya un tag de versiÃ³n (ej: v1.2.3)
 
 jobs:
   build-and-publish:
@@ -30,8 +30,7 @@ jobs:
       - name: Build all projects (except tests)
         run: |
           $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
-            $_.FullName -notmatch 'Test|Tests|\.Tests\' # Excluye proyectos de pruebas
-          }
+            $_.FullName -notmatch 'Test|Tests|\.Tests' } # Excluye proyectos de pruebas
           foreach ($proj in $projects) {
             $isNet48 = Select-String -Path $proj.FullName -Pattern '<TargetFramework.*>net48' -Quiet
             if ($isNet48) {
@@ -44,7 +43,7 @@ jobs:
 
       - name: Pack all projects (except tests)
         run: |
-          # Obtén la versión desde el tag (maneja tags tipo v1.2.3 o release-1.2.3)
+          # ObtÃ©n la versiÃ³n desde el tag (maneja tags tipo v1.2.3 o release-1.2.3)
           $tagRaw = '${{ github.ref }}'
           $tag = if ($tagRaw -match 'refs/tags/(?:v|release-)?([\d\.]+)') { $matches[1] } else { $tagRaw -replace 'refs/tags/', '' }
           $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
