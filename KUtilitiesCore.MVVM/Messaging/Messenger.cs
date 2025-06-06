@@ -55,10 +55,7 @@ namespace KUtilitiesCore.MVVM.Messaging
                 {
                     lock (_defaultInstanceLock)
                     {
-                        if (_defaultInstance == null) // Doble verificación de bloqueo
-                        {
-                            _defaultInstance = new Messenger();
-                        }
+                        _defaultInstance ??= new Messenger();
                     }
                 }
                 return _defaultInstance;
@@ -70,8 +67,8 @@ namespace KUtilitiesCore.MVVM.Messaging
         /// </summary>
         public Messenger()
         {
-            _strictSubscriptions = new Dictionary<Type, List<Subscription>>();
-            _derivedSubscriptions = new Dictionary<Type, List<Subscription>>();
+            _strictSubscriptions = [];
+            _derivedSubscriptions = [];
             _capturedSyncContext = SynchronizationContext.Current ?? new SynchronizationContext();
             _cancellationTokenSource = new CancellationTokenSource();
 
@@ -142,7 +139,7 @@ namespace KUtilitiesCore.MVVM.Messaging
             RegisterInternal(recipient, token, receiveDerivedMessagesToo, action);
         }
 
-        private void RegisterInternal<TMessage>(object recipient, object token, bool receiveDerivedMessagesToo, Action<TMessage> action)
+        private void RegisterInternal<TMessage>(object recipient, object? token, bool receiveDerivedMessagesToo, Action<TMessage> action)
         {
             if (recipient == null) throw new ArgumentNullException(nameof(recipient));
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -160,12 +157,12 @@ namespace KUtilitiesCore.MVVM.Messaging
             }
         }
 
-        private List<Subscription> GetOrCreateSubscriptionList(Dictionary<Type, List<Subscription>> dictionary, Type messageType)
+        private static List<Subscription> GetOrCreateSubscriptionList(Dictionary<Type, List<Subscription>> dictionary, Type messageType)
         {
             // Asume que ya se tiene el _subscriptionsLock
             if (!dictionary.TryGetValue(messageType, out var list))
             {
-                list = new List<Subscription>();
+                list = [];
                 dictionary[messageType] = list;
             }
             return list;
@@ -189,7 +186,7 @@ namespace KUtilitiesCore.MVVM.Messaging
             SendInternalEnvelope(message, null, token);
         }
 
-        private void SendInternalEnvelope<TMessage>(TMessage messageContent, Type targetTypeFilter, object token)
+        private void SendInternalEnvelope<TMessage>(TMessage messageContent, Type? targetTypeFilter, object? token)
         {
             if (messageContent is null) 
                 throw new ArgumentNullException(nameof(messageContent));
@@ -261,10 +258,11 @@ namespace KUtilitiesCore.MVVM.Messaging
                 // Procesar suscripciones estrictas
                 if (_strictSubscriptions.TryGetValue(envelope.DeclaredMessageType, out var strictList))
                 {
-                    foreach (var sub in strictList)
+                    foreach (var sub in from sub in strictList
+                                        where sub.IsAliveAndMatches(envelope.Token, envelope.TargetTypeFilter)
+                                        select sub)
                     {
-                        if (sub.IsAliveAndMatches(envelope.Token, envelope.TargetTypeFilter))
-                            recipientsToExecute.Add(sub);
+                        recipientsToExecute.Add(sub);
                     }
                 }
 
@@ -275,10 +273,11 @@ namespace KUtilitiesCore.MVVM.Messaging
                     // Comprueba herencia e implementación de interfaz (ActualMessageType hereda/implementa subscribedType)
                     if (subscribedType.IsAssignableFrom(envelope.ActualMessageType))
                     {
-                        foreach (var sub in entry.Value)
+                        foreach (var sub in from sub in entry.Value
+                                            where sub.IsAliveAndMatches(envelope.Token, envelope.TargetTypeFilter)
+                                            select sub)
                         {
-                            if (sub.IsAliveAndMatches(envelope.Token, envelope.TargetTypeFilter))
-                                recipientsToExecute.Add(sub);
+                            recipientsToExecute.Add(sub);
                         }
                     }
                 }
@@ -302,6 +301,12 @@ namespace KUtilitiesCore.MVVM.Messaging
                 }
             }
         }
+        private void RemoveFromAllSubscriptions(Predicate<Subscription> match)
+        {
+            // Asume que ya se tiene el _subscriptionsLock
+            CleanupDictionary(_strictSubscriptions, match);
+            CleanupDictionary(_derivedSubscriptions, match);
+        }
 
         /// <inheritdoc/>
         public void Unregister(object recipient)
@@ -314,12 +319,6 @@ namespace KUtilitiesCore.MVVM.Messaging
             }
         }
 
-        private void RemoveFromAllSubscriptions(Predicate<Subscription> match)
-        {
-            // Asume que ya se tiene el _subscriptionsLock
-            CleanupDictionary(_strictSubscriptions, match);
-            CleanupDictionary(_derivedSubscriptions, match);
-        }
 
 
         /// <inheritdoc/>
@@ -341,22 +340,22 @@ namespace KUtilitiesCore.MVVM.Messaging
         }
 
         /// <inheritdoc/>
-        public void Unregister<TMessage>(object recipient, object token, Action<TMessage> action)
+        public void Unregister<TMessage>(object recipient, object? token, Action<TMessage>? action)
         {
-            // Al menos uno debe ser no nulo para evitar desregistrar todo accidentalmente
+            // Al menos uno debe ser no nulo para evitar desregistrar todos accidentalmente
             if (recipient == null && token == null && action == null)
             {
                 // Podría ser una operación válida para limpiar todas las suscripciones de un tipo TMessage,
                 // pero es potencialmente peligrosa. Se podría requerir una confirmación o un método explícito.
                 // Por ahora, si todos son null, no hacemos nada o lanzamos excepción.
-                // throw new ArgumentException("At least one of recipient, token, or action must be non-null to unregister.");
+                // throw new ArgumentException("Almenos en uno de recipient, token,  action debe ser o-nulo para removerlo.");
                 return;
             }
 
             Type messageType = typeof(TMessage);
             lock (_subscriptionsLock)
             {
-                Predicate<Subscription> match = sub =>
+                bool match(Subscription sub)
                 {
                     bool recipientMatch = recipient == null || sub.Action.Target == recipient;
                     if (!recipientMatch) return false;
@@ -374,7 +373,7 @@ namespace KUtilitiesCore.MVVM.Messaging
                         return false;
                     }
                     return actionMatch;
-                };
+                }
 
                 CleanupDictionary(_strictSubscriptions, messageType, match);
                 CleanupDictionary(_derivedSubscriptions, messageType, match);
@@ -413,7 +412,7 @@ namespace KUtilitiesCore.MVVM.Messaging
             }
         }
 
-        private void CleanupDictionary(Dictionary<Type, List<Subscription>> dictionary, Predicate<Subscription> matchToRemove)
+        private static void CleanupDictionary(Dictionary<Type, List<Subscription>> dictionary, Predicate<Subscription> matchToRemove)
         {
             // Asume que ya se tiene el _subscriptionsLock
             if (dictionary == null || dictionary.Count == 0) return;
@@ -434,7 +433,7 @@ namespace KUtilitiesCore.MVVM.Messaging
             }
         }
 
-        private void CleanupDictionary(Dictionary<Type, List<Subscription>> dictionary, Type messageTypeFilter, Predicate<Subscription> matchToRemove)
+        private static void CleanupDictionary(Dictionary<Type, List<Subscription>> dictionary, Type messageTypeFilter, Predicate<Subscription> matchToRemove)
         {
             // Asume que ya se tiene el _subscriptionsLock
             if (dictionary == null || !dictionary.TryGetValue(messageTypeFilter, out var subscriptions))
@@ -495,46 +494,31 @@ namespace KUtilitiesCore.MVVM.Messaging
         /// <summary>
         /// Representa un mensaje en la cola interna del Messenger.
         /// </summary>
-        private class MessageEnvelope
+        private sealed class MessageEnvelope(object messageContent, Type actualMessageType, Type? targetTypeFilter, object? token, Type declaredMessageType)
         {
             /// <summary>El contenido del mensaje.</summary>
-            public object MessageContent { get; }
+            public object MessageContent { get; } = messageContent;
             /// <summary>El tipo real del mensaje en tiempo de ejecución.</summary>
-            public Type ActualMessageType { get; }
+            public Type ActualMessageType { get; } = actualMessageType;
             /// <summary>El tipo declarado del mensaje al momento del envío (puede ser una clase base o interfaz).</summary>
-            public Type DeclaredMessageType { get; }
+            public Type DeclaredMessageType { get; } = declaredMessageType;
             /// <summary>El tipo de destino opcional para el mensaje.</summary>
-            public Type TargetTypeFilter { get; }
+            public Type? TargetTypeFilter { get; } = targetTypeFilter;
             /// <summary>El token opcional asociado con el mensaje.</summary>
-            public object Token { get; }
-
-            public MessageEnvelope(object messageContent, Type actualMessageType, Type targetTypeFilter, object token, Type declaredMessageType)
-            {
-                MessageContent = messageContent;
-                ActualMessageType = actualMessageType;
-                TargetTypeFilter = targetTypeFilter;
-                Token = token;
-                DeclaredMessageType = declaredMessageType;
-            }
+            public object? Token { get; } = token;
         }
 
         /// <summary>
         /// Representa una suscripción individual a un mensaje.
         /// </summary>
-        private sealed class Subscription
+        private sealed class Subscription(WeakAction action, object? token)
         {
-            public WeakAction Action { get; }
-            public object Token { get; }
-
-            public Subscription(WeakAction action, object token)
-            {
-                Action = action ?? throw new ArgumentNullException(nameof(action));
-                Token = token;
-            }
+            public WeakAction Action { get; } = action ?? throw new ArgumentNullException(nameof(action));
+            public object? Token { get; } = token;
 
             public bool IsAlive => Action.IsAlive;
 
-            public bool IsAliveAndMatches(object messageToken, Type messageTargetType)
+            public bool IsAliveAndMatches(object? messageToken, Type? messageTargetType)
             {
                 if (!IsAlive) return false;
                 // Comprobar token

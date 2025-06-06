@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using KUtilitiesCore.Logger.Options;
+using Microsoft.Extensions.Logging;
 using System;
 
-namespace KUtilitiesCore.Logger
+namespace KUtilitiesCore.Logger.Options
 {
     /// <summary>
     /// Implementación básica de <see cref="ILoggerOptions"/> para configurar el nivel mínimo de log.

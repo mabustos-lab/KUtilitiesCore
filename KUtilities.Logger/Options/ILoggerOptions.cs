@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 
-namespace KUtilitiesCore.Logger
+namespace KUtilitiesCore.Logger.Options
 {
     /// <summary>
     /// Define las opciones básicas para la configuración de un logger.

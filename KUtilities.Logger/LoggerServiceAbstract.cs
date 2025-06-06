@@ -1,32 +1,41 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using KUtilitiesCore.Logger.Helpers;
+using KUtilitiesCore.Logger.Options;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace KUtilitiesCore.Logger
 {
     /// <summary>
-    /// Implementación de <see cref="IAppLogger{TCategoryName}"/> que utiliza <see
-    /// cref="ILogger{TCategoryName}"/> de Microsoft.Extensions.Logging.
+    /// Clase base abstracta para servicios de logging personalizados.
+    /// Implementa <see cref="ILoggerService{TCategoryName}"/> y utiliza las opciones de configuración
+    /// definidas en <typeparamref name="TOptions"/> para controlar el comportamiento del log.
+    /// Proporciona métodos de conveniencia para registrar mensajes en diferentes niveles de severidad,
+    /// así como la gestión de scopes y el formateo de mensajes.
     /// </summary>
-    /// <typeparam name="TCategoryName">El tipo de la clase que realiza el logging.</typeparam>
-    public abstract class LoggerServiceAbstract<TCategoryName> : ILoggerService<TCategoryName>
+    /// <typeparam name="TCategoryName">
+    /// Tipo de la clase que realiza el logging, utilizado para categorizar los mensajes.
+    /// </typeparam>
+    /// <typeparam name="TOptions">
+    /// Tipo de las opciones de configuración del logger, que debe implementar <see cref="ILoggerOptions"/>.
+    /// </typeparam>
+    /// <remarks>
+    /// Inicializa una nueva instancia de la clase <see cref="LoggerServiceAbstract{TCategoryName, TOptions}"/>.
+    /// </remarks>
+    /// <param name="options">Opciones de configuración del logger.</param>
+    /// <exception cref="ArgumentNullException">Se lanza si <paramref name="options"/> es null.</exception>
+    public abstract class LoggerServiceAbstract<TCategoryName, TOptions>(TOptions options)
+        : ILoggerService<TCategoryName>
+        where TOptions : ILoggerOptions
     {
-
-        internal readonly string CategoryName;
-        internal readonly ILoggerOptions Options;
+        /// <summary>
+        /// Nombre de la categoría asociada al logger, generalmente el nombre de la clase que lo utiliza.
+        /// </summary>
+        internal readonly string CategoryName = typeof(TCategoryName).Name;
 
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="AppLogger{TCategoryName}"/>.
+        /// Opciones de configuración del logger.
         /// </summary>
-        /// <param name="logger">La instancia de ILogger proporcionada por el framework de logging.</param>
-        /// <param name="categoryName">
-        /// El tipo de la clase que realiza el logging, usado para categorizar los mensajes.
-        /// </param>
-        /// <exception cref="ArgumentNullException">Se lanza si logger es null.</exception>
-        protected LoggerServiceAbstract(ILoggerOptions? options = null)
-        {
-            Options = options ?? new LoggerOptions();
-            CategoryName = typeof(TCategoryName).Name;
-        }
+        internal readonly TOptions LogOptions = options ?? throw new ArgumentNullException(nameof(options));
 
         /// <inheritdoc/>
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull
@@ -36,7 +45,7 @@ namespace KUtilitiesCore.Logger
 
         /// <inheritdoc/>
         public bool IsEnabled(LogLevel logLevel)
-        => logLevel >= Options.MinimumLogLevel;
+            => logLevel >= LogOptions.MinimumLogLevel;
 
         /// <inheritdoc/>
         public virtual void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
@@ -89,32 +98,42 @@ namespace KUtilitiesCore.Logger
 
         /// <inheritdoc/>
         public void LogInformation(string message, EventId? eventId, params object[] args)
-             => Log(LogLevel.Information, null, eventId, message, args);
+            => Log(LogLevel.Information, null, eventId, message, args);
 
         /// <inheritdoc/>
         public void LogInformation(Exception exception, string message, EventId? eventId, params object[] args)
-             => Log(LogLevel.Information, exception, eventId, message, args);
+            => Log(LogLevel.Information, exception, eventId, message, args);
 
         /// <inheritdoc/>
         public void LogTrace(string message, EventId? eventId, params object[] args)
             => Log(LogLevel.Trace, null, eventId, message, args);
 
-        // Implementaciones de los métodos de conveniencia
         /// <inheritdoc/>
         public void LogTrace(Exception exception, string message, EventId? eventId, params object[] args)
             => Log(LogLevel.Trace, exception, eventId, message, args);
 
-        //internal abstract void WriteLog(LogLevel logLevel, EventId eventId, Exception? exception, string message, params object[] args);
         /// <inheritdoc/>
         public void LogWarning(string message, EventId? eventId, params object[] args)
             => Log(LogLevel.Warning, null, eventId, message, args);
 
         /// <inheritdoc/>
         public void LogWarning(Exception exception, string message, EventId? eventId, params object[] args)
-             => Log(LogLevel.Warning, exception, eventId, message, args);
+            => Log(LogLevel.Warning, exception, eventId, message, args);
 
+        /// <summary>
+        /// Método que debe implementar la clase derivada para escribir la entrada de log en el destino deseado.
+        /// </summary>
+        /// <param name="entry">La entrada de log a escribir.</param>
         internal abstract void WriteLog(LogEntry entry);
 
+        /// <summary>
+        /// Método privado auxiliar para formatear y registrar mensajes de log usando los métodos de conveniencia.
+        /// </summary>
+        /// <param name="logLevel">Nivel de log.</param>
+        /// <param name="exception">Excepción asociada, si existe.</param>
+        /// <param name="eventId">Identificador del evento.</param>
+        /// <param name="message">Mensaje de log.</param>
+        /// <param name="args">Argumentos para el mensaje.</param>
         private void Log(LogLevel logLevel, Exception? exception, EventId? eventId, string message, params object[] args)
         {
             // Formatea el mensaje si hay argumentos
@@ -133,6 +152,5 @@ namespace KUtilitiesCore.Logger
                 (state, ex) => formattedMessage
             );
         }
-
     }
 }
