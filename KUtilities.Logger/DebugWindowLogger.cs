@@ -16,7 +16,7 @@ namespace KUtilitiesCore.Logger
     /// Inicializa una nueva instancia de <see cref="DebugWindowLogger{TCategoryName}"/>.
     /// </remarks>
     /// <param name="options">Opciones de configuración del logger.</param>
-    public class DebugWindowLogger<TCategoryName>(LoggerOptions options) : LoggerServiceAbstract<TCategoryName, LoggerOptions>(options)
+    class DebugWindowLogger<TCategoryName>(LoggerOptions options) : LoggerServiceAbstract<TCategoryName, LoggerOptions>(options)
     {
 
         /// <summary>

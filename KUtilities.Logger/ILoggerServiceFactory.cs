@@ -7,26 +7,35 @@ namespace KUtilitiesCore.Logger
 {
     /// <summary>
     /// Define un contrato para una fábrica de servicios de logging.
-    /// La fábrica es responsable de crear instancias de <see cref="ILoggerService{TCategoryName}"/>,
-    /// potencialmente utilizando uno o más <see cref="ILoggerServiceProvider"/>.
+    /// La fábrica utiliza proveedores (<see cref="ILoggerServiceProvider"/>) para crear
+    /// instancias de <see cref="ILoggerService{TCategoryName}"/>.
     /// </summary>
     public interface ILoggerServiceFactory : IDisposable
     {
         /// <summary>
         /// Agrega un proveedor de servicios de logging a la fábrica.
-        /// La fábrica puede utilizar múltiples proveedores para crear loggers compuestos.
         /// </summary>
         /// <param name="provider">El proveedor de servicios de logging a agregar.</param>
-        /// <exception cref="ArgumentNullException">Se lanza si el <paramref name="provider"/> es nulo.</exception>
+        /// <exception cref="ArgumentNullException">Si el proveedor es nulo.</exception>
+        /// <exception cref="ArgumentException">Si ya existe un proveedor con el mismo nombre.</exception>
         void AddProvider(ILoggerServiceProvider provider);
 
         /// <summary>
-        /// Obtiene una instancia de <see cref="ILoggerService{TCategoryName}"/> para la categoría especificada.
-        /// Si se han agregado múltiples proveedores, podría devolver un logger compuesto.
+        /// Obtiene una instancia de <see cref="ILoggerService{TCategoryName}"/> utilizando un proveedor específico.
         /// </summary>
-        /// <typeparam name="TCategoryName">El tipo (categoría) para el cual se obtiene el logger.</typeparam>
-        /// <param name="options">Opciones opcionales para configurar el logger. Si múltiples proveedores son usados, estas opciones podrían aplicarse a todos o ser específicas del proveedor.</param>
+        /// <typeparam name="TCategoryName">El tipo usado para la categoría del logger.</typeparam>
+        /// <param name="providerName">El nombre del proveedor a utilizar.</param>
         /// <returns>Una instancia de <see cref="ILoggerService{TCategoryName}"/>.</returns>
-        ILoggerService<TCategoryName> GetLogger<TCategoryName>(ILoggerOptions? options = null) where TCategoryName : class;
+        /// <exception cref="ArgumentException">Si no se encuentra un proveedor con el nombre especificado.</exception>
+        ILoggerService<TCategoryName> GetLogger<TCategoryName>(string providerName);
+
+        /// <summary>
+        /// Obtiene una instancia de <see cref="ILoggerService{TCategoryName}"/> utilizando el proveedor por defecto
+        /// o el primer proveedor registrado si no se especifica uno por defecto.
+        /// </summary>
+        /// <typeparam name="TCategoryName">El tipo usado para la categoría del logger.</typeparam>
+        /// <returns>Una instancia de <see cref="ILoggerService{TCategoryName}"/>.</returns>
+        /// <exception cref="InvalidOperationException">Si no hay proveedores registrados.</exception>
+        ILoggerService<TCategoryName> GetLogger<TCategoryName>();
     }
 }
