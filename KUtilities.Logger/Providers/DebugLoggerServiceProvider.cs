@@ -17,7 +17,7 @@ namespace KUtilitiesCore.Logger.Providers
     {
         private readonly LoggerOptions _options = options ?? throw new ArgumentNullException(nameof(options));
         /// <inheritdoc/>
-        public string Name => "Debug"; // Nombre único para este proveedor
+        public string Name => nameof(DebugLoggerServiceProvider); // Nombre único para este proveedor
 
         /// <inheritdoc/>
         public ILoggerService<TCategoryName> CreateLogger<TCategoryName>()

@@ -21,7 +21,7 @@ namespace KUtilitiesCore.Logger
     /// logs antiguos y rotación por tamaño.
     /// </summary>
     /// <typeparam name="TCategoryName">Tipo para categorización de logs.</typeparam>
-    public class FileLogger<TCategoryName> : LoggerServiceAbstract<TCategoryName, FileLoggerOptions>, IDisposable
+    class FileLogger<TCategoryName> : LoggerServiceAbstract<TCategoryName, FileLoggerOptions>, IDisposable
     {
 
         private const int MaxRetries = 3;
