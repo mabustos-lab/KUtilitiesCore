@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace KUtilitiesCore.MVVM.Command
 {
@@ -9,6 +10,8 @@ namespace KUtilitiesCore.MVVM.Command
     /// </summary>
     public abstract class RelayCommandBase : IViewModelCommand
     {
+        #region Constructors
+
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="RelayCommandBase"/>.
         /// </summary>
@@ -16,8 +19,16 @@ namespace KUtilitiesCore.MVVM.Command
         {
         }
 
+        #endregion Constructors
+
+        #region Events
+
         /// <inheritdoc/>
         public event EventHandler? CanExecuteChanged;
+
+        #endregion Events
+
+        #region Properties
 
         /// <inheritdoc/>
         public virtual string CommandName { get; internal set; } = string.Empty;
@@ -25,11 +36,20 @@ namespace KUtilitiesCore.MVVM.Command
         /// <inheritdoc/>
         public virtual bool IsParametrizedCommand { get; internal set; }
 
+        #endregion Properties
+
+        #region Methods
+
         /// <inheritdoc/>
         public abstract bool CanExecute(object? parameter);
 
         /// <inheritdoc/>
         public abstract void Execute(object? parameter);
+
+        /// <summary>
+        /// Obtiene el parametro asociado a el view model si se requiere en el comando.
+        /// </summary>
+        public virtual object? GetViewModelParameter(object viewModelSource) => null;
 
         /// <summary>
         /// Notifica a la interfaz de usuario que el estado de ejecución del comando ha cambiado.
@@ -63,12 +83,15 @@ namespace KUtilitiesCore.MVVM.Command
                 throw new ArgumentException($"Se requieren {expectedParameterCount} parámetro(s).", nameof(expression));
             }
         }
+
         /// <summary>
         /// Valida que la expresión sea un MemberExpression sobre el ViewModel.
         /// </summary>
         /// <param name="expression">Expresión lambda.</param>
         /// <param name="viewModelType">Tipo del ViewModel esperado.</param>
-        /// <exception cref="ArgumentException">Si la expresión no es un MemberExpression sobre el ViewModel.</exception>
+        /// <exception cref="ArgumentException">
+        /// Si la expresión no es un MemberExpression sobre el ViewModel.
+        /// </exception>
         internal static void ValidateViewModelMemberExpression(
             LambdaExpression expression,
             Type viewModelType)
@@ -79,6 +102,7 @@ namespace KUtilitiesCore.MVVM.Command
             if (memberExpr.Expression is not ParameterExpression paramExpr || paramExpr.Type != viewModelType)
                 throw new ArgumentException("La expresión debe referenciar un miembro del ViewModel.", nameof(expression));
         }
+
         /// <summary>
         /// Indica si existe lógica de ejecución asociada al comando.
         /// </summary>
@@ -100,5 +124,6 @@ namespace KUtilitiesCore.MVVM.Command
             IsParametrizedCommand = expectedParameters > 0;
         }
 
+        #endregion Methods
     }
 }
