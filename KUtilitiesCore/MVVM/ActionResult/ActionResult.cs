@@ -10,16 +10,20 @@
         /// Resultado generado cuando la acción se canceló.
         /// </summary>
         public static ActionResult CancelResult =>
-            new ActionResult { Status = ActionResultStatus.Canceled };
-
+            new()
+            { Status = ActionResultStatus.Canceled };
+        /// <summary>
+        /// Obtiene una instancia Vacia
+        /// </summary>
         public static ActionResult Empty =>
-            new ActionResult();
+            new();
 
         /// <summary>
         /// Resultado generado cuando la acción se completó correctamente.
         /// </summary>
         public static ActionResult SuccessResult =>
-            new ActionResult { Status = ActionResultStatus.Succes };
+            new()
+            { Status = ActionResultStatus.Succes };
 
         /// <summary>
         /// Crea un resultado fallido.

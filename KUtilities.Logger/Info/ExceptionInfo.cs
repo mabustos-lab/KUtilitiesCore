@@ -22,8 +22,8 @@ namespace KUtilitiesCore.Logger.Info
         /// </summary>
         public ExceptionInfo()
         {
-            AggregateExceptions = new List<ExceptionInfo>();
-            AdditionalInfo = new List<KeyValuePair<string, string>>();
+            AggregateExceptions = [];
+            AdditionalInfo = [];
             _currentExceptionDepth = 1; // Profundidad base para una excepción no anidada directamente.
 
             // Inicializa propiedades no nulables con valores predeterminados para asegurar consistencia.
@@ -35,7 +35,7 @@ namespace KUtilitiesCore.Logger.Info
             ExceptionType = string.Empty;
             HelpLink = string.Empty;
             BaseExceptionSourceInfo = CallerInfo.Empty;
-            StackTraceFrames = new List<CallerInfo>();
+            StackTraceFrames = [];
         }
 
         /// <summary>
@@ -356,20 +356,18 @@ namespace KUtilitiesCore.Logger.Info
                     // y el punto de captura más reciente al final, o viceversa según se prefiera.
                     // El código original usaba Reverse(), lo que significa que el error más profundo (origen) está al final.
                     // Usualmente se muestra desde el punto de catch hacia el origen. Mantendré el Reverse().
-                    StackTraceFrames = frames.Select(frame => new CallerInfo(frame))
-                                             .Reverse() // Para que el inicio de la traza (método que lanzó) esté primero en la lista
-                                             .ToList();
+                    StackTraceFrames = [.. frames.Select(frame => new CallerInfo(frame)).Reverse()];
                 }
                 else
                 {
-                    StackTraceFrames = new List<CallerInfo>();
+                    StackTraceFrames = [];
                 }
             }
             catch (Exception e)
             {
                 // Error al obtener la información de la pila.
                 Debug.WriteLine($"Error loading stack trace: {e.Message}");
-                StackTraceFrames = new List<CallerInfo>(); // Asegurar que sea una lista vacía
+                StackTraceFrames = []; // Asegurar que sea una lista vacía
             }
         }
 
