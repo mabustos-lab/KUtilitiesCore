@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using KUtilitiesCore.Logger.Helpers;
+using KUtilitiesCore.Logger.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Concurrent;
@@ -19,18 +21,15 @@ namespace KUtilitiesCore.Logger
     /// logs antiguos y rotación por tamaño.
     /// </summary>
     /// <typeparam name="TCategoryName">Tipo para categorización de logs.</typeparam>
-    public class FileLogger<TCategoryName> : LoggerServiceAbstract<TCategoryName>, IDisposable
+    class FileLogger<TCategoryName> : LoggerServiceAbstract<TCategoryName, FileLoggerOptions>, IDisposable
     {
 
         private const int MaxRetries = 3;
         private const int RetryDelayMs = 100;
         private static readonly Mutex FileMutex = new(false, "Global\\FileLoggerMutex");
 
-        private readonly string _applicationName;
         private readonly JsonSerializerOptions _jsonOptions;
-        private readonly string _logDirectory;
         private readonly BlockingCollection<LogEntry> _logQueue = new();
-        private readonly bool _useJsonFormat;
         private int _currentFileIndex = 1;
         private string _currentLogFilePath = string.Empty;
 
@@ -38,22 +37,15 @@ namespace KUtilitiesCore.Logger
         private bool disposedValue;
 
         public FileLogger(
-           string? logDirectory = null,
-           string applicationName = "Application",
-           bool useJsonFormat = false) : base(new FileLoggerOptions())
+            FileLoggerOptions options) : base(options)
         {
-            _applicationName = applicationName;
-            _logDirectory = ValidateLogDirectory(logDirectory);
-            _useJsonFormat = useJsonFormat;
+            LogOptions.LogDirectory = ValidateLogDirectory(LogOptions.LogDirectory);
             _jsonOptions = CreateJsonOptions();
 
-            Directory.CreateDirectory(_logDirectory);
+            Directory.CreateDirectory(LogOptions.LogDirectory);
             InitializeLogFile();
             StartProcessingTask();
         }
-
-        public FileLoggerOptions GetOptions
-                    => (FileLoggerOptions)Options;
 
         internal override void WriteLog(LogEntry entry)
         {
@@ -86,10 +78,10 @@ namespace KUtilitiesCore.Logger
         {
             try
             {
-                var cutoff = DateTime.Now.AddDays(-GetOptions.RetentionDays);
-                var pattern = _useJsonFormat ? "*.json" : "*.log";
+                var cutoff = DateTime.Now.AddDays(-LogOptions.RetentionDays);
+                var pattern = LogOptions.UseJSonFormat ? "*.json" : "*.log";
 
-                foreach (var file in Directory.GetFiles(_logDirectory, pattern))
+                foreach (var file in Directory.GetFiles(LogOptions.LogDirectory, pattern))
                 {
                     var info = new FileInfo(file);
                     if (info.CreationTime < cutoff)
@@ -128,14 +120,14 @@ namespace KUtilitiesCore.Logger
         private string GenerateLogFilePath()
         {
             var dateStamp = DateTime.Now.ToString("yyyyMMdd");
-            var extension = _useJsonFormat ? ".json" : ".log";
-            return Path.Combine(_logDirectory, $"{_applicationName}_{dateStamp}_{_currentFileIndex:D2}{extension}");
+            var extension = LogOptions.UseJSonFormat ? ".json" : ".log";
+            return Path.Combine(LogOptions.LogDirectory, $"{LogOptions.ApplicationName}_{dateStamp}_{_currentFileIndex:D2}{extension}");
         }
 
         private string GetDefaultLogDirectory()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return Path.Combine(appData, _applicationName, "Logs");
+            return Path.Combine(appData, LogOptions.ApplicationName, "Logs");
         }
 
         private void InitializeLogFile()
@@ -147,7 +139,7 @@ namespace KUtilitiesCore.Logger
         private bool NeedsRotation()
         {
             var fileInfo = new FileInfo(_currentLogFilePath);
-            return fileInfo.Exists && fileInfo.Length > GetOptions.MaxFileSizeBytes;
+            return fileInfo.Exists && fileInfo.Length > LogOptions.MaxFileSizeBytes;
         }
 
         private void ProcessLogQueue()
@@ -162,7 +154,7 @@ namespace KUtilitiesCore.Logger
         {
             try
             {
-                var content = _useJsonFormat
+                var content = LogOptions.UseJSonFormat
                     ? FormatAsJson(entry)
                     : FormatAsText(entry);
 
@@ -176,7 +168,7 @@ namespace KUtilitiesCore.Logger
 
         private void RotateFile()
         {
-            _currentFileIndex = (_currentFileIndex % GetOptions.MaxRetainedFiles) + 1;
+            _currentFileIndex = (_currentFileIndex % LogOptions.MaxRetainedFiles) + 1;
             var newPath = GenerateLogFilePath();
 
             if (File.Exists(newPath))
@@ -250,7 +242,7 @@ namespace KUtilitiesCore.Logger
             catch (Exception ex)
             {
                 // 4. Fallback a directorio temporal en caso de error crítico
-                var tempPath = Path.Combine(Path.GetTempPath(), _applicationName, "Logs");
+                var tempPath = Path.Combine(Path.GetTempPath(), LogOptions.ApplicationName, "Logs");
                 Directory.CreateDirectory(tempPath);
                 Debug.WriteLine($"[Logger Error] Usando directorio temporal: {tempPath}. Razón: {ex.Message}");
                 return tempPath;

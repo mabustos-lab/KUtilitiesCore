@@ -4,6 +4,8 @@ using KUtilitiesCore.DataAccess.Utils;
 using System.Linq.Expressions;
 using System.Reflection;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
+using KUtilitiesCore.Logger;
+
 
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
@@ -40,7 +42,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <summary>
         /// Constructor.
         /// </summary>
-        protected EfCoreRepositoryBase(TDbContext context, ILoggerFactory loggerFactory = null)
+        protected EfCoreRepositoryBase(TDbContext context, ILoggerServiceProvider loggerFactory = null)
             : base(context, loggerFactory) { }
 
 #if NETCOREAPP

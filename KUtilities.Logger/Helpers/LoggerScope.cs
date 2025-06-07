@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
 
-namespace KUtilitiesCore.Logger
+namespace KUtilitiesCore.Logger.Helpers
 {
     internal sealed class LoggerScope : IDisposable
     {
-        private static readonly AsyncLocal<object?> _currentScope = new AsyncLocal<object?>();
+        private static readonly AsyncLocal<object?> _currentScope = new();
 
         public object? State { get; }
 

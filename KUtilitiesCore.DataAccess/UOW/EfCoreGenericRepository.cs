@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using KUtilitiesCore.Logger;
+using Microsoft.Extensions.Logging;
 
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
@@ -25,7 +26,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         where TDbContext : DbContext
 #endif
     {
-        public EfCoreGenericRepository(TDbContext context, ILoggerFactory loggerFactory = null)
+        public EfCoreGenericRepository(TDbContext context, ILoggerServiceProvider loggerFactory = null)
             : base(context, loggerFactory) { }
     }
 }

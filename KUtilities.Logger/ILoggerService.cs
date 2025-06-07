@@ -5,13 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace KUtilitiesCore.Logger
 {
-
     /// <summary>
     /// Interfaz para un servicio de logging genérico.
-    /// Abstrae la implementación de logging específica (ILogger<T>) para facilitar
-    /// la inyección de dependencias y las pruebas unitarias.
     /// </summary>
-    public interface ILoggerService<out TCategory>:ILogger<TCategory>
+    public interface ILoggerService: ILogger
     {
         /// <summary>
         /// Formatea y escribe un mensaje de log de Trace.
@@ -67,5 +64,13 @@ namespace KUtilitiesCore.Logger
         /// <param name="args">Un array de objetos con los argumentos para el mensaje.</param>
         void LogCritical(string message, EventId? eventId, params object[] args);
         void LogCritical(Exception exception, string message, EventId? eventId, params object[] args);
+    }
+    /// <summary>
+    /// Interfaz para un servicio de logging genérico.
+    /// Abstrae la implementación de logging específica (<see cref="ILogger{T}"/>) para facilitar
+    /// la inyección de dependencias y las pruebas unitarias.
+    /// </summary>
+    public interface ILoggerService<out TCategory>:ILogger<TCategory>, ILoggerService
+    {        
     }
 }
