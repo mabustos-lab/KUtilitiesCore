@@ -30,7 +30,7 @@ namespace KUtilitiesCore.Logger
         private static readonly Mutex FileMutex = new(false, "Global\\FileLoggerMutex");
 
         private readonly JsonSerializerOptions _jsonOptions;
-        private readonly BlockingCollection<LogEntry> _logQueue = new();
+        private readonly BlockingCollection<LogEntry> _logQueue = [];
         private int _currentFileIndex = 1;
         private string _currentLogFilePath = string.Empty;
 

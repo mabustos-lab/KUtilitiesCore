@@ -17,6 +17,6 @@ namespace KUtilitiesCore.MVVM
         /// Obtiene o establece el parámetro asociado al ViewModel.
         /// Este parámetro puede ser utilizado para pasar datos o configuraciones específicas al ViewModel.
         /// </summary>
-        object Parameter { get; set; }
+        object? Parameter { get; set; }
     }
 }

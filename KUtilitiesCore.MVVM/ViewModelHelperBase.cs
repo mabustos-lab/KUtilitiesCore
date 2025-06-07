@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data;
+using KUtilitiesCore.MVVM.Command;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -6,18 +7,23 @@ using System.Runtime.CompilerServices;
 
 namespace KUtilitiesCore.MVVM
 {
+    /// <summary>
+    /// Proporciona una base para implementar ViewModels en aplicaciones MVVM, gestionando
+    /// validación de datos, el estado de carga y comunicación con el modelo del documento.
+    /// </summary>
     public abstract class ViewModelHelperBase
         : IViewModelHelper, ISupportParameter, ISupportParentViewModel,
         IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
         #region Fields
 
-        private IViewModelDocumentOwner documentOwner;
-        private string error;
-        private ConcurrentDictionary<string, string> errorMessages;
+        private readonly List<RelayCommandBase> _registeredCommands = [];
+        private IViewModelDocumentOwner? documentOwner;
+        private string error = string.Empty;
+        private ConcurrentDictionary<string, string> errorMessages = [];
         private bool hasValidationErrors;
         private bool isLoading;
-        private object parentViewModel;
+        private object? parentViewModel;
 
         #endregion Fields
 
@@ -32,6 +38,7 @@ namespace KUtilitiesCore.MVVM
         /// <inheritdoc/>
         public event EventHandler? ParentViewModelChanged;
 
+        /// <inheritdoc/>
         public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion Events
@@ -69,10 +76,10 @@ namespace KUtilitiesCore.MVVM
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
-        public object Parameter { get; set; }
+        public object? Parameter { get; set; }
 
         [Display(AutoGenerateField = false)]
-        object ISupportParentViewModel.ParentViewModel
+        object? ISupportParentViewModel.ParentViewModel
         {
             get => parentViewModel;
             set => this.SetVMValue(ref parentViewModel, value, null, OnParentViewModelChangedBase);
@@ -131,6 +138,17 @@ namespace KUtilitiesCore.MVVM
         {
         }
 
+        /// <summary>
+        /// Registra un comando para que su estado CanExecute sea re-evaluado automáticamente cuando
+        /// una propiedad del ViewModel cambie.
+        /// </summary>
+        /// <param name="command">El comando a registrar.</param>
+        public void RegisterCommand<TCommand>(TCommand command)
+            where TCommand : RelayCommandBase
+        {
+            _registeredCommands.Add(command);
+        }
+
         /// <inheritdoc/>
         void IViewModelDataErrorInfo.SetError(string propertyName, string errorMessage)
         {
@@ -151,11 +169,12 @@ namespace KUtilitiesCore.MVVM
         public virtual void Update()
         {
             HasErrors();
+            UpdateRegisteredCommands();
             UpdateCommands();
         }
 
         internal virtual string GetErrorMessage(string columnName)
-         => GetErrorMessageCore(columnName);
+                 => GetErrorMessageCore(columnName);
 
         /// <summary>
         /// Envia un mensaje para el usuario de estado cuando IsLoading=True
@@ -199,7 +218,6 @@ namespace KUtilitiesCore.MVVM
 
         /// <inheritdoc/>
         protected abstract void OnDestroy();
-
 
         /// <summary>
         /// Es invocado cuando cambia de estado la propiedad <see cref="IsLoading"/>
@@ -262,6 +280,17 @@ namespace KUtilitiesCore.MVVM
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        /// <summary>
+        /// Itera sobre los comandos registrados y les indica que su estado de ejecución puede haber cambiado.
+        /// </summary>
+        private void UpdateRegisteredCommands()
+        {
+            foreach (var command in _registeredCommands)
+            {
+                command.RaiseCanExecuteChanged();
+            }
         }
 
         #endregion Methods

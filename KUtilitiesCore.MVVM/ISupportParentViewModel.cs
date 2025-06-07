@@ -17,6 +17,6 @@ namespace KUtilitiesCore.MVVM
         /// Obtiene o establece el objeto que actúa como el ViewModel padre.
         /// Este objeto puede ser utilizado para establecer relaciones jerárquicas entre ViewModels.
         /// </summary>
-        object ParentViewModel { get; set; }
+        object? ParentViewModel { get; set; }
     }
 }

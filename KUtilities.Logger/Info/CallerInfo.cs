@@ -35,7 +35,7 @@ namespace KUtilitiesCore.Logger.Info
 
         public static CallerInfo Empty
         {
-            get => new CallerInfo();
+            get => new();
         }
 
         public string ClassName { get; private set; }

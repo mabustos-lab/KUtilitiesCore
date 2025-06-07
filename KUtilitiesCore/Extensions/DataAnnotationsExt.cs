@@ -35,7 +35,7 @@ namespace KUtilitiesCore.Extensions
         /// Proporciona el texto de la propiedad que corresponde a la Descripción que se mostrará al usuario
         /// </summary>
         public static string DataAnnotationsDescription<TSource>(this TSource source, string propertyName)
-        => DataAnnotationsHelpers.GetDescriptionCore(typeof(TSource), propertyName);
+        => DataAnnotationsHelpers.GetDescriptionCore(source?.GetType() ?? typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto de la propiedad que corresponde a la Descripción que se mostrará al usuario
@@ -70,7 +70,7 @@ namespace KUtilitiesCore.Extensions
         /// Proporciona el texto de presentación de una propiedad.
         /// </summary>
         public static string DataAnnotationsDisplayFormat<TSource>(this TSource source, string propertyName)
-            => DataAnnotationsHelpers.GetDisplayFormatCore(typeof(TSource), propertyName);
+            => DataAnnotationsHelpers.GetDisplayFormatCore(source?.GetType() ?? typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto de presentación de una propiedad.
@@ -94,7 +94,7 @@ namespace KUtilitiesCore.Extensions
         /// Proporciona el texto para mostrar de un propiedad.
         /// </summary>
         public static string DataAnnotationsDisplayName<TSource>(this TSource source, string propertyName)
-            => DataAnnotationsHelpers.GetDisplayNameCore(typeof(TSource), propertyName);
+            => DataAnnotationsHelpers.GetDisplayNameCore(source?.GetType() ?? typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto para mostrar de un propiedad.
@@ -137,7 +137,7 @@ namespace KUtilitiesCore.Extensions
         /// Proporciona el texto para mostrar de un propiedad.
         /// </summary>
         public static string DataAnnotationsDisplayShortName<TSource>(this TSource source, string propertyName)
-            => DataAnnotationsHelpers.GetShortNameCore(typeof(TSource), propertyName);
+            => DataAnnotationsHelpers.GetShortNameCore(source?.GetType() ?? typeof(TSource), propertyName);
 
         /// <summary>
         /// Proporciona el texto para mostrar de un propiedad.

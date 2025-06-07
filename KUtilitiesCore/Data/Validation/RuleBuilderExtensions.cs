@@ -6,7 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace KUtilitiesCore.Data.Validation
 {
-    // Métodos de extensión para el API Fluido (NotNull, NotEmpty, Must, etc.)
+    /// <summary>
+    /// Métodos de extensión para el API Fluido (NotNull, NotEmpty, Must, etc.)
+    /// </summary>
     public static class RuleBuilderExtensions
     {
 

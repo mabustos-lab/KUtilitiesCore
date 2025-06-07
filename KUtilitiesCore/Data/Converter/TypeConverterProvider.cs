@@ -6,16 +6,24 @@ using KUtilitiesCore.Data.Converter.Types;
 
 namespace KUtilitiesCore.Data.Converter
 {
+    /// <summary>
+    /// Proveedor interno de convertidores de tipo. Permite registrar y resolver convertidores para tipos individuales y colecciones.
+    /// </summary>
     internal class TypeConverterProvider : ITypeConverterProvider
     {
-
+        /// <summary>
+        /// Diccionario que almacena los convertidores registrados, indexados por su tipo de destino.
+        /// </summary>
         private readonly IDictionary<Type, ITypeConverter> typeConverters;
 
+        /// <summary>
+        /// Inicializa una nueva instancia de <see cref="TypeConverterProvider"/> y registra los convertidores estándar.
+        /// </summary>
         public TypeConverterProvider()
         {
             typeConverters = new Dictionary<Type, ITypeConverter>();
 
-            // Single Converters:
+            // Registro de convertidores individuales y de colecciones.
             Add(new BoolConverter());
             Add(new ByteConverter());
             Add(new DateTimeConverter());
@@ -48,7 +56,6 @@ namespace KUtilitiesCore.Data.Converter
             Add(new UInt32Converter());
             Add(new UInt64Converter());
 
-            // Collection Converters:
             Add(new ArrayConverter<bool>(new BoolConverter()));
             Add(new ArrayConverter<byte>(new ByteConverter()));
             Add(new ArrayConverter<DateTime>(new DateTimeConverter()));
@@ -82,8 +89,18 @@ namespace KUtilitiesCore.Data.Converter
             Add(new ArrayConverter<ulong>(new UInt64Converter()));
         }
 
+        /// <summary>
+        /// Delegado opcional para obtener un convertidor personalizado basado en el tipo.
+        /// </summary>
         public ConverterByType? GetCustomConverter { get; set; }
 
+        /// <summary>
+        /// Agrega un convertidor de tipo específico al proveedor.
+        /// </summary>
+        /// <typeparam name="TTargetType">Tipo de destino que manejará el convertidor.</typeparam>
+        /// <param name="typeConverter">Instancia del convertidor a registrar.</param>
+        /// <returns>La instancia actual para encadenar llamadas.</returns>
+        /// <exception cref="TypeConverterNotRegisteredException">Se lanza si ya existe un convertidor registrado para el tipo.</exception>
         public ITypeConverterProvider Add<TTargetType>(ITypeConverter<TTargetType> typeConverter)
         {
             if (typeConverters.ContainsKey(typeConverter.TargetType))
@@ -96,6 +113,13 @@ namespace KUtilitiesCore.Data.Converter
             return this;
         }
 
+        /// <summary>
+        /// Agrega un convertidor de tipo para colecciones al proveedor.
+        /// </summary>
+        /// <typeparam name="TTargetType">Tipo de destino que manejará el convertidor de colección.</typeparam>
+        /// <param name="typeConverter">Instancia del convertidor de colección a registrar.</param>
+        /// <returns>La instancia actual para encadenar llamadas.</returns>
+        /// <exception cref="TypeConverterAlreadyRegisteredException">Se lanza si ya existe un convertidor registrado para el tipo.</exception>
         public ITypeConverterProvider Add<TTargetType>(IArrayTypeConverter<TTargetType> typeConverter)
         {
             if (typeConverters.ContainsKey(typeConverter.TargetType))
@@ -108,9 +132,21 @@ namespace KUtilitiesCore.Data.Converter
             return this;
         }
 
+        /// <summary>
+        /// Verifica si existe un convertidor registrado para el tipo de destino especificado.
+        /// </summary>
+        /// <param name="targetType">Tipo de destino a verificar.</param>
+        /// <returns>True si existe un convertidor registrado; de lo contrario, false.</returns>
         public bool ContainsConverterType(Type targetType)
             => typeConverters.ContainsKey(targetType);
 
+        /// <summary>
+        /// Resuelve un convertidor para el tipo de destino especificado.
+        /// Si no existe y hay un delegado personalizado, lo intenta registrar dinámicamente.
+        /// </summary>
+        /// <param name="targetType">Tipo de destino a resolver.</param>
+        /// <returns>Instancia de <see cref="ITypeConverter"/> correspondiente.</returns>
+        /// <exception cref="TypeConverterNotRegisteredException">Si no se encuentra un convertidor registrado.</exception>
         public ITypeConverter Resolve(Type targetType)
         {
             if (!typeConverters.ContainsKey(targetType) && GetCustomConverter != null)
@@ -126,6 +162,12 @@ namespace KUtilitiesCore.Data.Converter
             return typeConverter;
         }
 
+        /// <summary>
+        /// Resuelve un convertidor fuertemente tipado para el tipo de destino especificado.
+        /// </summary>
+        /// <typeparam name="TTargetType">Tipo de destino a resolver.</typeparam>
+        /// <returns>Instancia de <see cref="ITypeConverter{TTargetType}"/> correspondiente.</returns>
+        /// <exception cref="TypeConverterNotRegisteredException">Si no se encuentra un convertidor registrado.</exception>
         public ITypeConverter<TTargetType> Resolve<TTargetType>()
         {
             Type targetType = typeof(TTargetType);
@@ -137,6 +179,12 @@ namespace KUtilitiesCore.Data.Converter
             return converter;
         }
 
+        /// <summary>
+        /// Resuelve un convertidor de colecciones fuertemente tipado para el tipo de destino especificado.
+        /// </summary>
+        /// <typeparam name="TTargetType">Tipo de destino a resolver.</typeparam>
+        /// <returns>Instancia de <see cref="IArrayTypeConverter{TTargetType}"/> correspondiente.</returns>
+        /// <exception cref="TypeConverterNotRegisteredException">Si no se encuentra un convertidor registrado.</exception>
         public IArrayTypeConverter<TTargetType> ResolveCollection<TTargetType>()
         {
             Type targetType = typeof(TTargetType);
@@ -148,6 +196,11 @@ namespace KUtilitiesCore.Data.Converter
             return converter;
         }
 
+        /// <summary>
+        /// Agrega un convertidor para enumeraciones al proveedor.
+        /// </summary>
+        /// <typeparam name="TTargetType">Tipo de enumeración a registrar.</typeparam>
+        /// <returns>La instancia actual para encadenar llamadas.</returns>
         ITypeConverterProvider ITypeConverterProvider.AddEnum<TTargetType>()
         {
             return Add(new EnumConverter<TTargetType>());
