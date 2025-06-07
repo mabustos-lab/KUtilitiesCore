@@ -61,7 +61,7 @@ namespace KUtilitiesCore.MVVM.Command
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 1);
             relayCommand.CompileParametrizedExecuteLogic(viewModel, executeExpression);
             relayCommand.CompileParametrizedCanExecuteLogic(viewModel, canExecuteExpression);
-            if (viewModel is ViewModelHelperBase viewModelHelper)
+            if (viewModel is ISupportCommands viewModelHelper)
                 viewModelHelper.RegisterCommand(relayCommand);
             return relayCommand;
         }
@@ -186,7 +186,7 @@ namespace KUtilitiesCore.MVVM.Command
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 0);
             relayCommand.CompileExecuteLogic(viewModel, executeExpression);
             relayCommand.CompileCanExecuteLogic(viewModel, canExecuteExpression);
-            if (viewModel is ViewModelHelperBase viewModelHelper)
+            if (viewModel is ISupportCommands viewModelHelper)
                 viewModelHelper.RegisterCommand(relayCommand);
             return relayCommand;
         }
