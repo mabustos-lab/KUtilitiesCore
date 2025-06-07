@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Logger.Helpers;
+using KUtilitiesCore.Logger.Info;
 using KUtilitiesCore.Logger.Options;
 using Microsoft.Extensions.Logging;
 using System;
