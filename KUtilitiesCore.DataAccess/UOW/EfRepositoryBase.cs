@@ -7,6 +7,8 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using KUtilitiesCore.Logger;
+
 
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
@@ -38,23 +40,23 @@ namespace KUtilitiesCore.DataAccess.UOW
     {
         protected readonly TDbContext Context;
         protected readonly DbSet<TEntity> DbSet;
-        protected readonly ILogger Logger;
+        protected readonly ILoggerService Logger;
 
         /// <summary>
         /// Constructor base.
         /// </summary>
-        protected EfRepositoryBase(TDbContext context, ILoggerFactory loggerFactory = null)
+        protected EfRepositoryBase(TDbContext context, ILoggerServiceProvider loggerFactory = null)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
             DbSet = Context.Set<TEntity>();
-            Logger = loggerFactory?.CreateLogger(GetType()) ?? NullLoggerFactory.Instance.CreateLogger(GetType());
+            Logger = loggerFactory?.CreateLogger<EfRepositoryBase<TEntity, TDbContext>>() ?? NullLoggerService<EfRepositoryBase<TEntity, TDbContext>>.Instance;
         }
 
         // --- Implementación de IReadOnlyDbRepository<TEntity> ---
         /// <inheritdoc/>
         public virtual async Task<TEntity> FindOneAsync(ISpecification<TEntity> specification)
         {
-            if(specification == null)
+            if (specification == null)
                 throw new ArgumentNullException(nameof(specification));
             IQueryable<TEntity> query = ApplySpecification(specification);
             return await query.SingleOrDefaultAsync();
@@ -63,7 +65,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual async Task<IReadOnlyList<TEntity>> FindAsync(ISpecification<TEntity> specification)
         {
-            if(specification == null)
+            if (specification == null)
                 throw new ArgumentNullException(nameof(specification));
             IQueryable<TEntity> query = ApplySpecification(specification);
             return await query.ToListAsync();
@@ -74,13 +76,13 @@ namespace KUtilitiesCore.DataAccess.UOW
             IPagingOptions pagingOptions,
             ISpecification<TEntity> specification)
         {
-            if(pagingOptions == null)
+            if (pagingOptions == null)
                 throw new ArgumentNullException(nameof(pagingOptions));
-            if(specification == null)
+            if (specification == null)
                 throw new ArgumentNullException(nameof(specification));
-            if(!pagingOptions.SkipPagination && pagingOptions.PageNumber <= 0)
+            if (!pagingOptions.SkipPagination && pagingOptions.PageNumber <= 0)
                 throw new ArgumentOutOfRangeException(nameof(pagingOptions.PageNumber));
-            if(!pagingOptions.SkipPagination && pagingOptions.PageSize <= 0)
+            if (!pagingOptions.SkipPagination && pagingOptions.PageSize <= 0)
                 throw new ArgumentOutOfRangeException(nameof(pagingOptions.PageSize));
 
             IQueryable<TEntity> query = ApplySpecification(specification);
@@ -90,13 +92,13 @@ namespace KUtilitiesCore.DataAccess.UOW
             object lastKeyValue = null;
             int currentPageNumber = pagingOptions.PageNumber;
 
-            if(pagingOptions.SkipPagination)
+            if (pagingOptions.SkipPagination)
             {
                 items = await query.ToListAsync();
                 totalCount = items.Count;
                 hasNextPage = false;
                 currentPageNumber = 1;
-                if(!items.IsNullOrEmpty() && (specification.OrderBy != null || specification.OrderByDescending != null))
+                if (!items.IsNullOrEmpty() && (specification.OrderBy != null || specification.OrderByDescending != null))
                 {
                     lastKeyValue = GetKeyValueFromEntity(items.Last(), specification);
                 }
@@ -109,7 +111,7 @@ namespace KUtilitiesCore.DataAccess.UOW
                     hasNextPage);
             }
 
-            if(pagingOptions.Strategy == PagingStrategy.Offset)
+            if (pagingOptions.Strategy == PagingStrategy.Offset)
             {
                 totalCount = await query.CountAsync();
                 int skip = (pagingOptions.PageNumber - 1) * pagingOptions.PageSize;
@@ -117,18 +119,19 @@ namespace KUtilitiesCore.DataAccess.UOW
                 items = await query.Skip(skip).Take(pagingOptions.PageSize).ToListAsync();
 
                 hasNextPage = (pagingOptions.PageNumber * pagingOptions.PageSize) < totalCount;
-                if(items.Any() && (specification.OrderBy != null || specification.OrderByDescending != null))
+                if (items.Any() && (specification.OrderBy != null || specification.OrderByDescending != null))
                 {
                     lastKeyValue = GetKeyValueFromEntity(items.Last(), specification);
                 }
-            } else // PagingStrategy.Keyset
+            }
+            else // PagingStrategy.Keyset
             {
-                if(specification.OrderBy == null && specification.OrderByDescending == null)
+                if (specification.OrderBy == null && specification.OrderByDescending == null)
                 {
                     throw new InvalidOperationException(
                         "La paginación Keyset requiere una cláusula OrderBy u OrderByDescending en la especificación.");
                 }
-                if(pagingOptions.AfterValue != null)
+                if (pagingOptions.AfterValue != null)
                 {
                     query = ApplyKeysetFilter(query, specification, pagingOptions.AfterValue);
                 }
@@ -137,7 +140,7 @@ namespace KUtilitiesCore.DataAccess.UOW
 
                 hasNextPage = itemsWithNext.Count > pagingOptions.PageSize;
                 items = itemsWithNext.Take(pagingOptions.PageSize).ToList();
-                if(items.Any())
+                if (items.Any())
                 {
                     lastKeyValue = GetKeyValueFromEntity(items.Last(), specification);
                 }
@@ -158,7 +161,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual async Task<bool> ExistsAsync(ISpecification<TEntity> specification)
         {
-            if(specification == null)
+            if (specification == null)
                 throw new ArgumentNullException(nameof(specification));
             return await ApplySpecification(specification).AnyAsync();
         }
@@ -166,7 +169,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual async Task<int> CountAsync(ISpecification<TEntity> specification)
         {
-            if(specification == null)
+            if (specification == null)
                 throw new ArgumentNullException(nameof(specification));
             return await ApplySpecification(specification).CountAsync();
         }
@@ -175,7 +178,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual Task<TEntity> AddAsync(TEntity entity)
         {
-            if(entity == null)
+            if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
             DbSet.Add(entity);
             return Task.FromResult(entity);
@@ -184,7 +187,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual Task AddRangeAsync(IEnumerable<TEntity> entities)
         {
-            if(entities == null)
+            if (entities == null)
                 throw new ArgumentNullException(nameof(entities));
             DbSet.AddRange(entities);
             return Task.CompletedTask;
@@ -193,10 +196,10 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual Task UpdateAsync(TEntity entity)
         {
-            if(entity == null)
+            if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
             var entry = Context.Entry(entity);
-            if(entry.State == EntityState.Detached)
+            if (entry.State == EntityState.Detached)
                 DbSet.Attach(entity);
             entry.State = EntityState.Modified;
             return Task.CompletedTask;
@@ -205,10 +208,10 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual Task DeleteAsync(TEntity entity)
         {
-            if(entity == null)
+            if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
             var entry = Context.Entry(entity);
-            if(entry.State == EntityState.Detached)
+            if (entry.State == EntityState.Detached)
                 DbSet.Attach(entity);
             DbSet.Remove(entity);
             return Task.CompletedTask;
@@ -223,7 +226,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// </summary>
         protected virtual IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification)
         {
-            if(specification == null)
+            if (specification == null)
                 throw new ArgumentNullException(nameof(specification));
             return SpecificationEvaluator<TEntity>.GetQuery(DbSet.AsQueryable(), specification);
         }
@@ -236,17 +239,17 @@ namespace KUtilitiesCore.DataAccess.UOW
             ISpecification<TEntity> specification,
             object afterValue)
         {
-            if(afterValue == null)
+            if (afterValue == null)
                 return query;
             LambdaExpression orderByExpression = specification.OrderBy ?? specification.OrderByDescending;
-            if(orderByExpression == null)
+            if (orderByExpression == null)
                 throw new InvalidOperationException("Keyset pagination requiere OrderBy/OrderByDescending.");
 
             var parameter = orderByExpression.Parameters.Single();
             var propertyAccess = orderByExpression.Body;
-            if(propertyAccess is UnaryExpression unary && unary.NodeType == ExpressionType.Convert)
+            if (propertyAccess is UnaryExpression unary && unary.NodeType == ExpressionType.Convert)
                 propertyAccess = unary.Operand;
-            if(!(propertyAccess is MemberExpression memberExpression))
+            if (!(propertyAccess is MemberExpression memberExpression))
                 throw new ArgumentException("Expresión OrderBy para Keyset debe ser un acceso a miembro.");
 
             ConstantExpression constantValue;
@@ -255,7 +258,8 @@ namespace KUtilitiesCore.DataAccess.UOW
                 var propertyType = ((PropertyInfo)memberExpression.Member).PropertyType;
                 var convertedAfterValue = Convert.ChangeType(afterValue, propertyType);
                 constantValue = Expression.Constant(convertedAfterValue, propertyType);
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new ArgumentException(
                     $"Tipo de AfterValue incompatible. AfterValue: '{afterValue}'.",
@@ -275,15 +279,16 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// </summary>
         protected virtual object GetKeyValueFromEntity(TEntity entity, ISpecification<TEntity> specification)
         {
-            if(entity == null)
+            if (entity == null)
                 return null;
             LambdaExpression orderByExpression = specification.OrderBy ?? specification.OrderByDescending;
-            if(orderByExpression == null)
+            if (orderByExpression == null)
                 return null;
             try
             {
                 return orderByExpression.Compile().DynamicInvoke(entity);
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.LogError(ex, "Error al obtener valor clave de entidad para Keyset.");
                 return null;

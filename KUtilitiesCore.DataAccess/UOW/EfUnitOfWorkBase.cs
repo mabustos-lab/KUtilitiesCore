@@ -1,5 +1,6 @@
 ﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.DataAccess.Utils;
+using KUtilitiesCore.Logger;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -37,7 +38,7 @@ namespace KUtilitiesCore.DataAccess.UOW
     //        , Microsoft.EntityFrameworkCore.DbContext
     //#endif
     //    {
-    //        public EfProductRepository(TDbContext context, ILoggerFactory loggerFactory = null)
+    //        public EfProductRepository(TDbContext context, ILoggerServiceProvider loggerFactory = null)
     //            : base(context, loggerFactory) { }
 
     //        public async Task<IPagedResult<Product>> GetProductsByCategoryPagedAsync(int categoryId, IPagingOptions pagingOptions)
@@ -64,19 +65,19 @@ namespace KUtilitiesCore.DataAccess.UOW
         , IDisposable
     {
         protected readonly TDbContext Context;
-        protected readonly ILogger Logger;
+        protected readonly ILoggerService Logger;
         private bool _disposed = false;
 #if NETCOREAPP
         private IDbContextTransaction _currentTransaction;
 #endif
         private Dictionary<Type, object> _repositories;
-        protected readonly ILoggerFactory LoggerFactoryInternal;
+        protected readonly ILoggerServiceProvider LoggerFactoryInternal;
 
-        protected EfUnitOfWorkBase(TDbContext context, ILoggerFactory loggerFactory = null)
+        protected EfUnitOfWorkBase(TDbContext context, ILoggerServiceProvider loggerFactory = null)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
             LoggerFactoryInternal = loggerFactory;
-            Logger = loggerFactory?.CreateLogger(GetType()) ?? NullLoggerFactory.Instance.CreateLogger(GetType());
+            Logger = loggerFactory?.CreateLogger<EfUnitOfWorkBase<TDbContext>>() ?? NullLoggerService<EfUnitOfWorkBase<TDbContext>>.Instance;
         }
 
         protected TRepoInterface ResolveRepository<TRepoInterface, TRepoImplementation>()

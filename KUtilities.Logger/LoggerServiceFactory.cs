@@ -1,4 +1,6 @@
-﻿using System;
+﻿using KUtilitiesCore.Logger.Providers;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -52,7 +54,10 @@ namespace KUtilitiesCore.Logger
             {
                 throw new ArgumentException("El nombre del proveedor no puede ser nulo o vacío.", nameof(providerName));
             }
-
+            if (providerName.Equals(nameof(NullLoggerServiceProvider), StringComparison.OrdinalIgnoreCase))
+            {
+                return NullLoggerService<TCategoryName>.Instance;
+            }
             // Asegurarse de que el caché para este proveedor exista.
             if (!_loggerCache.TryGetValue(providerName, out var providerCache))
             {
@@ -88,7 +93,7 @@ namespace KUtilitiesCore.Logger
             }
             if (_providers.Count == 0)
             {
-                throw new InvalidOperationException("No hay proveedores de logging registrados. Agregue al menos un proveedor usando AddProvider().");
+                return NullLoggerService<TCategoryName>.Instance;
             }
 
             // Usar el primer proveedor registrado como el predeterminado.
