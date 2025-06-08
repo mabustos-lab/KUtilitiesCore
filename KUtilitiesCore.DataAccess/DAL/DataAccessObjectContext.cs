@@ -27,29 +27,29 @@ namespace KUtilitiesCore.DataAccess.DAL
             factory = DbProviderFactories.GetFactory(cnnStr.ProviderName);
             connection = new Lazy<DbConnection>(CreateConnection);
         }
-
+        /// <inheritdoc/>
         public DbConnection Connection
             => connection.Value;
-
+        /// <inheritdoc/>
         public ITransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Snapshot)
         {
             return new TransactionBase(
                 Connection.BeginTransaction(isolationLevel));
         }
-
+        /// <inheritdoc/>
         public DbDataAdapter CreateAdapter(DbCommand command)
         {
             DbDataAdapter dataAdapter = factory.CreateDataAdapter();
             dataAdapter.SelectCommand = command;
             return dataAdapter;
         }
-
+        /// <inheritdoc/>
         public DbCommandBuilder CreateCommandBuilder()
         {
             DbCommandBuilder cmdBuilder = factory.CreateCommandBuilder();
             return cmdBuilder;
         }
-
+        /// <inheritdoc/>
         public DbCommand CreateCommand(string sql,
             IDbParameterCollection parameters = null,
             CommandType commandType = CommandType.Text, ITransaction transaction = null)
@@ -68,12 +68,12 @@ namespace KUtilitiesCore.DataAccess.DAL
             }
             return command;
         }
-
+        /// <inheritdoc/>
         public IDbParameterCollection CreateParameterCollection()
         {
             return new DbParameterCollection(CreateParameter);
         }
-
+        /// <inheritdoc/>
         public bool DatabaseExists()
         {
             if (connection.IsValueCreated && connection.Value.State == ConnectionState.Open) return true;
@@ -87,20 +87,20 @@ namespace KUtilitiesCore.DataAccess.DAL
                 return false;
             }
         }
-
+        /// <inheritdoc/>
         public void Dispose()
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
+        /// <inheritdoc/>
         public int ExecuteNonQuery(string sql, IDbParameterCollection parameters = null,
                     CommandType commandType = CommandType.Text, ITransaction transaction = null)
         {
             using DbCommand command = CreateCommand(sql, parameters, commandType, transaction);
             return command.ExecuteNonQuery();
         }
-
+        /// <inheritdoc/>
         public IReaderResultSet ExecuteReader(string sql,
             IDataReaderConverter translate, IDbParameterCollection parameters = null,
             CommandType commandType = CommandType.StoredProcedure)
@@ -118,7 +118,7 @@ namespace KUtilitiesCore.DataAccess.DAL
             }
             return ret;
         }
-     
+        /// <inheritdoc/>
         public TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null)
         {
             using DbCommand command = CreateCommand(sql, parameters);
@@ -134,7 +134,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         {
             return factory.CreateParameter();
         }
-
+        /// <inheritdoc/>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -155,7 +155,7 @@ namespace KUtilitiesCore.DataAccess.DAL
             cnn.Open();
             return cnn;
         }
-
+        /// <inheritdoc/>
         public void FillDataSet(string sql,string srcTable,DataSet ds, IDbParameterCollection parameters = null)
         {
             using DbCommand command = CreateCommand(sql, parameters);
@@ -163,7 +163,7 @@ namespace KUtilitiesCore.DataAccess.DAL
             adapter.SelectCommand = command;
             adapter.Fill(ds, srcTable);
         }
-
+        /// <inheritdoc/>
         public int UpdateDataSet(DataSet ds, string selectCommandText, string tableName, ITransaction transaction = null)
         {
             using DbCommand command = CreateCommand(selectCommandText, null, CommandType.Text, transaction);
@@ -178,7 +178,5 @@ namespace KUtilitiesCore.DataAccess.DAL
 
             return affected;
         }
-        
-
     }
 }

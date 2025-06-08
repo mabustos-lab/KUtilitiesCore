@@ -1,7 +1,9 @@
-﻿using System;
+﻿using KUtilitiesCore.MVVM.Command.Attribs;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Windows.Input;
 
 namespace KUtilitiesCore.MVVM.Command
@@ -31,9 +33,10 @@ namespace KUtilitiesCore.MVVM.Command
 
         #region Properties
 
-        // <summary>
+        /// <summary>
         /// Obtiene el nombre de la propiedad del ViewModel que este comando observa como parámetro.
-        /// Es null si el comando no tiene parámetros o no se especificó una propiedad de parámetro. </summary>
+        /// Es null si el comando no tiene parámetros o no se especificó una propiedad de parámetro. 
+        /// </summary>
         public string? WatchedParameterPropertyName { get; private set; }
 
         /// <summary>
@@ -47,35 +50,44 @@ namespace KUtilitiesCore.MVVM.Command
         #region Methods
 
         /// <summary>
-        /// Crea un comando que ejecuta un método con parámetro en el ViewModel.
+        /// Crea un comando que ejecuta un método con parámetro en el ViewModel. La lógica
+        /// CanExecute se busca por reflexión.
         /// </summary>
         /// <param name="viewModel">Instancia del ViewModel.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar con parámetro.</param>
         /// <param name="parameterPropertyExpression">
         /// Expresión que representa la propiedad del parámetro.
         /// </param>
-        /// <param name="canExecuteExpression">
-        /// Expresión opcional que determina si el comando puede ejecutarse con parámetro.
-        /// </param>
         /// <returns>Instancia de RelayCommand configurada.</returns>
-        /// <exception cref="ArgumentNullException">Si viewModel o executeExpression son nulos.</exception>
+        /// <exception cref="ArgumentNullException">
+        /// Si viewModel, executeExpression o parameterPropertyExpression son nulos.
+        /// </exception>
         public static RelayCommand<TViewModel, TParam> Create(
             TViewModel viewModel,
             Expression<Action<TViewModel, TParam?>> executeExpression,
-            Expression<Func<TViewModel, TParam>> parameterPropertyExpression,
-            Expression<Func<TViewModel, TParam?, bool>>? canExecuteExpression = null)
+            Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
         {
             if (viewModel == null)
                 throw new ArgumentNullException(nameof(viewModel));
             if (executeExpression == null)
                 throw new ArgumentNullException(nameof(executeExpression));
+            if (parameterPropertyExpression == null)
+                throw new ArgumentNullException(nameof(parameterPropertyExpression));
+
             RelayCommand<TViewModel, TParam> relayCommand = new();
             relayCommand.InitializeMemberMetaData(viewModel, parameterPropertyExpression);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 1);
+
+            // Buscar el método CanExecute usando reflexión
+            var executeMethodInfo = ((executeExpression.Body as MethodCallExpression)?.Method) ?? throw new ArgumentException("La expresión de ejecución debe ser una llamada a método.", nameof(executeExpression));
+            var canExecuteMethodInfo = FindCanExecuteMethod(viewModel.GetType(), executeMethodInfo);
+
             relayCommand.CompileParametrizedExecuteLogic(viewModel, executeExpression);
-            relayCommand.CompileParametrizedCanExecuteLogic(viewModel, canExecuteExpression);
+            relayCommand.CompileParametrizedCanExecuteLogic(viewModel, canExecuteMethodInfo);
+
             if (viewModel is ISupportCommands viewModelHelper)
                 viewModelHelper.RegisterCommand(relayCommand);
+
             return relayCommand;
         }
 
@@ -85,20 +97,34 @@ namespace KUtilitiesCore.MVVM.Command
         /// <param name="parameter">Parámetro opcional para el comando.</param>
         /// <returns>True si puede ejecutarse; de lo contrario, false.</returns>
         public override bool CanExecute(object? parameter)
-        { return _canExecuteWithParamFunc?.Invoke((TParam?)parameter) ?? HasExecuteLogic(); }
+        {
+            // La conversión puede fallar si el XAML envía un valor nulo a un tipo de valor no anulable.
+            TParam? typedParameter = default;
+            if (parameter != null)
+            {
+                try { typedParameter = (TParam)parameter; }
+                catch { /* Ignorar si la conversión falla, se usará el valor predeterminado */ }
+            }
+            return _canExecuteWithParamFunc?.Invoke(typedParameter) ?? HasExecuteLogic();
+        }
 
         /// <summary>
         /// Ejecuta el comando con el parámetro proporcionado.
         /// </summary>
         /// <param name="parameter">Parámetro opcional para el comando.</param>
         public override void Execute(object? parameter)
-        { _executeWithParamAction?.Invoke((TParam?)parameter); }
+        {
+            TParam? typedParameter = default;
+            if (parameter != null)
+            {
+                try { typedParameter = (TParam)parameter; }
+                catch { /* Ignorar si la conversión falla, se usará el valor predeterminado */ }
+            }
+            _executeWithParamAction?.Invoke(typedParameter);
+        }
 
         /// <inheritdoc/>
-        public override object? GetViewModelParameter()
-        {
-            return _getParamDelegate.Invoke();
-        }
+        public override object? GetViewModelParameter() => _getParamDelegate.Invoke();
 
         /// <summary>
         /// Indica si existe lógica de ejecución asociada al comando.
@@ -106,45 +132,68 @@ namespace KUtilitiesCore.MVVM.Command
         /// <returns>True si existe lógica de ejecución; de lo contrario, false.</returns>
         internal override bool HasExecuteLogic() => _executeWithParamAction != null;
 
-        private static string? GetMemberNameFromExpression(Expression<Func<TViewModel, TParam>> expression)
+        private static MethodInfo? FindCanExecuteMethod(Type viewModelType, MethodInfo executeMethod)
         {
-            Expression expressionBody = expression.Body;
-            // Si la propiedad es un tipo de valor y la expresión la convierte a object (ej. vm =>
-            // (object)vm.MyIntProp), el MemberExpression estará dentro de un UnaryExpression (Convert).
-            if (expressionBody is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
-            {
-                if (unaryExpression.Operand is MemberExpression innerMemberExpression)
-                {
-                    return innerMemberExpression.Member.Name;
-                }
-            }
-            else if (expressionBody is MemberExpression memberExpression)
-            {
-                // Esto cubre propiedades de tipos de referencia y tipos de valor que no se convierten.
-                return memberExpression.Member.Name;
-            }
-            // Podría no ser una expresión de miembro simple (ej. vm => vm.MyObject.Property), en
-            // cuyo caso este método simple no funcionará. Se podría hacer más robusto o lanzar excepción.
-            Debug.WriteLine($"RelayCommand: La expresión '{expression}' no parece ser una expresión de miembro simple para obtener un nombre de propiedad.");
-            return null;
+            // Estrategia 1: Buscar por atributo [CanExecuteAttribute]
+            var attribute = executeMethod.GetCustomAttribute<CanExecuteAttribute>();
+            string canExecuteName = attribute?.MethodName ?? $"Can{executeMethod.Name}";
+
+            // Estrategia 2: Buscar por convención "Can" + Nombre del método
+            var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            return viewModelType.GetMethod(canExecuteName, bindingFlags, null, [typeof(TParam)], null);
         }
 
-        /// <summary>
-        /// Compila la lógica de validación para comandos con parámetro.
-        /// </summary>
-        /// <param name="viewModel">Instancia del ViewModel.</param>
-        /// <param name="canExecuteExpression">Expresión de validación.</param>
-        private void CompileParametrizedCanExecuteLogic(
-            TViewModel viewModel,
-            Expression<Func<TViewModel, TParam?, bool>>? canExecuteExpression)
+        private void CompileParametrizedCanExecuteLogic(TViewModel viewModel, MethodInfo? canExecuteMethodInfo)
         {
-            if (canExecuteExpression == null)
-                return;
+            if (canExecuteMethodInfo == null) return;
 
-            ValidateMethodExpression(canExecuteExpression, typeof(bool), 1);
-            var canExecuteDelegate = canExecuteExpression.Compile();
-            _canExecuteWithParamFunc = param => canExecuteDelegate(viewModel, param);
+            var vmExpression = Expression.Constant(viewModel, typeof(TViewModel));
+            var paramExpression = Expression.Parameter(typeof(TParam), "param");
+            var callExpression = Expression.Call(vmExpression, canExecuteMethodInfo, paramExpression);
+
+            var lambda = Expression.Lambda<Func<TParam?, bool>>(callExpression, paramExpression);
+            _canExecuteWithParamFunc = lambda.Compile();
         }
+
+        //private static string? GetMemberNameFromExpression(Expression<Func<TViewModel, TParam>> expression)
+        //{
+        //    Expression expressionBody = expression.Body;
+        //    // Si la propiedad es un tipo de valor y la expresión la convierte a object (ej. vm =>
+        //    // (object)vm.MyIntProp), el MemberExpression estará dentro de un UnaryExpression (Convert).
+        //    if (expressionBody is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
+        //    {
+        //        if (unaryExpression.Operand is MemberExpression innerMemberExpression)
+        //        {
+        //            return innerMemberExpression.Member.Name;
+        //        }
+        //    }
+        //    else if (expressionBody is MemberExpression memberExpression)
+        //    {
+        //        // Esto cubre propiedades de tipos de referencia y tipos de valor que no se convierten.
+        //        return memberExpression.Member.Name;
+        //    }
+        //    // Podría no ser una expresión de miembro simple (ej. vm => vm.MyObject.Property), en
+        //    // cuyo caso este método simple no funcionará. Se podría hacer más robusto o lanzar excepción.
+        //    Debug.WriteLine($"RelayCommand: La expresión '{expression}' no parece ser una expresión de miembro simple para obtener un nombre de propiedad.");
+        //    return null;
+        //}
+
+        ///// <summary>
+        ///// Compila la lógica de validación para comandos con parámetro.
+        ///// </summary>
+        ///// <param name="viewModel">Instancia del ViewModel.</param>
+        ///// <param name="canExecuteExpression">Expresión de validación.</param>
+        //private void CompileParametrizedCanExecuteLogic(
+        //    TViewModel viewModel,
+        //    Expression<Func<TViewModel, TParam?, bool>>? canExecuteExpression)
+        //{
+        //    if (canExecuteExpression == null)
+        //        return;
+
+        //    ValidateMethodExpression(canExecuteExpression, typeof(bool), 1);
+        //    var canExecuteDelegate = canExecuteExpression.Compile();
+        //    _canExecuteWithParamFunc = param => canExecuteDelegate(viewModel, param);
+        //}
 
         /// <summary>
         /// Compila la lógica de ejecución para comandos con parámetro.
@@ -160,13 +209,16 @@ namespace KUtilitiesCore.MVVM.Command
             _executeWithParamAction = param => executeDelegate(viewModel, param);
         }
 
-        private void InitializeMemberMetaData(TViewModel viewModel,
-            Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
+        private void InitializeMemberMetaData(TViewModel viewModel, Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
         {
             ValidateViewModelMemberExpression(parameterPropertyExpression, typeof(TViewModel));
             var paramGetterDelegate = parameterPropertyExpression.Compile();
             _getParamDelegate = () => paramGetterDelegate(viewModel);
-            WatchedParameterPropertyName = GetMemberNameFromExpression(parameterPropertyExpression);
+
+            if (parameterPropertyExpression.Body is MemberExpression memberExpression)
+            {
+                WatchedParameterPropertyName = memberExpression.Member.Name;
+            }
             WatchedParameterPropertyType = typeof(TParam);
         }
 
@@ -197,30 +249,35 @@ namespace KUtilitiesCore.MVVM.Command
         #region Methods
 
         /// <summary>
-        /// Crea un comando que ejecuta un método sin parámetros en el ViewModel.
+        /// Crea un comando que ejecuta un método sin parámetros en el ViewModel. La lógica
+        /// CanExecute se busca automáticamente por reflexión.
         /// </summary>
         /// <param name="viewModel">Instancia del ViewModel.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar.</param>
-        /// <param name="canExecuteExpression">
-        /// Expresión opcional que determina si el comando puede ejecutarse.
-        /// </param>
         /// <returns>Instancia de RelayCommand configurada.</returns>
         /// <exception cref="ArgumentNullException">Si viewModel o executeExpression son nulos.</exception>
         public static RelayCommand<TViewModel> Create(
             TViewModel viewModel,
-            Expression<Action<TViewModel>> executeExpression,
-            Expression<Func<TViewModel, bool>>? canExecuteExpression = null)
+            Expression<Action<TViewModel>> executeExpression)
         {
             if (viewModel == null)
                 throw new ArgumentNullException(nameof(viewModel));
             if (executeExpression == null)
                 throw new ArgumentNullException(nameof(executeExpression));
+
             RelayCommand<TViewModel> relayCommand = new();
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 0);
+
+            // Buscar el método CanExecute usando reflexión
+            var executeMethodInfo = ((executeExpression.Body as MethodCallExpression)?.Method) ?? throw new ArgumentException("La expresión de ejecución debe ser una llamada a método.", nameof(executeExpression));
+            var canExecuteMethodInfo = FindCanExecuteMethod(viewModel.GetType(), executeMethodInfo);
+
             relayCommand.CompileExecuteLogic(viewModel, executeExpression);
-            relayCommand.CompileCanExecuteLogic(viewModel, canExecuteExpression);
+            relayCommand.CompileCanExecuteLogic(viewModel, canExecuteMethodInfo);
+
             if (viewModel is ISupportCommands viewModelHelper)
                 viewModelHelper.RegisterCommand(relayCommand);
+
             return relayCommand;
         }
 
@@ -245,21 +302,39 @@ namespace KUtilitiesCore.MVVM.Command
         /// <returns>True si existe lógica de ejecución; de lo contrario, false.</returns>
         internal override bool HasExecuteLogic() => _executeAction != null;
 
+        private static MethodInfo? FindCanExecuteMethod(Type viewModelType, MethodInfo executeMethod)
+        {
+            // Estrategia 1: Buscar por atributo [CanExecuteAttribute]
+            var attribute = executeMethod.GetCustomAttribute<CanExecuteAttribute>();
+            string canExecuteName = attribute?.MethodName ?? $"Can{executeMethod.Name}";
+
+            // Estrategia 2: Buscar por convención "Can" + Nombre del método
+            var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            return viewModelType.GetMethod(canExecuteName, bindingFlags, null, Type.EmptyTypes, null);
+        }
+
         /// <summary>
         /// Compila la lógica de validación para comandos sin parámetros.
         /// </summary>
         /// <param name="viewModel">Instancia del ViewModel.</param>
-        /// <param name="canExecuteExpression">Expresión de validación.</param>
+        /// <param name="canExecuteMethodInfo">povee acceso al metadata del metodo.</param>
         private void CompileCanExecuteLogic(
             TViewModel viewModel,
-            Expression<Func<TViewModel, bool>>? canExecuteExpression)
+            MethodInfo? canExecuteMethodInfo)
         {
-            if (canExecuteExpression == null)
-                return;
+            if (canExecuteMethodInfo == null) return;
 
-            ValidateMethodExpression(canExecuteExpression, typeof(bool), 0);
-            var canExecuteDelegate = canExecuteExpression.Compile();
-            _canExecuteFunc = () => canExecuteDelegate(viewModel);
+            // Validar que el método encontrado retorne bool y no tenga parámetros.
+            if (canExecuteMethodInfo.ReturnType != typeof(bool) || canExecuteMethodInfo.GetParameters().Length != 0)
+            {
+                Debug.WriteLine($"RelayCommand: El método CanExecute '{canExecuteMethodInfo.Name}' tiene una firma inválida. Debe retornar bool y no tener parámetros.");
+                return;
+            }
+
+            var vmExpression = Expression.Constant(viewModel, typeof(TViewModel));
+            var callExpression = Expression.Call(vmExpression, canExecuteMethodInfo);
+            var lambda = Expression.Lambda<Func<bool>>(callExpression);
+            _canExecuteFunc = lambda.Compile();
         }
 
         /// <summary>
