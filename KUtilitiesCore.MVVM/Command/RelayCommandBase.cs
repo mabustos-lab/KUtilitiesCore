@@ -46,10 +46,8 @@ namespace KUtilitiesCore.MVVM.Command
         /// <inheritdoc/>
         public abstract void Execute(object? parameter);
 
-        /// <summary>
-        /// Obtiene el parametro asociado a el view model si se requiere en el comando.
-        /// </summary>
-        public virtual object? GetViewModelParameter(object viewModelSource) => null;
+        /// <inheritdoc/>
+        public virtual object? GetViewModelParameter() => null;
 
         /// <summary>
         /// Notifica a la interfaz de usuario que el estado de ejecución del comando ha cambiado.

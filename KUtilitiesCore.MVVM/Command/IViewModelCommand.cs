@@ -9,6 +9,7 @@ namespace KUtilitiesCore.MVVM.Command
     /// </summary>
     public interface IViewModelCommand : ICommand
     {
+
         /// <summary>
         /// Nombre del método asociado al comando.
         /// </summary>
@@ -18,5 +19,11 @@ namespace KUtilitiesCore.MVVM.Command
         /// Indica si el comando requiere un parámetro.
         /// </summary>
         public bool IsParametrizedCommand { get; }
+
+        /// <summary>
+        /// Obtiene el parametro asociado a el view model si se requiere en el comando.
+        /// </summary>
+        object? GetViewModelParameter();
+
     }
 }

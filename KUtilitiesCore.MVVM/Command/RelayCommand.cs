@@ -25,7 +25,7 @@ namespace KUtilitiesCore.MVVM.Command
         /// </summary>
         private Action<TParam?>? _executeWithParamAction;
 
-        private Func<TViewModel, TParam>? paramGetterDelegate;
+        private Func<TParam?> _getParamDelegate = () => default;
 
         #endregion Fields
 
@@ -70,7 +70,7 @@ namespace KUtilitiesCore.MVVM.Command
             if (executeExpression == null)
                 throw new ArgumentNullException(nameof(executeExpression));
             RelayCommand<TViewModel, TParam> relayCommand = new();
-            relayCommand.InitializeMemberMetaData(parameterPropertyExpression);
+            relayCommand.InitializeMemberMetaData(viewModel, parameterPropertyExpression);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 1);
             relayCommand.CompileParametrizedExecuteLogic(viewModel, executeExpression);
             relayCommand.CompileParametrizedCanExecuteLogic(viewModel, canExecuteExpression);
@@ -95,13 +95,9 @@ namespace KUtilitiesCore.MVVM.Command
         { _executeWithParamAction?.Invoke((TParam?)parameter); }
 
         /// <inheritdoc/>
-        public override object? GetViewModelParameter(object viewModelSource)
+        public override object? GetViewModelParameter()
         {
-            if (viewModelSource == null)
-                throw new ArgumentNullException(nameof(viewModelSource));
-            if (viewModelSource is TViewModel viewModel)
-                return paramGetterDelegate != null ? paramGetterDelegate.Invoke(viewModel)! : default;
-            throw new ArgumentException($"El objeto de origen esperado es: {typeof(TViewModel)} y se esta enviando {viewModelSource.GetType()}", nameof(viewModelSource));
+            return _getParamDelegate.Invoke();
         }
 
         /// <summary>
@@ -164,10 +160,12 @@ namespace KUtilitiesCore.MVVM.Command
             _executeWithParamAction = param => executeDelegate(viewModel, param);
         }
 
-        private void InitializeMemberMetaData(Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
+        private void InitializeMemberMetaData(TViewModel viewModel,
+            Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
         {
             ValidateViewModelMemberExpression(parameterPropertyExpression, typeof(TViewModel));
-            paramGetterDelegate = parameterPropertyExpression.Compile();
+            var paramGetterDelegate = parameterPropertyExpression.Compile();
+            _getParamDelegate = () => paramGetterDelegate(viewModel);
             WatchedParameterPropertyName = GetMemberNameFromExpression(parameterPropertyExpression);
             WatchedParameterPropertyType = typeof(TParam);
         }
