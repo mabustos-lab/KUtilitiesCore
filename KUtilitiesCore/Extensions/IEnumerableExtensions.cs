@@ -84,7 +84,7 @@ namespace KUtilitiesCore.Extensions
         /// Obtiene una instancia de <see cref="Random"/> adecuada para la plataforma y versión de .NET en uso.
         /// </summary>
         /// <remarks>
-        /// En .NET 8 o superior, utiliza <see cref="Random.Shared"/> para obtener una instancia compartida y eficiente.
+        /// En .NET 8 o superior, utiliza <c>Random.Shared</c>  para obtener una instancia compartida y eficiente.
         /// En .NET Framework 4.8, genera una semilla criptográficamente segura usando <see cref="System.Security.Cryptography.RNGCryptoServiceProvider"/>,
         /// y crea una nueva instancia de <see cref="Random"/> con dicha semilla para mejorar la aleatoriedad.
         /// </remarks>
