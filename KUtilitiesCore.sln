@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Logger", "KU
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilities.LoggerTests", "KUtilities.LoggerTests\KUtilities.LoggerTests.csproj", "{1A0B513B-3FFA-4F0D-885D-93896364C285}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Encryption", "KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj", "{50248B29-52F7-4916-B11A-570B8B22E980}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{1A0B513B-3FFA-4F0D-885D-93896364C285}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A0B513B-3FFA-4F0D-885D-93896364C285}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A0B513B-3FFA-4F0D-885D-93896364C285}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50248B29-52F7-4916-B11A-570B8B22E980}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50248B29-52F7-4916-B11A-570B8B22E980}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50248B29-52F7-4916-B11A-570B8B22E980}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50248B29-52F7-4916-B11A-570B8B22E980}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

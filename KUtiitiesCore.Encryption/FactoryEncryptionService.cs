@@ -30,9 +30,9 @@ namespace KUtilitiesCore.Encryption
         /// Implementación Data Protection API
         /// </summary>
         /// <returns></returns>
-        public static IEncryptionService GetDPAPIEncryptionService()
+        public static IEncryptionService GetDPAPIEncryptionService(DataProtectionScope scope= DataProtectionScope.CurrentUser)
         {
-            return new DPAPIEncryptServise();
+            return new DPAPIEncryptServise() {Scope = scope };
         }
 #endif
         /// <summary>

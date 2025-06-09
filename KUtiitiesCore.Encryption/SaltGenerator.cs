@@ -8,7 +8,7 @@ namespace KUtilitiesCore.Encryption
     /// <remarks>
     /// La clase utiliza RandomNumberGenerator para generar bytes criptográficamente seguros.
     /// </remarks>
-    static class SaltGenerator
+    public static class SaltGenerator
     {
         /// <summary>
         /// Límite de longitud máximo para el arreglo de bytes generado.
