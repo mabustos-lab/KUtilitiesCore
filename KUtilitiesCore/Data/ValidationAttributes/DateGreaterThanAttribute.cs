@@ -36,7 +36,7 @@ namespace KUtilitiesCore.Data.ValidationAttributes
         /// Indica si se permite igualdad entre los valores comparados
         /// </summary>
         public bool AllowedEquality { get; }
-
+        /// <inheritdoc/>
         public override bool RequiresValidationContext => true;
 
         private void SetErrorMessage(bool allowedEquality)

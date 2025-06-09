@@ -24,6 +24,7 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
     /// Constructor que inicializa la configuración para la inserción masiva.
     /// </remarks>
     /// <param name="config">Configuración para la inserción masiva.</param>
+    /// <param name="connectionString">Encapsulación de la cadena de conección</param>
     /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
     public class BulkOperationsService(BulkOperationsConfig config,IConnectionString connectionString) : IBulkOperationsService
     {

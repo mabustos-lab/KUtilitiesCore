@@ -11,7 +11,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Implementación decolección de parámetros de base de datos.
     /// </summary>
-    class DbParameterCollection : IDbParameterCollection
+    sealed class DbParameterCollection : IDbParameterCollection
     {
         private readonly Func<DbParameter> _parameterFactory;
         private readonly Dictionary<string, DbParameter> _parameters;

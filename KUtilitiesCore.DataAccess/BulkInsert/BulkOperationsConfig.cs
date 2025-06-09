@@ -22,7 +22,7 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
         /// Si la operación excede este tiempo, se cancelará.
         /// </summary>
         public int BulkCopyTimeout { get; set; } = 600;
-        // <summary>
+        /// <summary>
         /// Diccionario para mapear columnas del DataTable de origen a columnas de la tabla destino.
         /// Clave: Nombre de la columna en el DataTable de origen.
         /// Valor: Nombre de la columna en la tabla de base de datos destino.
