@@ -51,6 +51,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Data\ValidationAttributes\ValidationAtrributesStrings.Designer.cs">
       <CustomToolNamespace>KUtilitiesCore.Data.ValidationAttributes</CustomToolNamespace>
     </Compile>
