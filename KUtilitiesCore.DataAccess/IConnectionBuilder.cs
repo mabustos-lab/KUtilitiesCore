@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
+﻿using KUtilitiesCore.DataAccess.Helpers;
+using System;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using KUtilitiesCore.DataAccess.Helpers;
-using Newtonsoft.Json;
-using KUtilitiesCore.Data.ValidationAttributes;
-using KUtilitiesCore.Data;
-using System.Data.Common;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.Xml;
 
 namespace KUtilitiesCore.DataAccess
 {
@@ -26,6 +16,7 @@ namespace KUtilitiesCore.DataAccess
         /// </summary>
         /// <returns>Regresa un DataTable con las columnas: Owner, DatabaseName y CreatedDate</returns>
         DataTable ListDatabases();
+
         /// <summary>
         /// Indica si existe la configuración minima para listar las Bases de datos
         /// </summary>
@@ -48,9 +39,9 @@ namespace KUtilitiesCore.DataAccess
         string InitialCatalog { get; set; }
 
         /// <summary>
-        /// Obtiene o establece un valor booleano que indica si se utilizan las credenciales
-        /// actuales de la cuenta de Windows para la autenticación (cuando es true) o si se
-        /// especifican el identificador de usuario y la contraseña en la conexión (cuando es false).
+        /// Obtiene o establece un valor booleano que indica si se utilizan las credenciales actuales de la cuenta de Windows
+        /// para la autenticación (cuando es true) o si se especifican el identificador de usuario y la contraseña en la
+        /// conexión (cuando es false).
         /// </summary>
         bool IntegratedSecurity { get; set; }
 
@@ -60,8 +51,7 @@ namespace KUtilitiesCore.DataAccess
         string Password { get; set; }
 
         /// <summary>
-        /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base
-        /// de datos.
+        /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base de datos.
         /// </summary>
         string ServerName { get; set; }
 
@@ -97,6 +87,5 @@ namespace KUtilitiesCore.DataAccess
         /// Un objeto <see cref="TestConnectionResult"/> que contiene el resultado de la prueba de conexión.
         /// </returns>
         TestConnectionResult TestConnection();
-
     }
 }

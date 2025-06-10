@@ -1,14 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
@@ -25,41 +19,48 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <summary>
         /// Agrega un parámetro basado en una propiedad.
         /// </summary>
-        void Add<TSource, TValue>(TSource sourceObj,
+        void Add<TSource, TValue>(
+            TSource sourceObj,
             Expression<Func<TSource, TValue>> propertyExpression,
             ParameterDirection direction = ParameterDirection.Input);
 
         /// <summary>
         /// Agrega un parámetro con valor inicial y configuraciones.
         /// </summary>
-        void Add<TType>(string parameterName, TType value,
-            int size, byte scale, byte precision,
+        void Add<TType>(
+            string parameterName,
+            TType value,
+            int size,
+            byte scale,
+            byte precision,
             ParameterDirection direction = ParameterDirection.Input);
 
         /// <summary>
         /// Agrega un parámetro con valor inicial.
         /// </summary>
-        void Add<TType>(string parameterName, TType value,
-            ParameterDirection direction = ParameterDirection.Input);
+        void Add<TType>(string parameterName, TType value, ParameterDirection direction = ParameterDirection.Input);
 
         /// <summary>
         /// Agrega un parámetro con configuraciones avanzadas.
         /// </summary>
-        void Add(string parameterName, object value,
-            DbType dbType, int size, byte scale, byte precision,
+        void Add(
+            string parameterName,
+            object value,
+            DbType dbType,
+            int size,
+            byte scale,
+            byte precision,
             ParameterDirection direction = ParameterDirection.Input);
 
         /// <summary>
         /// Agrega un parámetro sin valor inicial.
         /// </summary>
-        void Add<TType>(string parameterName,
-            ParameterDirection direction = ParameterDirection.Input);
+        void Add<TType>(string parameterName, ParameterDirection direction = ParameterDirection.Input);
 
         /// <summary>
         /// Agrega un parámetro especificando solo el tipo de datos.
         /// </summary>
-        void Add(string parameterName, DbType dbType,
-            ParameterDirection direction = ParameterDirection.Input);
+        void Add(string parameterName, DbType dbType, ParameterDirection direction = ParameterDirection.Input);
 
         /// <summary>
         /// Elimina todos los parámetros.
@@ -80,6 +81,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// Elimina un parámetro específico.
         /// </summary>
         bool Remove(DbParameter param);
+
         /// <summary>
         /// Obtiene el valor del parametro.
         /// </summary>

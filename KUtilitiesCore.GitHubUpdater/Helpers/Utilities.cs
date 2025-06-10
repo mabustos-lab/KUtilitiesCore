@@ -1,0 +1,154 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
+
+#if NET6_0_OR_GREATER // Incluye .NET 6, 7, 8 y superiores
+using System.Text.Json;
+using System.Text.Json.Serialization;
+#else // Para .NET Framework 4.x y .NET Core/.NET 5 anteriores
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+#endif
+
+namespace KUtilitiesCore.GitHubUpdater.Helpers
+{
+    static class Utilities
+    {
+#if NET6_0_OR_GREATER
+        // --- Opciones de Serialización JSON para System.Text.Json ---
+        private static readonly JsonSerializerOptions _jsonOptionsDefault = new()
+        {
+            PropertyNameCaseInsensitive = true, // Ignora mayúsculas/minúsculas en propiedades
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase, // Usa camelCase para nombres de propiedad (ej. miPropiedad)
+            WriteIndented = true, // Escribe el JSON con formato indentado para legibilidad
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull // No incluye propiedades con valor null
+            // podemos agregar mas opciones
+        };
+
+        /// <summary>
+        /// Serializa un objeto a una cadena JSON usando System.Text.Json.
+        /// </summary>
+        /// <typeparam name="T">El tipo del objeto a serializar.</typeparam>
+        /// <param name="source">El objeto a serializar.</param>
+        /// <param name="options">Opciones personalizadas de serialización JSON. Si es null, se usan las opciones por defecto.</param>
+        /// <returns>Una cadena que representa el objeto en formato JSON.</returns>
+        /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>
+        /// <exception cref="JsonException">Si ocurre un error durante la serialización.</exception>
+        public static string ToJson<T>(this T source, JsonSerializerOptions? options = null)
+        {
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source), "El objeto a serializar no puede ser null.");
+            }
+
+            try
+            {
+                return JsonSerializer.Serialize(source, options ?? _jsonOptionsDefault);
+            }
+            catch (Exception ex) 
+            {
+                throw new JsonException($"Error al serializar el objeto de tipo {typeof(T).FullName} a JSON.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Deserializa una cadena JSON a un objeto usando System.Text.Json.
+        /// </summary>
+        /// <typeparam name="T">El tipo del objeto al que deserializar.</typeparam>
+        /// <param name="json">La cadena JSON a deserializar.</param>
+        /// <param name="options">Opciones personalizadas de deserialización JSON. Si es null, se usan las opciones por defecto.</param>
+        /// <returns>Una instancia del objeto de tipo T.</returns>
+        /// <exception cref="ArgumentException">Si la cadena JSON es null o vacía.</exception>
+        /// <exception cref="JsonException">Si ocurre un error durante la deserialización.</exception>
+        public static T FromJson<T>(this string json, JsonSerializerOptions? options = null)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                throw new ArgumentException("La cadena JSON no puede ser null o vacía.", nameof(json));
+            }
+            try
+            {
+                var result = JsonSerializer.Deserialize<T>(json, options ?? _jsonOptionsDefault);
+                return result is null
+                    ? throw new JsonException($"La deserialización retornó null para el tipo {typeof(T).FullName}. Se esperaba un objeto válido.")
+                    : result;
+            }
+            catch (Exception ex)
+            {
+                throw new JsonException($"Error al deserializar JSON al tipo {typeof(T).FullName}.", ex);
+            }
+        }
+
+#else
+        // --- Opciones de Serialización JSON para Newtonsoft.Json ---
+
+        private static readonly JsonSerializerSettings _jsonSettingsDefault = new()
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(), // Usa camelCase
+            Formatting = Formatting.Indented, // Formato indentado
+            NullValueHandling = NullValueHandling.Ignore, // Ignora valores null
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore // Ignora referencias circulares
+            // podemos agregar mas opciones
+        };
+
+        /// <summary>
+        /// Serializa un objeto a una cadena JSON usando Newtonsoft.Json.
+        /// </summary>
+        /// <typeparam name="T">El tipo del objeto a serializar.</typeparam>
+        /// <param name="obj">El objeto a serializar.</param>
+        /// <param name="settings">Configuración personalizada de serialización JSON. Si es null, se usa la configuración por defecto.</param>
+        /// <returns>Una cadena que representa el objeto en formato JSON.</returns>
+        /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>
+        /// <exception cref="JsonSerializationException">Si ocurre un error durante la serialización.</exception>
+        public static string ToJson<T>(this T obj, JsonSerializerSettings? settings = null)
+        {
+            if (obj is null)
+            {
+                throw new ArgumentNullException(nameof(obj), "El objeto a serializar no puede ser null.");
+            }
+
+            try
+            {
+                return JsonConvert.SerializeObject(obj, settings ?? _jsonSettingsDefault);
+            }
+            catch (Exception ex) // Captura excepciones específicas si es necesario
+            {
+
+                throw new JsonSerializationException($"Error al serializar el objeto de tipo {typeof(T).FullName} a JSON.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Deserializa una cadena JSON a un objeto usando Newtonsoft.Json.
+        /// </summary>
+        /// <typeparam name="T">El tipo del objeto al que deserializar.</typeparam>
+        /// <param name="json">La cadena JSON a deserializar.</param>
+        /// <param name="settings">Configuración personalizada de deserialización JSON. Si es null, se usa la configuración por defecto.</param>
+        /// <returns>Una instancia del objeto de tipo T.</returns>
+        /// <exception cref="ArgumentException">Si la cadena JSON es null o vacía.</exception>
+        /// <exception cref="JsonSerializationException">Si ocurre un error durante la deserialización.</exception>
+        public static T FromJson<T>(this string json, JsonSerializerSettings? settings = null)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                throw new ArgumentException("La cadena JSON no puede ser null o vacía.", nameof(json));
+            }
+            try
+            {
+                var result = JsonConvert.DeserializeObject<T>(json, settings ?? _jsonSettingsDefault);
+                return result is null
+                    ? throw new JsonSerializationException($"La deserialización retornó null para el tipo {typeof(T).FullName}. Se esperaba un objeto válido.")
+                    : result;
+            }
+            catch (Exception ex)
+            {
+                // Considera loggear el error aquí
+                throw new JsonSerializationException($"Error al deserializar JSON al tipo {typeof(T).FullName}.", ex);
+            }
+        }
+#endif
+    }
+}

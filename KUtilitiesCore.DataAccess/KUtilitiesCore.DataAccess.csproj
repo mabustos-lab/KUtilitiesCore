@@ -16,6 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj" />
 	  <ProjectReference Include="..\KUtilities.Logger\KUtilitiesCore.Logger.csproj" />
 	  <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
 	</ItemGroup>

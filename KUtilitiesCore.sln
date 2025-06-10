@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilities.LoggerTests", "K
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Encryption", "KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj", "{50248B29-52F7-4916-B11A-570B8B22E980}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.GitHubUpdater", "KUtilitiesCore.GitHubUpdater\KUtilitiesCore.GitHubUpdater.csproj", "{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{50248B29-52F7-4916-B11A-570B8B22E980}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{50248B29-52F7-4916-B11A-570B8B22E980}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{50248B29-52F7-4916-B11A-570B8B22E980}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
