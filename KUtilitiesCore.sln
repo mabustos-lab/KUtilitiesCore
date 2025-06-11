@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Encryption",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.GitHubUpdater", "KUtilitiesCore.GitHubUpdater\KUtilitiesCore.GitHubUpdater.csproj", "{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.GitHubUpdaterTests", "KUtilitiesCore.GitHubUpdaterTests\KUtilitiesCore.GitHubUpdaterTests.csproj", "{AD52E299-EA0F-4D3A-8353-61D71D882620}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F47C0A0-4354-407C-A8CE-D07CCBCB32BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD52E299-EA0F-4D3A-8353-61D71D882620}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD52E299-EA0F-4D3A-8353-61D71D882620}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD52E299-EA0F-4D3A-8353-61D71D882620}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD52E299-EA0F-4D3A-8353-61D71D882620}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,6 +85,7 @@ Global
 		{42729E06-FFB1-4121-8CC7-EBC57AA3C616} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{57D90377-8BCE-40CD-A29D-6661B84C9C63} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{1A0B513B-3FFA-4F0D-885D-93896364C285} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{AD52E299-EA0F-4D3A-8353-61D71D882620} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ABBF050F-7E9C-442B-B90F-35E0EF3EC12D}

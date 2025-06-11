@@ -34,6 +34,10 @@ namespace KUtilitiesCore.IO
         /// <summary>
         /// Obtiene la carpeta publica que todos los usuarios tienen acceso %PUBLIC%
         /// </summary>
-        AllUserPublic = 3
+        AllUserPublic = 3,
+        /// <summary>
+        /// Representa la carpeta de almacenamiento temporal del sistema.
+        /// </summary>
+        TemporalFolder = 4
     }
 }

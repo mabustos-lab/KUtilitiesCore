@@ -25,6 +25,7 @@ namespace KUtilitiesCore.IO
                 SpecialStoreFolder.AllUserPublic => Path.Combine(Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments))?.FullName??"", string.Empty),
                 SpecialStoreFolder.MachineIsolatedStorage => GetIsolatedStorageRoot(IsolatedStorageScope.Machine | IsolatedStorageScope.Assembly),
                 SpecialStoreFolder.UserIsolatedStorage => GetIsolatedStorageRoot(IsolatedStorageScope.User | IsolatedStorageScope.Assembly),
+                SpecialStoreFolder.TemporalFolder => Path.GetTempPath(),
                 _ => string.Empty,
             };
         }

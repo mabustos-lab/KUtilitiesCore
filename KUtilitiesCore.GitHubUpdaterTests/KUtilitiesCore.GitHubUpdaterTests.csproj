@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KUtilitiesCore.MVVM\KUtilitiesCore.MVVM.csproj" />
+    <ProjectReference Include="..\KUtilitiesCore.GitHubUpdater\KUtilitiesCore.GitHubUpdater.csproj" />
   </ItemGroup>
 
   <ItemGroup>

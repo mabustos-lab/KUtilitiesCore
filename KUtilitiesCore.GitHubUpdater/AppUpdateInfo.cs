@@ -27,7 +27,7 @@ namespace KUtilitiesCore.GitHubUpdater
     /// ejemplo, QA y Producción), integrando la gestión de versiones a través de Releases de GitHub
     /// y facilitando la extensión a módulos adicionales como el reporte de errores.
     /// </summary>
-    public class AppUpdateInfo : IAppUpdateInfo
+    public sealed class AppUpdateInfo : IAppUpdateInfo
     {
         #region Fields
 
@@ -77,7 +77,7 @@ namespace KUtilitiesCore.GitHubUpdater
 
             if (string.IsNullOrEmpty(filePath))
                 filePath = Path.Combine(
-                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), string.Empty),
+                    Path.GetTempPath(),
                     "KUtilitiesCore",
                     "GitHubRepositoryInfo.json");
             _filePath = filePath;
@@ -186,7 +186,10 @@ namespace KUtilitiesCore.GitHubUpdater
             _gitHub.EncryptedToken = _encryptionService.Encrypt(token);
             secureToken = token.ToSecureString();
         }
-
+        /// <summary>
+        /// Restaura la infomación establecida desde un objeto serializado en formato JSON
+        /// </summary>
+        /// <param name="json"></param>
         public void LoadJson(string json)
         {
             try
