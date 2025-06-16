@@ -25,7 +25,7 @@ namespace KUtilitiesCore.MVVMTests
         }
         public class MyClass : ViewModelHelperBase
         {
-            public override object Title => "Prueba";
+            public override string Title => "Prueba";
             int age;
             [Range(10, 15)]
             public int Age 
@@ -38,7 +38,7 @@ namespace KUtilitiesCore.MVVMTests
                 age = 10;
             }
 
-            protected override void OnDestroy()
+            public override void OnDestroy()
             {
                 
             }

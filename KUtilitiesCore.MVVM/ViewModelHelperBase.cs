@@ -8,8 +8,8 @@ using System.Runtime.CompilerServices;
 namespace KUtilitiesCore.MVVM
 {
     /// <summary>
-    /// Clase base abstracta para ViewModels en aplicaciones MVVM.
-    /// Gestiona validación de datos, estado de carga, comunicación con el modelo del documento y registro de comandos.
+    /// Clase base abstracta para ViewModels en aplicaciones MVVM. Gestiona validación de datos,
+    /// estado de carga, comunicación con el modelo del documento y registro de comandos.
     /// </summary>
     public abstract class ViewModelHelperBase
         : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel,
@@ -85,7 +85,7 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <inheritdoc/>
-        public abstract object Title { get; }
+        public abstract string Title { get; }
 
         #endregion Properties
 
@@ -116,6 +116,9 @@ namespace KUtilitiesCore.MVVM
         {
             OnDestroy();
         }
+
+        /// <inheritdoc/>
+        public abstract void OnDestroy();
 
         /// <summary>
         /// Inicializa el modelo si es necesario. Implementar en clases derivadas.
@@ -173,6 +176,17 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
+        /// Itera sobre los comandos registrados y notifica que su estado de ejecución puede haber cambiado.
+        /// </summary>
+        void ISupportCommands.UpdateRegisteredCommands()
+        {
+            foreach (var command in _registeredCommands)
+            {
+                command.RaiseCanExecuteChanged();
+            }
+        }
+
+        /// <summary>
         /// Obtiene el mensaje de error asociado a una propiedad.
         /// </summary>
         /// <param name="columnName">Nombre de la propiedad.</param>
@@ -209,8 +223,8 @@ namespace KUtilitiesCore.MVVM
         { }
 
         /// <summary>
-        /// Permite establecer un mensaje de error general personalizado.
-        /// Implementar en clases derivadas si se requiere lógica especial.
+        /// Permite establecer un mensaje de error general personalizado. Implementar en clases
+        /// derivadas si se requiere lógica especial.
         /// </summary>
         /// <param name="sender">Instancia que genera el error.</param>
         protected virtual void CustomMessageError(IViewModelDataErrorInfo sender)
@@ -221,9 +235,6 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         /// <param name="e">Datos del evento de cierre, permite cancelar la operación.</param>
         protected abstract void OnClose(CancelEventArgs e);
-
-        /// <inheritdoc/>
-        protected abstract void OnDestroy();
 
         /// <summary>
         /// Se invoca cuando cambia el estado de <see cref="IsLoading"/>.
@@ -241,8 +252,15 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Actualiza el estado de los comandos definidos en el ViewModel.
-        /// Implementar en clases derivadas.
+        /// Avisa al que se debe actializar la propiedad Title en el Documento
+        /// </summary>
+        protected virtual void OnUpdateTitle()
+        {
+            RaisePropertyChanged(nameof(Title));
+        }
+
+        /// <summary>
+        /// Actualiza el estado de los comandos definidos en el ViewModel. Implementar en clases derivadas.
         /// </summary>
         protected abstract void UpdateCommands();
 
@@ -262,9 +280,9 @@ namespace KUtilitiesCore.MVVM
                     CustomColumnMessageError(this, columnName);
             }
             else
-                ret = errorMessages?[columnName];
+                ret = errorMessages?[columnName] ?? string.Empty;
             if (!string.IsNullOrEmpty(ret))
-                errorMessages[columnName] = ret;
+                errorMessages![columnName] = ret;
             return ret;
         }
 
@@ -296,17 +314,6 @@ namespace KUtilitiesCore.MVVM
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        /// <summary>
-        /// Itera sobre los comandos registrados y notifica que su estado de ejecución puede haber cambiado.
-        /// </summary>
-        void ISupportCommands.UpdateRegisteredCommands()
-        {
-            foreach (var command in _registeredCommands)
-            {
-                command.RaiseCanExecuteChanged();
-            }
         }
 
         #endregion Methods
