@@ -15,8 +15,6 @@ namespace KUtilitiesCore.MVVM
         : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel,
         IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
-        #region Fields
-
         private readonly List<RelayCommandBase> _registeredCommands = [];
         private IViewModelDocumentOwner? documentOwner;
         private string error = string.Empty;
@@ -24,10 +22,6 @@ namespace KUtilitiesCore.MVVM
         private bool hasValidationErrors;
         private bool isLoading;
         private object? parentViewModel;
-
-        #endregion Fields
-
-        #region Events
 
         /// <summary>
         /// Se dispara cuando cambia el estado de <see cref="IsLoading"/>.
@@ -40,9 +34,7 @@ namespace KUtilitiesCore.MVVM
         /// <inheritdoc/>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        #endregion Events
-
-        #region Properties
+        private string _title = string.Empty;
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
@@ -84,19 +76,19 @@ namespace KUtilitiesCore.MVVM
             set => this.SetVMValue(ref parentViewModel, value, null, OnParentViewModelChangedBase);
         }
 
+#pragma warning disable CS8601 // Non-nullable field is uninitialized. Agregado por que persiste el mensaje
+
         /// <inheritdoc/>
-        public abstract string Title { get; }
+        public string Title
+        {
+            get => _title;
+            set { this.SetVMValue(ref _title, value ?? string.Empty); }
+        }
 
-        #endregion Properties
-
-        #region Indexers
+#pragma warning restore CS8601
 
         /// <inheritdoc/>
         string IDataErrorInfo.this[string columnName] => GetErrorMessage(columnName);
-
-        #endregion Indexers
-
-        #region Methods
 
         /// <inheritdoc/>
         void IViewModelDataErrorInfo.ClearErrors()
@@ -252,14 +244,6 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Avisa al que se debe actializar la propiedad Title en el Documento
-        /// </summary>
-        protected virtual void OnUpdateTitle()
-        {
-            RaisePropertyChanged(nameof(Title));
-        }
-
-        /// <summary>
         /// Actualiza el estado de los comandos definidos en el ViewModel. Implementar en clases derivadas.
         /// </summary>
         protected abstract void UpdateCommands();
@@ -315,7 +299,5 @@ namespace KUtilitiesCore.MVVM
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        #endregion Methods
     }
 }
