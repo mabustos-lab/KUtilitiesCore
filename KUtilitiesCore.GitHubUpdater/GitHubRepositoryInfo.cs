@@ -1,6 +1,4 @@
-﻿using KUtilitiesCore.Encryption;
-using KUtilitiesCore.Encryption.Extensions;
-using KUtilitiesCore.GitHubUpdater.Interface;
+﻿using KUtilitiesCore.GitHubUpdater.Interface;
 using System;
 using System.Linq;
 

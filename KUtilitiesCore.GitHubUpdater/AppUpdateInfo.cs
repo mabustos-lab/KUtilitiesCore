@@ -123,7 +123,7 @@ namespace KUtilitiesCore.GitHubUpdater
 
             if (!string.IsNullOrEmpty(GitHub.EncryptedToken))
             {
-                secureToken = _encryptionService.Decrypt(GitHub.EncryptedToken).ToSecureString();
+                secureToken = GitHub.GetSecuredToken(_encryptionService);
                 return _encryptionService.Decrypt(GitHub.EncryptedToken);
             }
 

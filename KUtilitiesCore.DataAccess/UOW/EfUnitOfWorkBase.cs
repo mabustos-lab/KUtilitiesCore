@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
+﻿using KUtilitiesCore.DataAccess.Exceptions;
+using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.DataAccess.Utils;
 using KUtilitiesCore.Logger;
 using Microsoft.Extensions.Logging;
