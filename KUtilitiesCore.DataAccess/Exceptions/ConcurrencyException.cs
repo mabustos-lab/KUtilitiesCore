@@ -1,7 +1,8 @@
-﻿using System;
+﻿using KUtilitiesCore.DataAccess.Utils;
+using System;
 using System.Linq;
 
-namespace KUtilitiesCore.DataAccess.Utils
+namespace KUtilitiesCore.DataAccess.Exceptions
 {
     public class ConcurrencyException : DataAccessException
     {

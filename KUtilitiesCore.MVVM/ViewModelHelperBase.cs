@@ -8,15 +8,13 @@ using System.Runtime.CompilerServices;
 namespace KUtilitiesCore.MVVM
 {
     /// <summary>
-    /// Clase base abstracta para ViewModels en aplicaciones MVVM.
-    /// Gestiona validación de datos, estado de carga, comunicación con el modelo del documento y registro de comandos.
+    /// Clase base abstracta para ViewModels en aplicaciones MVVM. Gestiona validación de datos,
+    /// estado de carga, comunicación con el modelo del documento y registro de comandos.
     /// </summary>
     public abstract class ViewModelHelperBase
         : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel,
         IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
-        #region Fields
-
         private readonly List<RelayCommandBase> _registeredCommands = [];
         private IViewModelDocumentOwner? documentOwner;
         private string error = string.Empty;
@@ -24,10 +22,6 @@ namespace KUtilitiesCore.MVVM
         private bool hasValidationErrors;
         private bool isLoading;
         private object? parentViewModel;
-
-        #endregion Fields
-
-        #region Events
 
         /// <summary>
         /// Se dispara cuando cambia el estado de <see cref="IsLoading"/>.
@@ -40,9 +34,7 @@ namespace KUtilitiesCore.MVVM
         /// <inheritdoc/>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        #endregion Events
-
-        #region Properties
+        private string _title = string.Empty;
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
@@ -84,19 +76,19 @@ namespace KUtilitiesCore.MVVM
             set => this.SetVMValue(ref parentViewModel, value, null, OnParentViewModelChangedBase);
         }
 
+#pragma warning disable CS8601 // Non-nullable field is uninitialized. Agregado por que persiste el mensaje
+
         /// <inheritdoc/>
-        public abstract object Title { get; }
+        public string Title
+        {
+            get => _title;
+            set { this.SetVMValue(ref _title, value ?? string.Empty); }
+        }
 
-        #endregion Properties
-
-        #region Indexers
+#pragma warning restore CS8601
 
         /// <inheritdoc/>
         string IDataErrorInfo.this[string columnName] => GetErrorMessage(columnName);
-
-        #endregion Indexers
-
-        #region Methods
 
         /// <inheritdoc/>
         void IViewModelDataErrorInfo.ClearErrors()
@@ -116,6 +108,9 @@ namespace KUtilitiesCore.MVVM
         {
             OnDestroy();
         }
+
+        /// <inheritdoc/>
+        public abstract void OnDestroy();
 
         /// <summary>
         /// Inicializa el modelo si es necesario. Implementar en clases derivadas.
@@ -173,6 +168,17 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
+        /// Itera sobre los comandos registrados y notifica que su estado de ejecución puede haber cambiado.
+        /// </summary>
+        void ISupportCommands.UpdateRegisteredCommands()
+        {
+            foreach (var command in _registeredCommands)
+            {
+                command.RaiseCanExecuteChanged();
+            }
+        }
+
+        /// <summary>
         /// Obtiene el mensaje de error asociado a una propiedad.
         /// </summary>
         /// <param name="columnName">Nombre de la propiedad.</param>
@@ -209,8 +215,8 @@ namespace KUtilitiesCore.MVVM
         { }
 
         /// <summary>
-        /// Permite establecer un mensaje de error general personalizado.
-        /// Implementar en clases derivadas si se requiere lógica especial.
+        /// Permite establecer un mensaje de error general personalizado. Implementar en clases
+        /// derivadas si se requiere lógica especial.
         /// </summary>
         /// <param name="sender">Instancia que genera el error.</param>
         protected virtual void CustomMessageError(IViewModelDataErrorInfo sender)
@@ -221,9 +227,6 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         /// <param name="e">Datos del evento de cierre, permite cancelar la operación.</param>
         protected abstract void OnClose(CancelEventArgs e);
-
-        /// <inheritdoc/>
-        protected abstract void OnDestroy();
 
         /// <summary>
         /// Se invoca cuando cambia el estado de <see cref="IsLoading"/>.
@@ -241,8 +244,7 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Actualiza el estado de los comandos definidos en el ViewModel.
-        /// Implementar en clases derivadas.
+        /// Actualiza el estado de los comandos definidos en el ViewModel. Implementar en clases derivadas.
         /// </summary>
         protected abstract void UpdateCommands();
 
@@ -262,9 +264,9 @@ namespace KUtilitiesCore.MVVM
                     CustomColumnMessageError(this, columnName);
             }
             else
-                ret = errorMessages?[columnName];
+                ret = errorMessages?[columnName] ?? string.Empty;
             if (!string.IsNullOrEmpty(ret))
-                errorMessages[columnName] = ret;
+                errorMessages![columnName] = ret;
             return ret;
         }
 
@@ -297,18 +299,5 @@ namespace KUtilitiesCore.MVVM
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        /// <summary>
-        /// Itera sobre los comandos registrados y notifica que su estado de ejecución puede haber cambiado.
-        /// </summary>
-        void ISupportCommands.UpdateRegisteredCommands()
-        {
-            foreach (var command in _registeredCommands)
-            {
-                command.RaiseCanExecuteChanged();
-            }
-        }
-
-        #endregion Methods
     }
 }

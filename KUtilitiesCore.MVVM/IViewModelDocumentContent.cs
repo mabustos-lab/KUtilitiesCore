@@ -21,7 +21,7 @@ namespace KUtilitiesCore.MVVM
         /// Este título puede ser utilizado para mostrar información descriptiva del documento en la interfaz de usuario.
         /// </summary>
         [Display(AutoGenerateField = false)]
-        object Title { get; }
+        string Title { get; }
 
         /// <summary>
         /// Método invocado antes de que el documento sea cerrado (ocultado).
