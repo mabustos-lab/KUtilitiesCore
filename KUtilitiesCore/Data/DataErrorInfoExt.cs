@@ -46,7 +46,7 @@ namespace KUtilitiesCore.Data
         /// <param name="ignoreOwnerError">Indica si se debe omitir el error del propietario propio.</param>
         /// <param name="deep">El nivel de profundidad para buscar errores en propiedades anidadas.</param>
         /// <returns>true si se encuentran errores; en caso contrario, false.</returns>
-        public static bool HasErrors<T>(T owner, bool ignoreOwnerError, int deep = 2)
+        public static bool HasErrors<T>(this T owner, bool ignoreOwnerError, int deep = 2)
             where T : class, IDataErrorInfo
         {
             if (owner is null)
@@ -65,8 +65,8 @@ namespace KUtilitiesCore.Data
         /// <param name="owner">El objeto que implementa IDataErrorInfo.</param>
         /// <param name="deep">El nivel de profundidad para buscar errores en propiedades anidadas.</param>
         /// <returns>true si se encuentran errores; en caso contrario, false.</returns>
-        public static bool HasErrors(IDataErrorInfo owner, int deep = 2)
-            => HasErrors(owner, false, deep);
+        public static bool HasErrors(this IDataErrorInfo owner, int deep = 2)
+            => owner.HasErrors(false, deep);
 
         /// <summary>
         /// Obtiene todos los atributos de un miembro.
