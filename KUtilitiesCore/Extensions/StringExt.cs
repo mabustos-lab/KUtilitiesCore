@@ -25,29 +25,51 @@ namespace KUtilitiesCore.Extensions
         #region Methods
 
         /// <summary>
-        /// Expande una cadena de texto como el nombre de un campo, insertando un espacio en cada
-        /// letra capitalizada, excepto cuando las letras capitalizadas son consecutivas (posible acrónimo).
+        /// Expande una cadena de texto (interpretada como un identificador, ej. "MiClaseEjemplo" o "HTMLParser")
+        /// insertando espacios antes de las letras mayúsculas para formar palabras legibles.
+        /// Maneja acrónimos (secuencias de mayúsculas) correctamente, manteniéndolos juntos.
+        /// También reemplaza guiones bajos con espacios.
         /// </summary>
+        /// <param name="inputString">La cadena de entrada a expandir.</param>
+        /// <returns>Una cadena con espacios insertados para mejorar la legibilidad, o una cadena vacía si la entrada es nula o vacía.</returns>
+        /// <example>
+        /// "MiClaseEjemplo" se convierte en "Mi Clase Ejemplo".
+        /// "HTMLParser" se convierte en "HTML Parser".
+        /// "UnTexto_Con_Guiones" se convierte en "Un Texto Con Guiones".
+        /// </example>
         public static string ExpandToWords(this string inputString)
         {
             if (string.IsNullOrEmpty(inputString)) return string.Empty;
 
-            var result = new StringBuilder(inputString.Length * 2); // Pre-asignar más espacio
-            bool previousWasUpper = char.IsUpper(inputString[0]);
-            result.Append(inputString[0]);
+            var result = new StringBuilder(inputString.Length + inputString.Length / 2); // Estimación inicial de capacidad
 
-            for (int i = 1; i < inputString.Length; i++)
+            for (int i = 0; i < inputString.Length; i++)
             {
-                bool currentIsUpper = char.IsUpper(inputString[i]);
-                if (currentIsUpper && !previousWasUpper)
+                char currentChar = inputString[i];
+
+                if (currentChar == '_')
                 {
                     result.Append(' ');
+                    continue;
                 }
-                result.Append(inputString[i]);
-                previousWasUpper = currentIsUpper;
-            }
 
-            return result.Replace("_", " ").ToString().Trim();
+                if (i > 0 && char.IsUpper(currentChar))
+                {
+                    char prevChar = inputString[i - 1];
+                    // Condición para insertar espacio:
+                    // 1. La anterior no es mayúscula (ej. 'a' seguida de 'B' -> "a B")
+                    // 2. O la anterior es mayúscula, PERO la siguiente también es minúscula (ej. "ABc" -> "A Bc", para manejar acrónimos seguidos de una palabra capitalizada)
+                    if (!char.IsUpper(prevChar) ||
+                        (i + 1 < inputString.Length && char.IsLower(inputString[i + 1]) && char.IsUpper(prevChar))
+                       )
+                    {
+                        result.Append(' ');
+                    }
+                }
+                result.Append(currentChar);
+            }
+            // Reemplazar múltiples espacios (que podrían surgir por guiones bajos consecutivos o al inicio/final) por uno solo y quitar espacios al inicio/final.
+            return Regex.Replace(result.ToString(), @"\s+", " ").Trim();
         }
 
         /// <summary>
@@ -64,12 +86,6 @@ namespace KUtilitiesCore.Extensions
             var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
             return stringValues.Any(s => s.Equals(value, comparison));
         }
-
-        /// <summary>
-        /// Determina si dos rangos se intersectan.
-        /// </summary>
-        public static bool Intersect<T>(T x1, T y1, T x2, T y2) where T : IComparable<T>
-            => x2.CompareTo(y1) <= 0 && x1.CompareTo(y2) <= 0;
 
         /// <summary>
         /// Compara dos cadenas de texto normalizándolas e ignorando mayúsculas, minúsculas y acentos.
@@ -111,12 +127,13 @@ namespace KUtilitiesCore.Extensions
         /// </summary>
         /// <param name="value">La cadena de texto a normalizar.</param>
         /// <param name="caseSensitive">
-        /// Indica si se debe mantener la sensibilidad a mayúsculas. Por defecto es <c>true</c>, lo
-        /// que significa que la cadena se convertirá a minúsculas.
+        /// Indica si se debe mantener la sensibilidad a mayúsculas/minúsculas original de la cadena.
+        /// Si es <c>true</c> (valor predeterminado), se mantiene el caso original después de quitar los diacríticos.
+        /// Si es <c>false</c>, la cadena resultante se convierte a minúsculas.
         /// </param>
         /// <returns>
-        /// Una cadena de texto normalizada sin marcas diacríticas y en minúsculas (si no es
-        /// sensible a mayúsculas).
+        /// Una cadena de texto normalizada sin marcas diacríticas. El caso de la cadena resultante
+        /// dependerá del parámetro <paramref name="caseSensitive"/>.
         /// </returns>
         public static string ToNormalized(this string value, bool caseSensitive = true)
         {

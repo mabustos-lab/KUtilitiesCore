@@ -102,26 +102,31 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// Serializa un objeto a una cadena JSON usando Newtonsoft.Json.
         /// </summary>
         /// <typeparam name="T">El tipo del objeto a serializar.</typeparam>
-        /// <param name="obj">El objeto a serializar.</param>
+        /// <param name="source">El objeto a serializar.</param>
         /// <param name="settings">Configuración personalizada de serialización JSON. Si es null, se usa la configuración por defecto.</param>
         /// <returns>Una cadena que representa el objeto en formato JSON.</returns>
         /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>
         /// <exception cref="JsonSerializationException">Si ocurre un error durante la serialización.</exception>
-        public static string ToJson<T>(this T obj, JsonSerializerSettings? settings = null)
+        public static string ToJson<T>(this T source, JsonSerializerSettings? settings = null)
         {
-            if (obj is null)
+            if (source is null)
             {
-                throw new ArgumentNullException(nameof(obj), "El objeto a serializar no puede ser null.");
+                throw new ArgumentNullException(nameof(source), "El objeto a serializar no puede ser null.");
             }
 
             try
             {
-                return JsonConvert.SerializeObject(obj, settings ?? _jsonSettingsDefault);
+                return JsonConvert.SerializeObject(source, settings ?? _jsonSettingsDefault);
             }
-            catch (Exception ex) // Captura excepciones específicas si es necesario
+            catch (JsonSerializationException jsex) // Captura la excepción específica de Newtonsoft
             {
-                
-                throw new JsonSerializationException($"Error al serializar el objeto de tipo {typeof(T).FullName} a JSON.", ex);
+                // Considera loggear el error aquí
+                throw new JsonSerializationException($"Error al serializar el objeto de tipo {typeof(T).FullName} a JSON.", jsex);
+            }
+            catch (Exception ex) // Captura cualquier otra excepción inesperada
+            {
+                // Considera loggear el error aquí
+                throw new JsonSerializationException($"Error inesperado al serializar el objeto de tipo {typeof(T).FullName} a JSON.", ex);
             }
         }
 

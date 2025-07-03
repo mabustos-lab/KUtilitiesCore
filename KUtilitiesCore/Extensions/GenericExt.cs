@@ -182,5 +182,22 @@ namespace KUtilitiesCore.Extensions
             Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
             return NumericTypes.Contains(underlyingType);
         }
+
+        /// <summary>
+        /// Determina si dos rangos se intersectan.
+        /// </summary>
+        /// <typeparam name="T">El tipo de los valores del rango, debe implementar <see cref="IComparable{T}"/>.</typeparam>
+        /// <param name="x1">Inicio del primer rango.</param>
+        /// <param name="y1">Fin del primer rango.</param>
+        /// <param name="x2">Inicio del segundo rango.</param>
+        /// <param name="y2">Fin del segundo rango.</param>
+        /// <returns><c>true</c> si los rangos se intersectan; de lo contrario, <c>false</c>.</returns>
+        /// <remarks>
+        /// Se asume que los rangos están bien formados, es decir, x1 &lt;= y1 y x2 &lt;= y2.
+        /// La intersección ocurre si el inicio del segundo rango es menor o igual al fin del primero,
+        /// Y el inicio del primer rango es menor o igual al fin del segundo.
+        /// </remarks>
+        public static bool Intersect<T>(T x1, T y1, T x2, T y2) where T : IComparable<T>
+            => x2.CompareTo(y1) <= 0 && x1.CompareTo(y2) <= 0;
     }
 }

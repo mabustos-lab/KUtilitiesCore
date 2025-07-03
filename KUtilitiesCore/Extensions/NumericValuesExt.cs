@@ -69,14 +69,16 @@ namespace KUtilitiesCore.Extensions
         }
 
         /// <summary>
-        /// Performs a rollup operation on the collection, applying the projection function sequentially.
+        /// Realiza una operación de acumulación progresiva (rollup) en la colección,
+        /// aplicando la función de proyección secuencialmente y devolviendo cada resultado intermedio.
         /// </summary>
-        /// <typeparam name="TSource">The type of elements in the source collection.</typeparam>
-        /// <typeparam name="TResult">The type of the result after applying the projection.</typeparam>
-        /// <param name="source">The collection to process.</param>
-        /// <param name="seed">The initial value for the accumulator.</param>
-        /// <param name="projection">A function that transforms the current element and the previous accumulator into the new accumulator.</param>
-        /// <returns>A sequence of accumulated results.</returns>
+        /// <typeparam name="TSource">El tipo de los elementos en la colección de origen.</typeparam>
+        /// <typeparam name="TResult">El tipo del resultado después de aplicar la proyección.</typeparam>
+        /// <param name="source">La colección a procesar.</param>
+        /// <param name="seed">El valor inicial para el acumulador.</param>
+        /// <param name="projection">Una función que transforma el elemento actual y el acumulador anterior en el nuevo valor del acumulador.</param>
+        /// <returns>Una secuencia de resultados acumulados.</returns>
+        /// <exception cref="ArgumentNullException">Si <paramref name="source"/> o <paramref name="projection"/> es nulo.</exception>
         public static IEnumerable<TResult> Rollup<TSource, TResult>(
             this IEnumerable<TSource> source,
             TResult seed,
@@ -84,12 +86,12 @@ namespace KUtilitiesCore.Extensions
         {
             if (source == null)
             {
-                throw new ArgumentNullException(nameof(source), "The source collection cannot be null.");
+                throw new ArgumentNullException(nameof(source), "La colección de origen no puede ser nula.");
             }
 
             if (projection == null)
             {
-                throw new ArgumentNullException(nameof(projection), "The projection function cannot be null.");
+                throw new ArgumentNullException(nameof(projection), "La función de proyección no puede ser nula.");
             }
 
             List<TResult> results = new List<TResult>();

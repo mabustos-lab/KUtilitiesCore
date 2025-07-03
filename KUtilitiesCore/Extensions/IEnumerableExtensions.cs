@@ -70,10 +70,17 @@ namespace KUtilitiesCore.Extensions
             }
         }
 
-        // Implementación optimizada para IList<T>
+        /// <summary>
+        /// Crea una copia de una lista y la mezcla utilizando el algoritmo de Fisher-Yates.
+        /// Esta es una implementación optimizada para cuando la fuente ya es <see cref="IList{T}"/>.
+        /// </summary>
+        /// <typeparam name="T">Tipo de los elementos de la lista.</typeparam>
+        /// <param name="list">Lista original que se va a copiar y mezclar.</param>
+        /// <param name="random">Generador de números aleatorios a utilizar.</param>
+        /// <returns>Un nuevo array con los elementos de la lista original en orden aleatorio.</returns>
         private static T[] RandomizeList<T>(IList<T> list, Random random)
         {
-            // Creamos una copia para no modificar la original
+            // Creamos una copia para no modificar la lista original
             var copy = new T[list.Count];
             list.CopyTo(copy, 0);
             ShuffleInternal(copy, random);
@@ -112,16 +119,30 @@ namespace KUtilitiesCore.Extensions
             if (chunkSize <= 0)
                 throw new ArgumentException("El tamaño debe ser mayor a cero.", nameof(chunkSize));
 
-#if NET8_0
-        // Usar la implementación nativa de .NET 8+
+#if NET6_0_OR_GREATER
+        // Usar la implementación nativa de .NET 6+ (Enumerable.Chunk)
         return Enumerable.Chunk(source, chunkSize);
 #elif NET48
             // Implementación optimizada para .NET 4.8 con evaluación perezosa
             return ChunkLazy(source, chunkSize);
+#else
+            // Implementación alternativa para otras plataformas si fuera necesario, o error de compilación
+            // Por ahora, asumimos que o es NET6_0_OR_GREATER o NET48.
+            // Si se compila para una plataforma sin Enumerable.Chunk y no es NET48, esto daría un error.
+            // Considerar agregar un #error o una implementación base si es necesario.
+            return ChunkLazy(source, chunkSize); // Fallback a la implementación lazy si no hay otra opción
 #endif
         }
 
-#if NET48
+#if NET48 || (!NET6_0_OR_GREATER && !NET48) // Incluir ChunkLazy si es NET48 o si no es NET6+ Y no es NET48 (para el fallback)
+        /// <summary>
+        /// Implementación alternativa y con evaluación perezosa de Chunk para plataformas que no tienen <see cref="Enumerable.Chunk"/>.
+        /// Divide una colección en grupos de tamaño especificado.
+        /// </summary>
+        /// <typeparam name="T">Tipo de los elementos de la colección.</typeparam>
+        /// <param name="source">Colección a dividir.</param>
+        /// <param name="chunkSize">Tamaño máximo de cada grupo.</param>
+        /// <returns>Secuencia de grupos con el tamaño especificado.</returns>
         private static IEnumerable<IEnumerable<T>> ChunkLazy<T>(IEnumerable<T> source, int chunkSize)
         {
             var chunk = new List<T>(chunkSize);

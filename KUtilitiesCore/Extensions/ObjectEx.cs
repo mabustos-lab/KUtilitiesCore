@@ -141,6 +141,8 @@ namespace KUtilitiesCore.Extensions
                 }
                 catch (Exception ex)
                 {
+                    // TODO: Considerar mejor enfoque para errores durante la copia de propiedades en CopyPropertyValues.
+                    // Por ejemplo, usar un sistema de logging o una estrategia de excepción agregada.
                     Console.WriteLine($"Error al mapear propiedad '{sourceProp.Name}': {ex.Message}");
                 }
             }

@@ -17,7 +17,7 @@ namespace KUtilitiesCore.Extensions
         /// Una cadena que representa el <see cref="TimeSpan"/> en un formato legible, como milisegundos, segundos, minutos, horas o días,
         /// dependiendo de la duración del intervalo de tiempo.
         /// </returns>
-        public static string ToReadleFormat(this TimeSpan ts)
+        public static string ToReadableFormat(this TimeSpan ts)
         {
             if (ts.TotalMilliseconds < 1000)
             {
@@ -25,16 +25,22 @@ namespace KUtilitiesCore.Extensions
             }
             else
             {
-                // formats and its cutoffs based on totalseconds
+                // Define los formatos y sus umbrales basados en el total de segundos.
+                // Los índices en las cadenas de formato corresponden a:
+                // {0}: Días (ts.Days)
+                // {1}: Horas (ts.Hours)
+                // {2}: Minutos (ts.Minutes)
+                // {3}: Segundos (ts.Seconds)
+                // HmsFormatter se encarga de interpretar estos índices y los especificadores de formato (D, H, M, S).
                 var cutoff = new SortedList<long, string>
                     {
-                        {59, "{3:S}" },
-                        {60, "{2:M}" },
-                        {60*60-1, "{2:M}, {3:S}"},
-                        {60*60, "{1:H}"},
-                        {24*60*60-1, "{1:H}, {2:M}"},
-                        {24*60*60, "{0:D}"},
-                        {Int64.MaxValue , "{0:D}, {1:H}"}
+                        {59, "{3:S}" }, // Menos de 1 minuto: muestra segundos
+                        {60, "{2:M}" }, // Exactamente 1 minuto: muestra minutos
+                        {60*60-1, "{2:M}, {3:S}"}, // Menos de 1 hora: muestra minutos y segundos
+                        {60*60, "{1:H}"}, // Exactamente 1 hora: muestra horas
+                        {24*60*60-1, "{1:H}, {2:M}"}, // Menos de 1 día: muestra horas y minutos
+                        {24*60*60, "{0:D}"}, // Exactamente 1 día: muestra días
+                        {Int64.MaxValue , "{0:D}, {1:H}"} // Más de 1 día: muestra días y horas
                     };
                 // find nearest best match
                 var find = cutoff.Keys.ToList()

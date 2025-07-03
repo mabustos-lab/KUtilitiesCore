@@ -13,14 +13,14 @@ namespace KUtilitiesCore.Extensions
         /// <summary>
         /// Devuelve el argumento de tipo subyacente del tipo que acepta valores NULL especificado.
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="type">El tipo a examinar.</param>
         public static Type GetUnderlyingType(this Type type)
       => type.IsNullable() ? Nullable.GetUnderlyingType(type)! : type;
 
         /// <summary>
-        /// Regresa true si el tipo es System.Nulable que envuelbe el tipo de valor
+        /// Regresa true si el tipo es <see cref="System.Nullable{T}"/> que envuelve un tipo de valor.
         /// </summary>
-        /// <param name="type">El tipo para comprobar</param>
+        /// <param name="type">El tipo para comprobar.</param>
         public static bool IsNullable(this Type type)
             => type.IsGenericType
                    && (type.GetGenericTypeDefinition() == typeof(Nullable<>));
