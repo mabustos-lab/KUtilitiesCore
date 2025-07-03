@@ -147,23 +147,29 @@ namespace KUtilitiesCore.Extensions
             yield return typeof(decimal);
             yield return typeof(DateTime);
             yield return typeof(string);
-            yield return typeof(Enum);
+            // typeof(Enum) se elimina ya que ahora IsSupportedType verificará type.IsEnum directamente.
         }
 
         /// <summary>
-        /// Verifica si un tipo es compatible con los tipos soportados.
+        /// Verifica si un tipo es compatible con los tipos soportados o si es un tipo de enumeración.
         /// </summary>
         /// <param name="type">El tipo a verificar.</param>
-        /// <param name="supportedTypes">Los tipos soportados.</param>
-        /// <returns>True si el tipo es compatible, false en caso contrario.</returns>
+        /// <param name="supportedTypes">Los tipos explícitamente soportados (excluyendo la comprobación genérica de Enum).</param>
+        /// <returns>True si el tipo es compatible o es una enumeración, false en caso contrario.</returns>
         private static bool IsSupportedType(Type type, IEnumerable<Type> supportedTypes)
         {
-            var underlyingType = type.GetUnderlyingType();
+            if (type == null) return false;
 
-            return underlyingType != null && supportedTypes.Contains(underlyingType,
-                new TypeComparer()) ||
-                   supportedTypes.Contains(type,
-                        new TypeComparer());
+            Type typeToCheck = type.GetUnderlyingType() ?? type; // Obtiene el tipo subyacente si es Nullable<T>, sino el tipo mismo.
+
+            // Comprueba si es un tipo de enumeración.
+            if (typeToCheck.IsEnum)
+            {
+                return true;
+            }
+
+            // Comprueba si está en la lista de otros tipos soportados.
+            return supportedTypes.Contains(typeToCheck, new TypeComparer());
         }
 
         /// <summary>

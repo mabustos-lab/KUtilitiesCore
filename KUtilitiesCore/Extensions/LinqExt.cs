@@ -18,6 +18,10 @@ namespace KUtilitiesCore.Extensions
         /// <param name="source">Colección a transponer.</param>
         /// <returns>Nueva colección transpuesta.</returns>
         /// <exception cref="ArgumentNullException">Se produce si la fuente o cualquier fila son nulas.</exception>
+        /// <remarks>
+        /// Si las secuencias de entrada tienen diferentes longitudes, la transposición se detendrá cuando la secuencia más corta se agote.
+        /// Las columnas resultantes tendrán una longitud igual a la de la secuencia de entrada más corta.
+        /// </remarks>
         public static IEnumerable<IEnumerable<T>> Transpose<T>(this IEnumerable<IEnumerable<T>> source)
         {
             if (source == null)

@@ -45,23 +45,28 @@ namespace KUtilitiesCore.Extensions
         /// <param name="right">Segundo SecureString a comparar.</param>
         /// <returns>true si los 2 SecureStrings son iguales; de lo contrario, false.</returns>
         /// <remarks>
-        /// - La comparación es caso sensitivo y de culture-invariant.
-        /// - no se permiten comparar con nulos.
-        /// - Administra la memoria para prevenir la exposición de datos sensitivos.
+        /// - La comparación es caso sensitivo y de culture-invariant (Ordinal).
+        /// - No se permiten comparar con nulos; se lanzará <see cref="ArgumentNullException"/>.
+        /// - Administra la memoria no administrada para prevenir la exposición de datos sensitivos en dicha memoria.
+        /// - Nota importante de seguridad: Para realizar la comparación, este método convierte temporalmente el contenido de
+        ///   ambos <see cref="SecureString"/> a cadenas <see cref="string"/> administradas en memoria. Aunque estas cadenas
+        ///   son efímeras y el GC las recolectará eventualmente, su contenido existe brevemente en la memoria administrada.
+        ///   Para escenarios de altísima seguridad donde esto no es aceptable, se requeriría una comparación directa
+        ///   byte a byte en memoria no administrada.
         /// </remarks>
         /// <exception cref="ArgumentNullException">
-        /// Si algun parámetro es nulo.
+        /// Si <paramref name="left"/> o <paramref name="right"/> es nulo.
         /// </exception>
         public static bool SecureCompare(this SecureString left, SecureString right)
         {
             if (left == null)
             {
-                throw new ArgumentNullException(nameof(left), "The left SecureString cannot be null.");
+                throw new ArgumentNullException(nameof(left), "El SecureString izquierdo (left) no puede ser nulo.");
             }
 
             if (right == null)
             {
-                throw new ArgumentNullException(nameof(right), "The right SecureString cannot be null.");
+                throw new ArgumentNullException(nameof(right), "El SecureString derecho (right) no puede ser nulo.");
             }
 
             if (left.Length != right.Length)
