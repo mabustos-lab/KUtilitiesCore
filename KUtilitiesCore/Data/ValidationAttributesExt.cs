@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data
 {
+    /// <summary>
+    /// Métodos de extensión para validar objetos y propiedades utilizando atributos de validación.
+    /// Proporciona utilidades para validar instancias completas o propiedades individuales,
+    /// devolviendo los resultados de validación encontrados.
+    /// </summary>
     public static class ValidationAttributesExt
     {
         /// <summary>

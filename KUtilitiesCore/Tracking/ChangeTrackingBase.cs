@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,14 +12,14 @@ namespace KUtilitiesCore.Tracking
     /// <summary>
     /// Clase base que implementa IEditableObject para gestionar el seguimiento y reversión de cambios.
     /// </summary>
-    public abstract class ChangeTrackingBase : INotifyPropertyChanged, IEditableObject
+    public abstract class ChangeTrackingBase : INotifyPropertyChanged, IChangeTrackingBase
     {
         #region Fields
 
         [NonSerialized]
         private readonly Stack<Dictionary<string, TrackedProperty>> _snapshotStack = new();
 
-        #endregion
+        #endregion Fields
 
         #region Events
 
@@ -26,19 +28,20 @@ namespace KUtilitiesCore.Tracking
         /// </summary>
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        #endregion
+        #endregion Events
 
         #region Properties
 
-        /// <summary>
-        /// Indica si se han modificado los valores de las propiedades después de invocar BeginEdit.
-        /// </summary>
+        /// <inheritdoc/>
+        [NotMapped]
+        [Display(AutoGenerateField = false)]
         public bool IsChanged => CurrentSnapshot?.Any(x => x.Value.IsChanged(this)) ?? false;
-
+        [NotMapped]
+        [Display(AutoGenerateField = false)]
         private Dictionary<string, TrackedProperty>? CurrentSnapshot =>
             _snapshotStack.Count > 0 ? _snapshotStack.Peek() : null;
 
-        #endregion
+        #endregion Properties
 
         #region Methods
 
@@ -93,10 +96,6 @@ namespace KUtilitiesCore.Tracking
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        #endregion
-
-        #region Helper Methods
-
         private Dictionary<string, TrackedProperty> CreateCleanSnapshot()
         {
             var snapshot = new Dictionary<string, TrackedProperty>();
@@ -120,15 +119,6 @@ namespace KUtilitiesCore.Tracking
             return snapshot;
         }
 
-        private void RestoreSnapshot(Dictionary<string, TrackedProperty> snapshot)
-        {
-            foreach (var entry in snapshot)
-            {
-                entry.Value.Property.SetValue(this, entry.Value.Value);
-                OnPropertyChanged(entry.Key);
-            }
-        }
-
         private IEnumerable<PropertyInfo> GetTrackableProperties()
         {
             return GetType()
@@ -144,14 +134,22 @@ namespace KUtilitiesCore.Tracking
                    !property.GetCustomAttributes<ChangeTrackerIgnoreAttribute>(false).Any();
         }
 
-        #endregion
+        private void RestoreSnapshot(Dictionary<string, TrackedProperty> snapshot)
+        {
+            foreach (var entry in snapshot)
+            {
+                entry.Value.Property.SetValue(this, entry.Value.Value);
+                OnPropertyChanged(entry.Key);
+            }
+        }
 
-        #region Inner Classes
+        #endregion Methods
+
+        #region Classes
 
         private sealed class TrackedProperty
         {
-            public PropertyInfo Property { get; }
-            public object? Value { get; }
+            #region Constructors
 
             public TrackedProperty(PropertyInfo property, ChangeTrackingBase srcObject)
             {
@@ -159,12 +157,25 @@ namespace KUtilitiesCore.Tracking
                 Value = property.GetValue(srcObject, null);
             }
 
+            #endregion Constructors
+
+            #region Properties
+
+            public PropertyInfo Property { get; }
+            public object? Value { get; }
+
+            #endregion Properties
+
+            #region Methods
+
             internal bool IsChanged(ChangeTrackingBase srcObject)
             {
                 return !Equals(Value, Property.GetValue(srcObject, null));
             }
+
+            #endregion Methods
         }
 
-        #endregion
+        #endregion Classes
     }
 }
