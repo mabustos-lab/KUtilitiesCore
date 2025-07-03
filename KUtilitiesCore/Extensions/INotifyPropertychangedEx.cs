@@ -32,9 +32,6 @@ namespace KUtilitiesCore.Extensions
         /// <exception cref="ArgumentNullException">
         /// Se lanza si <paramref name="source"/> es null.
         /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Se lanza si <paramref name="source"/> no implementa INotifyPropertyChanged.
-        /// </exception>
         public static bool SetValueAndNotify<TSource, TProperty>(
             this TSource source,
             ref TProperty currentValue,
