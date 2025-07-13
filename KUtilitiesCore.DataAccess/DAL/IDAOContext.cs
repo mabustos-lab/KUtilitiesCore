@@ -10,13 +10,8 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// Define una interfaz para interactuar con el contexto de acceso a datos, proporcionando métodos para la creación de comandos,
     /// ejecución de consultas y manejo de transacciones.
     /// </summary>
-    public interface IDaoContext : IDalContext
-    {
-        /// <summary>
-        /// Obtiene la conexión de base de datos asociada al contexto.
-        /// </summary>
-        DbConnection Connection { get; }
-
+    public interface IDaoContext : ISqlExecutorContext
+    {       
         /// <summary>
         /// Crea un adaptador de datos basado en un comando de base de datos.
         /// </summary>
@@ -40,36 +35,6 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// </summary>
         /// <returns>Una instancia de <see cref="DbCommandBuilder"/>.</returns>
         DbCommandBuilder CreateCommandBuilder();
-
-        /// <summary>
-        /// Crea una nueva colección de parámetros.
-        /// </summary>
-        /// <returns>Una instancia de <see cref="IDbParameterCollection"/>.</returns>
-        IDbParameterCollection CreateParameterCollection();
-
-        /// <summary>
-        /// Ejecuta una consulta que no devuelve datos (INSERT, UPDATE, DELETE).
-        /// </summary>
-        /// <param name="sql">La consulta SQL a ejecutar.</param>
-        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
-        /// <param name="transaction">La transacción asociada al comando, si existe.</param>
-        /// <returns>El número de filas afectadas por la consulta.</returns>
-        int ExecuteNonQuery(string sql, IDbParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null);
-
-        /// <summary>
-        /// Ejecuta una consulta de manera asíncrona que no devuelve datos (INSERT, UPDATE, DELETE).
-        /// </summary>
-        /// <param name="sql">La consulta SQL a ejecutar.</param>
-        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
-        /// <param name="transaction">La transacción asociada al comando, si existe.</param>
-        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
-        /// <returns>El número de filas afectadas por la consulta.</returns>
-        Task<int> ExecuteNonQueryAsync(string sql, IDbParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null,
-            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Ejecuta una consulta y devuelve una colección de objetos mapeados.
@@ -102,25 +67,6 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="ds">Objeto <see cref="DataSet"/> que se va a rellenar con registros y, si es necesario, con esquema.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
         void FillDataSet(string sql, string srcTable, DataSet ds, IDbParameterCollection parameters = null);
-
-        /// <summary>
-        /// Devuelve el valor de la primera columna y la primera fila de una consulta.
-        /// </summary>
-        /// <typeparam name="TResult">El tipo del valor devuelto.</typeparam>
-        /// <param name="sql">La consulta SQL a ejecutar.</param>
-        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        /// <returns>El valor del tipo <typeparamref name="TResult"/> correspondiente a la primera columna y fila de la consulta.</returns>
-        TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null);
-        /// <summary>
-        /// Devuelve el valor de la primera columna y la primera fila de una consulta asyncrona.
-        /// </summary>
-        /// <typeparam name="TResult">El tipo del valor devuelto.</typeparam>
-        /// <param name="sql">La consulta SQL a ejecutar.</param>
-        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
-        /// <returns>El valor del tipo <typeparamref name="TResult"/> correspondiente a la primera columna y fila de la consulta.</returns>
-        Task<TResult> ScalarAsync<TResult>(string sql, IDbParameterCollection parameters = null,
-            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.
