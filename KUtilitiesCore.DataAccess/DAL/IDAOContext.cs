@@ -47,7 +47,6 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <returns>Una instancia de <see cref="IDbParameterCollection"/>.</returns>
         IDbParameterCollection CreateParameterCollection();
 
-
         /// <summary>
         /// Ejecuta una consulta que no devuelve datos (INSERT, UPDATE, DELETE).
         /// </summary>
@@ -60,9 +59,21 @@ namespace KUtilitiesCore.DataAccess.DAL
             CommandType commandType = CommandType.Text, ITransaction transaction = null);
 
         /// <summary>
+        /// Ejecuta una consulta de manera asíncrona que no devuelve datos (INSERT, UPDATE, DELETE).
+        /// </summary>
+        /// <param name="sql">La consulta SQL a ejecutar.</param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
+        /// <param name="transaction">La transacción asociada al comando, si existe.</param>
+        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        /// <returns>El número de filas afectadas por la consulta.</returns>
+        Task<int> ExecuteNonQueryAsync(string sql, IDbParameterCollection parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction transaction = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Ejecuta una consulta y devuelve una colección de objetos mapeados.
         /// </summary>
-        /// <typeparam name="T">El tipo de objeto generado.</typeparam>
         /// <param name="sql">La consulta SQL que debe retornar resultados del tipo del objeto a mapear.</param>
         /// <param name="translate">Convierte datos de un <see cref="IDataReader"/> en conjuntos de resultados fuertemente tipados.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
@@ -70,6 +81,18 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
             IDbParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure);
+        /// <summary>
+        /// Ejecuta de manera asincrona una consulta y devuelve una colección de objetos mapeados.
+        /// </summary>
+        /// <param name="sql">La consulta SQL que debe retornar resultados del tipo del objeto a mapear.</param>
+        /// <param name="translate">Convierte datos de un <see cref="IDataReader"/> en conjuntos de resultados fuertemente tipados.</param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
+        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
+        Task<IReaderResultSet> ExecuteReaderAsync(string sql, IDataReaderConverter translate,
+            IDbParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Ejecuta una consulta SELECT y rellena un DataSet con la información.
@@ -78,8 +101,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="srcTable">Nombre de la tabla de origen que se va a utilizar para la asignación de tabla.</param>
         /// <param name="ds">Objeto <see cref="DataSet"/> que se va a rellenar con registros y, si es necesario, con esquema.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        /// <returns>Un <see cref="DataSet"/> con los resultados de la consulta.</returns>
-        void FillDataSet(string sql, string srcTable,DataSet ds, IDbParameterCollection parameters = null);
+        void FillDataSet(string sql, string srcTable, DataSet ds, IDbParameterCollection parameters = null);
 
         /// <summary>
         /// Devuelve el valor de la primera columna y la primera fila de una consulta.
@@ -89,6 +111,16 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
         /// <returns>El valor del tipo <typeparamref name="TResult"/> correspondiente a la primera columna y fila de la consulta.</returns>
         TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null);
+        /// <summary>
+        /// Devuelve el valor de la primera columna y la primera fila de una consulta asyncrona.
+        /// </summary>
+        /// <typeparam name="TResult">El tipo del valor devuelto.</typeparam>
+        /// <param name="sql">La consulta SQL a ejecutar.</param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        /// <returns>El valor del tipo <typeparamref name="TResult"/> correspondiente a la primera columna y fila de la consulta.</returns>
+        Task<TResult> ScalarAsync<TResult>(string sql, IDbParameterCollection parameters = null,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.

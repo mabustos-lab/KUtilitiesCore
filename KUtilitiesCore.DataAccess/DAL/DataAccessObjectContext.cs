@@ -101,6 +101,14 @@ namespace KUtilitiesCore.DataAccess.DAL
             return command.ExecuteNonQuery();
         }
         /// <inheritdoc/>
+        public Task<int> ExecuteNonQueryAsync(string sql, IDbParameterCollection parameters = null,
+                    CommandType commandType = CommandType.Text, ITransaction transaction = null,
+                    CancellationToken cancellationToken = default)
+        {
+            using DbCommand command = CreateCommand(sql, parameters, commandType, transaction);
+            return command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        /// <inheritdoc/>
         public IReaderResultSet ExecuteReader(string sql,
             IDataReaderConverter translate, IDbParameterCollection parameters = null,
             CommandType commandType = CommandType.StoredProcedure)
@@ -119,10 +127,41 @@ namespace KUtilitiesCore.DataAccess.DAL
             return ret;
         }
         /// <inheritdoc/>
+        public async Task<IReaderResultSet> ExecuteReaderAsync(string sql,
+            IDataReaderConverter translate, IDbParameterCollection parameters = null,
+            CommandType commandType = CommandType.StoredProcedure,
+            CancellationToken cancellationToken = default)
+        {
+            IReaderResultSet ret = new ReaderResultSet();
+            translate ??= DataReaderConverter.Create();
+            using (DbCommand command = CreateCommand(sql, parameters, commandType))
+            {
+                using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+                if (translate.RequiredConvert)
+                {
+                    DataReaderConverter converter = (DataReaderConverter)translate;
+                    ret = converter.Translate(reader);
+                }
+            }
+            return ret;
+        }
+        /// <inheritdoc/>
         public TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null)
         {
             using DbCommand command = CreateCommand(sql, parameters);
             return (TResult)command.ExecuteScalar();
+        }
+
+        /// <inheritdoc/>
+        public async Task<TResult> ScalarAsync<TResult>(string sql, IDbParameterCollection parameters = null,
+            CancellationToken cancellationToken = default)
+        {
+            using DbCommand command = CreateCommand(sql, parameters);
+            object result = await command.ExecuteScalarAsync().ConfigureAwait(false);
+
+            return result is DBNull or null
+                ? default
+                : (TResult)result;
         }
 
         internal DbDataAdapter CreateDataAdapter()

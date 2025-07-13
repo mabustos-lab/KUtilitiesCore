@@ -12,8 +12,8 @@ namespace KUtilitiesCore.DataAccess.Helpers
     /// </summary>
     public sealed class DataReaderConverter : IDataReaderConverter, IReaderResultSet
     {
-        private List<Func<IDataReader, IEnumerable>> _resultSets;
-        private ReaderResultSet readerResultSet;
+        private readonly List<Func<IDataReader, IEnumerable>> _resultSets;
+        private readonly ReaderResultSet readerResultSet;
 
         /// <summary>
         /// Constructor privado para inicializar el DataReaderConverter.
