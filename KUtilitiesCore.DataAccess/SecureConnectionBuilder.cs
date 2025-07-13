@@ -1,5 +1,6 @@
 ﻿using KUtilitiesCore.Data;
 using KUtilitiesCore.Data.ValidationAttributes;
+using KUtilitiesCore.DataAccess.DAL;
 using KUtilitiesCore.DataAccess.Helpers;
 using KUtilitiesCore.DataAccess.Utils;
 using KUtilitiesCore.Extensions;
@@ -236,6 +237,7 @@ namespace KUtilitiesCore.DataAccess
             !string.IsNullOrEmpty(ProviderName) &&
             (IntegratedSecurity || (!string.IsNullOrEmpty(UserName) && !string.IsNullOrEmpty(Password)));
 
+
         /// <summary>
         /// Obtiene un <see cref="DataTable"/> con la lista de bases de datos disponibles en el servidor.
         /// </summary>
@@ -246,21 +248,16 @@ namespace KUtilitiesCore.DataAccess
             DataTable dt = new DataTable();
             if (CanListDatabases())
             {
-                DbProviderFactory factory = DbProviderFactories.GetFactory(ProviderName);
                 try
                 {
-                    using DbConnection connection = factory.CreateConnection();
-                    connection.ConnectionString = CnnString;
-                    connection.Open();
-
+                    using IDaoContext ctx = new DataAccessObjectContext(this);
                     // Obtener los catálogos (bases de datos)
-                    DataTable schemaTable = connection.GetSchema("Databases");
+                    DataTable schemaTable = ctx.Connection.GetSchema("Databases");
 
                     // Normalizar nombres de columnas para diferentes proveedores
                     dt.Columns.Add("DatabaseName", typeof(string));
                     dt.Columns.Add("Owner", typeof(string));
                     dt.Columns.Add("CreatedDate", typeof(DateTime));
-
                     foreach (DataRow row in schemaTable.Rows)
                     {
                         DataRow newRow = dt.NewRow();
@@ -279,7 +276,7 @@ namespace KUtilitiesCore.DataAccess
             }
             return dt;
         }
-
+       
         /// <summary>
         /// Realiza una prueba de conexión a la base de datos y devuelve el resultado.
         /// </summary>
@@ -287,20 +284,11 @@ namespace KUtilitiesCore.DataAccess
         public virtual TestConnectionResult TestConnection()
         {
             TestConnectionResult ret = TestConnectionResult.SucessTest;
-            DbProviderFactory factory;
-            factory = DbProviderFactories.GetFactory(ProviderName);
-            using DbConnection connection = factory.CreateConnection();
-            connection.ConnectionString = CnnString;
             try
             {
-                connection.Open();
-                using (DbCommand command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT PUBLISHINGSERVERNAME() as Servername";
-                    command.CommandType = System.Data.CommandType.Text;
-                    ret.PublishedServerName = (string)command.ExecuteScalar();
-                    ret.ServerVersion = connection.ServerVersion;
-                }
+                using IDaoContext ctx = new DataAccessObjectContext(this);
+                ret.PublishedServerName = ctx.GetPublishedServerNameAsync().ConfigureAwait(true).GetAwaiter().GetResult();
+                ret.ServerVersion = ctx.Connection.ServerVersion;
             }
             catch (System.Exception ex)
             {
