@@ -54,7 +54,10 @@ namespace KUtilitiesCore.DataAccess
         /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base de datos.
         /// </summary>
         string ServerName { get; set; }
-
+        /// <summary>
+        /// Obtiene o establece el tiempo máximo, en segundos, para esperar a que se establezca una conexión.
+        /// </summary>
+        int ConnectionTimeout { get;set; }
         /// <summary>
         /// Indica si se confía en el certificado del servidor.
         /// </summary>
