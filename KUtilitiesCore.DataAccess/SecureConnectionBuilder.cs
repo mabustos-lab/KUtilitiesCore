@@ -90,7 +90,7 @@ namespace KUtilitiesCore.DataAccess
 
         /// <inheritdoc/>
         [JsonProperty(PropertyName = "P")]
-        [RequiredIfAttribute("IntegratedSecurity", false)]
+        [RequiredIf("IntegratedSecurity", false)]
         public string Password { get; set; }
 
         /// <inheritdoc/>
@@ -111,6 +111,10 @@ namespace KUtilitiesCore.DataAccess
         [JsonProperty(PropertyName = "UID")]
         [RequiredIfAttribute("IntegratedSecurity", false)]
         public string UserName { get; set; }
+
+        /// <inheritdoc/>
+        [JsonProperty(PropertyName = "CT")]
+        public int ConnectionTimeout { get; set; } = 30;
         #endregion Properties
 
         #region Indexers
@@ -276,7 +280,7 @@ namespace KUtilitiesCore.DataAccess
             }
             return dt;
         }
-       
+
         /// <summary>
         /// Realiza una prueba de conexión a la base de datos y devuelve el resultado.
         /// </summary>
@@ -327,6 +331,7 @@ namespace KUtilitiesCore.DataAccess
 
                 dbcsb["Encrypt"] = Encrypt;
                 dbcsb["TrustServerCertificate"] = TrustServerCertificate;
+                dbcsb["Connection Timeout"] = ConnectionTimeout;
                 // Añadir otros parámetros si son necesarios (e.g., Connection Timeout, Pooling)
                 // sb.Append("Connection Timeout=30;");
                 res = dbcsb.ToString();
@@ -421,13 +426,13 @@ namespace KUtilitiesCore.DataAccess
             return res;
         }
 #if NET8_0_OR_GREATER
-            /// <summary>
-            /// Obtiene la lista de nombres invariantes de proveedores registrados en el sistema.
-            /// Solo disponible en .NET 8 o superior.
-            /// </summary>
-            /// <returns>Enumeración de nombres invariantes de proveedores.</returns>
-            public static IEnumerable<string> GetProviderInvariantNames()
-            { return DbProviderFactories.GetProviderInvariantNames(); }
+        /// <summary>
+        /// Obtiene la lista de nombres invariantes de proveedores registrados en el sistema.
+        /// Solo disponible en .NET 8 o superior.
+        /// </summary>
+        /// <returns>Enumeración de nombres invariantes de proveedores.</returns>
+        public static IEnumerable<string> GetProviderInvariantNames()
+        { return DbProviderFactories.GetProviderInvariantNames(); }
 #endif
         #endregion Methods
     }
