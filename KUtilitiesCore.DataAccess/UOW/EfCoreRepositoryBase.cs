@@ -88,20 +88,12 @@ namespace KUtilitiesCore.DataAccess.UOW
             return await query.ExecuteDeleteAsync();
         }
 
-        /// <inheritdoc />
-        public virtual int ExecuteDelete(ISpecification<TEntity> specification)
-        {
-            if (specification == null) throw new ArgumentNullException(nameof(specification));
-            IQueryable<TEntity> query = ApplySpecification(specification);
-            return query.ExecuteDelete();
-        }
+
 #else
         public virtual Task<int> ExecuteUpdateAsync(ISpecification<TEntity> specification, IEnumerable<PropertyUpdateDescriptor<TEntity>> updates)
         { throw new PlatformNotSupportedException("ExecuteUpdateAsync solo es compatible con EF Core 7.0+."); }
         public virtual Task<int> ExecuteDeleteAsync(ISpecification<TEntity> specification)
         { throw new PlatformNotSupportedException("ExecuteDeleteAsync solo es compatible con EF Core 7.0+."); }
-        public virtual int ExecuteDelete(ISpecification<TEntity> specification)
-        { throw new PlatformNotSupportedException("ExecuteDelete (síncrono) solo es compatible con EF Core 7.0+."); }
 #endif
     }
 }
