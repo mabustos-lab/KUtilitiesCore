@@ -54,19 +54,17 @@ namespace KUtilitiesCore.DataAccess.UOW
 
         // --- Implementación de IReadOnlyDbRepository<TEntity> ---
         /// <inheritdoc/>
-        public virtual async Task<TEntity> FindOneAsync(ISpecification<TEntity> specification)
+        public virtual async Task<TEntity> FindOneAsync(ISpecification<TEntity> specification = null)
         {
-            if (specification == null)
-                throw new ArgumentNullException(nameof(specification));
+            specification??=Specification<TEntity>.Empty;
             IQueryable<TEntity> query = ApplySpecification(specification);
             return await query.SingleOrDefaultAsync();
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IReadOnlyList<TEntity>> FindAsync(ISpecification<TEntity> specification)
+        public virtual async Task<IReadOnlyList<TEntity>> FindAsync(ISpecification<TEntity> specification=null)
         {
-            if (specification == null)
-                throw new ArgumentNullException(nameof(specification));
+            specification ??= Specification<TEntity>.Empty;
             IQueryable<TEntity> query = ApplySpecification(specification);
             return await query.ToListAsync();
         }
@@ -74,12 +72,11 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual async Task<IPagedResult<TEntity>> GetPagedAsync(
             IPagingOptions pagingOptions,
-            ISpecification<TEntity> specification)
+            ISpecification<TEntity> specification=null)
         {
             if (pagingOptions == null)
                 throw new ArgumentNullException(nameof(pagingOptions));
-            if (specification == null)
-                throw new ArgumentNullException(nameof(specification));
+            specification ??= Specification<TEntity>.Empty;
             if (!pagingOptions.SkipPagination && pagingOptions.PageNumber <= 0)
                 throw new ArgumentOutOfRangeException(nameof(pagingOptions.PageNumber));
             if (!pagingOptions.SkipPagination && pagingOptions.PageSize <= 0)
@@ -159,18 +156,16 @@ namespace KUtilitiesCore.DataAccess.UOW
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> ExistsAsync(ISpecification<TEntity> specification)
+        public virtual async Task<bool> ExistsAsync(ISpecification<TEntity> specification=null)
         {
-            if (specification == null)
-                throw new ArgumentNullException(nameof(specification));
+            specification ??= Specification<TEntity>.Empty;
             return await ApplySpecification(specification).AnyAsync();
         }
 
         /// <inheritdoc/>
-        public virtual async Task<int> CountAsync(ISpecification<TEntity> specification)
+        public virtual async Task<int> CountAsync(ISpecification<TEntity> specification=null)
         {
-            if (specification == null)
-                throw new ArgumentNullException(nameof(specification));
+            specification ??= Specification<TEntity>.Empty;
             return await ApplySpecification(specification).CountAsync();
         }
 
