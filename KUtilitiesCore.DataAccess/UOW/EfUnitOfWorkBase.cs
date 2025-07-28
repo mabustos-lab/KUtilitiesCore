@@ -39,7 +39,7 @@ namespace KUtilitiesCore.DataAccess.UOW
     //        , Microsoft.EntityFrameworkCore.DbContext
     //#endif
     //    {
-    //        public EfProductRepository(TDbContext context, ILoggerServiceProvider loggerFactory = null)
+    //        public EfProductRepository(TDbContext context, ILoggerServiceFactory loggerFactory = null)
     //            : base(context, loggerFactory) { }
 
     //        public async Task<IPagedResult<Product>> GetProductsByCategoryPagedAsync(int categoryId, IPagingOptions pagingOptions)
@@ -72,13 +72,13 @@ namespace KUtilitiesCore.DataAccess.UOW
         private IDbContextTransaction _currentTransaction;
 #endif
         private Dictionary<Type, object> _repositories;
-        protected readonly ILoggerServiceProvider LoggerFactoryInternal;
+        protected readonly ILoggerServiceFactory LoggerFactoryInternal;
 
-        protected EfUnitOfWorkBase(TDbContext context, ILoggerServiceProvider loggerFactory = null)
+        protected EfUnitOfWorkBase(TDbContext context, ILoggerServiceFactory loggerFactory = null)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
             LoggerFactoryInternal = loggerFactory;
-            Logger = loggerFactory?.CreateLogger<EfUnitOfWorkBase<TDbContext>>() ?? NullLoggerService<EfUnitOfWorkBase<TDbContext>>.Instance;
+            Logger = loggerFactory?.GetLogger<EfUnitOfWorkBase<TDbContext>>() ?? NullLoggerService<EfUnitOfWorkBase<TDbContext>>.Instance;
         }
 
         protected TRepoInterface ResolveRepository<TRepoInterface, TRepoImplementation>()
