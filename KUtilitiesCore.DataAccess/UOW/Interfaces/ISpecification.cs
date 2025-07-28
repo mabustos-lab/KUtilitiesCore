@@ -15,6 +15,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
     /// </summary>
     /// <typeparam name="T">El tipo de entidad al que se aplica la especificación.</typeparam>
     public interface ISpecification<T>
+        where T : class
     {
         /// <summary>
         /// Expresión de criterio para filtrar las entidades.

@@ -8,7 +8,8 @@ namespace KUtilitiesCore.DataAccess.UOW
     /// definir especificaciones.
     /// </summary>
     /// <typeparam name="T">El tipo de entidad.</typeparam>
-    public abstract class Specification<T> : ISpecification<T>
+    public class Specification<T> : ISpecification<T>
+        where T : class
     {
         #region Constructors
 
@@ -106,6 +107,7 @@ namespace KUtilitiesCore.DataAccess.UOW
     /// Especificación para combinar dos especificaciones con un operador AND.
     /// </summary>
     internal class AndSpecification<T> : Specification<T>
+        where T : class
     {
         #region Fields
 
@@ -148,6 +150,7 @@ namespace KUtilitiesCore.DataAccess.UOW
     /// Especificación para negar otra especificación.
     /// </summary>
     internal class NotSpecification<T> : Specification<T>
+        where T : class
     {
         #region Fields
 
@@ -180,6 +183,7 @@ namespace KUtilitiesCore.DataAccess.UOW
     /// Especificación para combinar dos especificaciones con un operador OR.
     /// </summary>
     internal class OrSpecification<T> : Specification<T>
+        where T : class
     {
         #region Fields
 
