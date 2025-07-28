@@ -45,11 +45,11 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <summary>
         /// Constructor base.
         /// </summary>
-        protected EfRepositoryBase(TDbContext context, ILoggerServiceProvider loggerFactory = null)
+        protected EfRepositoryBase(TDbContext context, ILoggerServiceFactory loggerFactory = null)
         {
             Context = context ?? throw new ArgumentNullException(nameof(context));
             DbSet = Context.Set<TEntity>();
-            Logger = loggerFactory?.CreateLogger<EfRepositoryBase<TEntity, TDbContext>>() ?? NullLoggerService<EfRepositoryBase<TEntity, TDbContext>>.Instance;
+            Logger = loggerFactory?.GetLogger<EfRepositoryBase<TEntity, TDbContext>>() ?? NullLoggerService<EfRepositoryBase<TEntity, TDbContext>>.Instance;
         }
 
         // --- Implementación de IReadOnlyDbRepository<TEntity> ---

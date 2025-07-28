@@ -26,7 +26,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         where TDbContext : DbContext
 #endif
     {
-        public EfGenericRepository(TDbContext context, ILoggerServiceProvider loggerFactory = null)
+        public EfGenericRepository(TDbContext context, ILoggerServiceFactory loggerFactory = null)
             : base(context, loggerFactory) { }
     }
 }

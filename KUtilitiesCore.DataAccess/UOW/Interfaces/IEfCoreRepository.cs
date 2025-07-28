@@ -32,13 +32,6 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <returns>El número de filas afectadas.</returns>
         Task<int> ExecuteDeleteAsync(ISpecification<TEntity> specification);
 
-        /// <summary>
-        /// Ejecuta una operación de eliminación masiva síncrona en la base de datos basada en la especificación.
-        /// ADVERTENCIA: Este método es específico para implementaciones que soportan EF Core 7.0+.
-        /// </summary>
-        /// <param name="specification">La especificación que define qué entidades eliminar.</param>
-        /// <returns>El número de filas afectadas.</returns>
-        int ExecuteDelete(ISpecification<TEntity> specification);
 #endif
     }
 }
