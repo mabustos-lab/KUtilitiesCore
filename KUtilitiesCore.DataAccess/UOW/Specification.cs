@@ -17,7 +17,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// Constructor base para especificaciones.
         /// </summary>
         /// <param name="criteria">La expresión de criterio inicial (opcional).</param>
-        protected Specification(Expression<Func<T, bool>> criteria = null)
+        public Specification(Expression<Func<T, bool>> criteria = null)
         { Criteria = criteria; }
 
         #endregion Constructors
@@ -38,6 +38,12 @@ namespace KUtilitiesCore.DataAccess.UOW
 
         /// <inheritdoc/>
         public Expression<Func<T, object>> OrderByDescending { get; private set; }
+        /// <summary>
+        /// Gets an empty specification that does not apply any filtering criteria.
+        /// </summary>
+        /// <remarks>This property can be used as a default or placeholder specification when no filtering
+        /// logic is required.</remarks>
+        public static ISpecification<T> Empty => new Specification<T>();
 
         #endregion Properties
 
