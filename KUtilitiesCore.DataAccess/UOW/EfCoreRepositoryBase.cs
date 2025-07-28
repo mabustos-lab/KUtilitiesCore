@@ -42,7 +42,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <summary>
         /// Constructor.
         /// </summary>
-        protected EfCoreRepositoryBase(TDbContext context, ILoggerServiceProvider loggerFactory = null)
+        protected EfCoreRepositoryBase(TDbContext context, ILoggerServiceFactory loggerFactory = null)
             : base(context, loggerFactory) { }
 
 #if NETCOREAPP

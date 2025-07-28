@@ -149,6 +149,7 @@ namespace KUtilitiesCore.DataAccess.UOW
             {
                 try
                 {
+                    BeforeSavechanges();
                     result = await (Context as DbContext).SaveChangesAsync();
                     dbContextTransaction.Commit();
                     Logger.LogInformation("SaveChangesAsync completado. {Count} cambios guardados. Transacción confirmada.", result);
@@ -178,7 +179,10 @@ namespace KUtilitiesCore.DataAccess.UOW
 #elif NETCOREAPP
             var efCoreContext = Context as DbContext;
             _currentTransaction = _currentTransaction ?? await efCoreContext.Database.BeginTransactionAsync();
-            try { result = await efCoreContext.SaveChangesAsync(); await _currentTransaction.CommitAsync(); }
+            try {
+                BeforeSavechanges();
+                result = await efCoreContext.SaveChangesAsync(); await _currentTransaction.CommitAsync(); 
+            }
             catch (DbUpdateConcurrencyException ex) { await RollbackTransactionAsync(); throw new ConcurrencyException("Conflicto de concurrencia.", ex); }
             catch (DbUpdateException ex) { await RollbackTransactionAsync(); throw new RepositoryException("Error al actualizar DB.", ex); }
             catch (Exception ex) { await RollbackTransactionAsync(); throw new RepositoryException("Error inesperado.", ex); }
@@ -207,6 +211,11 @@ namespace KUtilitiesCore.DataAccess.UOW
             }
         }
 #endif
+        /// <summary>
+        /// Permite ejeutar una acción antes de que se invoke SaveChanges
+        /// </summary>
+        protected virtual void BeforeSavechanges()
+        { }
         public void Dispose() { Dispose(true); GC.SuppressFinalize(this); }
         protected virtual void Dispose(bool disposing) { if (!_disposed) { if (disposing) { Context?.Dispose(); } _disposed = true; } }
     }
