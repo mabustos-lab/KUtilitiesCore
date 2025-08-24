@@ -1,8 +1,12 @@
-﻿using KUtilitiesCore.DataAccess.Helpers;
+﻿using KUtilitiesCore.Data.ValidationAttributes;
+using KUtilitiesCore.DataAccess.Helpers;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace KUtilitiesCore.DataAccess
 {
@@ -26,16 +30,23 @@ namespace KUtilitiesCore.DataAccess
         /// <summary>
         /// Establece o obtiene el nombre de la aplicación que realiza la conexión.
         /// </summary>
+        [JsonProperty("AN")]
+        [JsonPropertyName("AN")]
         string ApplicationName { get; set; }
 
         /// <summary>
         /// Indica si se utiliza cifrado SSL en la conexión.
         /// </summary>
+        [JsonProperty("E")]
+        [JsonPropertyName("E")]
         bool Encrypt { get; set; }
 
         /// <summary>
         /// Establece o obtiene el nombre del catálogo inicial, es decir, el nombre de la base de datos.
         /// </summary>
+        [JsonProperty("IC")]
+        [JsonPropertyName("IC")]
+        [Required(AllowEmptyStrings = false)]
         string InitialCatalog { get; set; }
 
         /// <summary>
@@ -43,29 +54,43 @@ namespace KUtilitiesCore.DataAccess
         /// para la autenticación (cuando es true) o si se especifican el identificador de usuario y la contraseña en la
         /// conexión (cuando es false).
         /// </summary>
+        [JsonProperty("IS")]
+        [JsonPropertyName("IS")]
         bool IntegratedSecurity { get; set; }
 
         /// <summary>
         /// Establece o obtiene la contraseña para la conexión a la base de datos.
         /// </summary>
+        [JsonProperty("P")]
+        [JsonPropertyName("P")]
         string Password { get; set; }
 
         /// <summary>
         /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base de datos.
         /// </summary>
+        [JsonProperty("SN")]
+        [JsonPropertyName("SN")]
+        [Required(AllowEmptyStrings = false)]
         string ServerName { get; set; }
         /// <summary>
         /// Obtiene o establece el tiempo máximo, en segundos, para esperar a que se establezca una conexión.
         /// </summary>
+        [JsonProperty("CT")]
+        [JsonPropertyName("CT")]
         int ConnectionTimeout { get;set; }
         /// <summary>
         /// Indica si se confía en el certificado del servidor.
         /// </summary>
+        [JsonProperty("TSC")]
+        [JsonPropertyName("TSC")]
         bool TrustServerCertificate { get; set; }
 
         /// <summary>
         /// Establece o obtiene el nombre de usuario para la conexión a la base de datos.
         /// </summary>
+        [JsonProperty("UID")]
+        [JsonPropertyName("UID")]
+        [RequiredIf("IntegratedSecurity", false)]
         string UserName { get; set; }
 
         /// <summary>

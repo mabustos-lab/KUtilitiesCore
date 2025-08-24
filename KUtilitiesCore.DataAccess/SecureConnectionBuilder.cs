@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace KUtilitiesCore.DataAccess
 {
@@ -71,63 +72,73 @@ namespace KUtilitiesCore.DataAccess
         private int connectionTimeout = 30;
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "AN")]
+        [JsonProperty("AN")]
+        [JsonPropertyName("AN")]
         public string ApplicationName
         { get => applicationName; set => this.SetValueAndNotify(ref applicationName, value); }
 
         /// <inheritdoc/>
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string CnnString { get => GetCnnString(); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "E")]
+        [JsonProperty("E")]
+        [JsonPropertyName("E")]
         public bool Encrypt
         { get => encrypt; set => this.SetValueAndNotify(ref encrypt, value); }
 
-        /// <summary>
-        /// Obtiene el mensaje de error general de validación.
-        /// </summary>
-        [JsonIgnore]
+        /// <inheritdoc/>
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string Error => string.Empty;
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "IC")]
+        [JsonProperty("IC")]
+        [JsonPropertyName("IC")]
         [Required(AllowEmptyStrings = false)]
         public string InitialCatalog
         { get => initialCatalog; set => this.SetValueAndNotify(ref initialCatalog, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "IS")]
+        [JsonProperty("IS")]
+        [JsonPropertyName("IS")]
         public bool IntegratedSecurity
         { get => integratedSecurity; set => this.SetValueAndNotify(ref integratedSecurity, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "P")]
+        [JsonProperty("P")]
+        [JsonPropertyName("P")]
         [RequiredIf("IntegratedSecurity", false)]
         public string Password { get => password; set => this.SetValueAndNotify(ref password, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "PN")]
+        [JsonProperty("PN")]
+        [JsonPropertyName("PN")]
         [Required(AllowEmptyStrings = false)]
         public string ProviderName { get => providerName; set => this.SetValueAndNotify(ref providerName, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "SN")]
+        [JsonProperty("SN")]
+        [JsonPropertyName("SN")]
         [Required(AllowEmptyStrings = false)]
         public string ServerName { get => serverName; set => this.SetValueAndNotify(ref serverName, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "TSC")]
+        [JsonProperty("TSC")]
+        [JsonPropertyName("TSC")]
         public bool TrustServerCertificate
         { get => trustServerCertificate; set => this.SetValueAndNotify(ref trustServerCertificate, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "UID")]
+        [JsonProperty("UID")]
+        [JsonPropertyName("UID")]
         [RequiredIfAttribute("IntegratedSecurity", false)]
         public string UserName { get => userName; set => this.SetValueAndNotify(ref userName, value); }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "CT")]
+        [JsonProperty("CT")]
+        [JsonPropertyName("CT")]
         public int ConnectionTimeout
         { get => connectionTimeout; set => this.SetValueAndNotify(ref connectionTimeout, value); }
 
@@ -136,7 +147,8 @@ namespace KUtilitiesCore.DataAccess
         /// </summary>
         /// <param name="columnName">Nombre de la propiedad.</param>
         /// <returns>Mensaje de error o cadena vacía si no hay error.</returns>
-        [JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string this[string columnName] => this.GetErrorText(columnName);
 
         /// <summary>
@@ -175,7 +187,7 @@ namespace KUtilitiesCore.DataAccess
         /// Notifica el cambio de una propiedad.
         /// </summary>
         /// <param name="propertyName">Nombre de la propiedad.</param>
-        public void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        public void OnPropertyChanged([CallerMemberName] string propertyName= "")
         { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); }
 
         /// <summary>
@@ -374,19 +386,12 @@ namespace KUtilitiesCore.DataAccess
                 })
             {
                 var value = GetType()
-                    .GetField(
-                        property,
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(
-                    cb) as string;
+                    .GetField(property)?.GetValue(cb) as string;
                 if (!string.IsNullOrEmpty(value))
                 {
                     var decriptedValue = _encryptionService.Decrypt(value);
                     GetType()
-                    .GetField(
-                        property,
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(
-                    cb,
-                    decriptedValue);
+                    .GetField(property)?.SetValue(cb, decriptedValue);
                 }
             }
         }
@@ -411,19 +416,13 @@ namespace KUtilitiesCore.DataAccess
                     })
                 {
                     var value = GetType()
-                        .GetField(
-                            property,
-                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(
+                        .GetField(property)?.GetValue(
                         this) as string;
                     if (!string.IsNullOrEmpty(value))
                     {
                         var encryptedValue = _encryptionService.Encrypt(value);
                         GetType()
-                        .GetField(
-                            property,
-                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(
-                        this,
-                        encryptedValue);
+                        .GetField(property)?.SetValue(this, encryptedValue);
                     }
                 }
 
