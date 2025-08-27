@@ -36,6 +36,12 @@ namespace KUtilitiesCore.DataAccess
         private readonly string _filePath;
 
         /// <summary>
+        /// Constructor vacio para la Deserialización de la clase
+        /// </summary>
+        public SecureConnectionBuilder() : this(null, string.Empty)
+        { }
+
+        /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="SecureConnectionBuilder"/>.
         /// </summary>
         /// <param name="encryptionService">
