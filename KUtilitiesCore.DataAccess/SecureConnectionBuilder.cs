@@ -187,7 +187,7 @@ namespace KUtilitiesCore.DataAccess
         /// Notifica el cambio de una propiedad.
         /// </summary>
         /// <param name="propertyName">Nombre de la propiedad.</param>
-        public void OnPropertyChanged([CallerMemberName] string propertyName= "")
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "")
         { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); }
 
         /// <summary>
@@ -377,21 +377,21 @@ namespace KUtilitiesCore.DataAccess
         {
             foreach (var property in new[]
             {
-                    nameof(ApplicationName),
-                    nameof(InitialCatalog),
-                    nameof(Password),
-                    nameof(UserName),
-                    nameof(ProviderName),
-                    nameof(ServerName)
+                    nameof(applicationName),
+                    nameof(initialCatalog),
+                    nameof(password),
+                    nameof(userName),
+                    nameof(providerName),
+                    nameof(serverName)
                 })
             {
-                var value = GetType()
-                    .GetField(property)?.GetValue(cb) as string;
+                var value = this.GetType()
+                    .GetField(property, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(cb) as string;
                 if (!string.IsNullOrEmpty(value))
                 {
                     var decriptedValue = _encryptionService.Decrypt(value);
-                    GetType()
-                    .GetField(property)?.SetValue(cb, decriptedValue);
+                    this.GetType()
+                    .GetField(property, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(cb, decriptedValue);
                 }
             }
         }
@@ -407,22 +407,24 @@ namespace KUtilitiesCore.DataAccess
             {
                 foreach (var property in new[]
                 {
-                        nameof(ApplicationName),
-                        nameof(InitialCatalog),
-                        nameof(Password),
-                        nameof(UserName),
-                        nameof(ProviderName),
-                        nameof(ServerName)
+                        nameof(applicationName),
+                        nameof(initialCatalog),
+                        nameof(password),
+                        nameof(userName),
+                        nameof(providerName),
+                        nameof(serverName)
                     })
                 {
-                    var value = GetType()
-                        .GetField(property)?.GetValue(
+                    var value = this.GetType()
+                        .GetField(property,
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(
                         this) as string;
                     if (!string.IsNullOrEmpty(value))
                     {
                         var encryptedValue = _encryptionService.Encrypt(value);
-                        GetType()
-                        .GetField(property)?.SetValue(this, encryptedValue);
+                        this.GetType()
+                        .GetField(property,
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.SetValue(this, encryptedValue);
                     }
                 }
 
