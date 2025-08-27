@@ -12,6 +12,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -50,7 +51,7 @@ namespace KUtilitiesCore.DataAccess
         /// <param name="filePath">
         /// Ruta del archivo de configuración. Si es vacío, se utiliza la ruta predeterminada.
         /// </param>
-        public SecureConnectionBuilder(Encryption.IEncryptionService encryptionService = null, string filePath = "")
+        public SecureConnectionBuilder(Encryption.IEncryptionService encryptionService, string filePath = "")
         {
             Reset();
             encryptionService ??= Encryption.FactoryEncryptionService.GetAesEncryptionService("@!KUtilities0000");
@@ -58,7 +59,7 @@ namespace KUtilitiesCore.DataAccess
             if (string.IsNullOrEmpty(filePath))
                 filePath = Path.Combine(
                     IO.StoreFolder.GetSpecialStoreFolder(IO.SpecialStoreFolder.AllUserPublic),
-                    "KUtilitiesCore",
+                    Assembly.GetEntryAssembly()?.GetName().Name ?? Process.GetCurrentProcess().ProcessName,
                     "SecureConnection.enc");
             _filePath = filePath;
         }
@@ -76,6 +77,13 @@ namespace KUtilitiesCore.DataAccess
         private bool trustServerCertificate;
         private string userName;
         private int connectionTimeout = 30;
+
+        /// <summary>
+        /// Establece la configuración default por el usuario para la conección a la base de datos.
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public Action<SecureConnectionBuilder> CustomDefaultConfig { get; set; }
 
         /// <inheritdoc/>
         [JsonProperty("AN")]
@@ -210,6 +218,9 @@ namespace KUtilitiesCore.DataAccess
             UserName = string.Empty;
             Encrypt = true;
             TrustServerCertificate = true;
+            if (CustomDefaultConfig != null)
+                CustomDefaultConfig(this);
+                      
         }
 
         /// <summary>
