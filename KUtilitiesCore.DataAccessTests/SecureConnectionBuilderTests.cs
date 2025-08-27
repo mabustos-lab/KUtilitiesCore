@@ -15,6 +15,14 @@ namespace KUtilitiesCore.DataAccess.Tests
     [TestClass()]
     public class SecureConnectionBuilderTests
     {
+        private string idCode;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            idCode=Guid.NewGuid().ToString();
+        }
+
         [TestMethod()]
         public void IsValid_FalseTest()
         {
@@ -30,10 +38,43 @@ namespace KUtilitiesCore.DataAccess.Tests
             SecureConnectionBuilder builder = new SecureConnectionBuilder();
             builder.InitialCatalog = string.Empty;
             Assert.IsFalse(builder.IsValid());
-            
+
         }
 
-         [TestMethod()]
+        [TestMethod()]
+        public void SaveAndLoadLest()
+        {
+            // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                Assert.Inconclusive("Esta prueba se omite en GitHub Actions.");
+            }
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
+            }
+            SaveChanges_1();
+            Assert.IsTrue( LoadChanges_1());
+        }
+
+        private bool LoadChanges_1()
+        {
+            IConnectionBuilder builder = new SecureConnectionBuilder();
+            builder.Load();
+            return builder.ApplicationName == "Test" + idCode;
+        }
+
+        private void SaveChanges_1()
+        {
+            IConnectionBuilder builder = new SecureConnectionBuilder
+            {
+                InitialCatalog = "SiomaxDB",
+                ApplicationName = "Test" + idCode
+            };
+            builder.SaveChanges();
+        }
+
+        [TestMethod()]
         public void SaveChangesTest()
         {
             // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')
@@ -99,8 +140,8 @@ namespace KUtilitiesCore.DataAccess.Tests
                 UserName = "sa",
                 Password = "@!Sefoil2908"
             };
-            DataTable dt= builder.ListDatabases();
-            Assert.IsTrue(dt!=null && dt.Rows.Count>0);
+            DataTable dt = builder.ListDatabases();
+            Assert.IsTrue(dt != null && dt.Rows.Count > 0);
         }
     }
 }
