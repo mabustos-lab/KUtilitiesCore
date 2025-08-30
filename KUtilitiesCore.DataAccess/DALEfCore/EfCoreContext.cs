@@ -1,6 +1,10 @@
 ﻿#if NETFRAMEWORK
 using System.Data.Entity;
 #elif NETCOREAPP
+using KUtilitiesCore;
+using KUtilitiesCore.DataAccess;
+using KUtilitiesCore.DataAccess.DAL;
+using KUtilitiesCore.DataAccess.DALEfCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 #endif
@@ -8,8 +12,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Data;
 using System.Data.Common;
+using KUtilitiesCore.DataAccess.DAL;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.DataAccess.DALEfCore
 {
     /// <summary>
     /// Implementación concreta de <see cref="IEfCoreContext"/> que proporciona acceso
@@ -72,17 +77,17 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public IDbParameterCollection CreateParameterCollection()
+        public IDaoParameterCollection CreateParameterCollection()
         {
             // Usa el proveedor de parámetros del contexto
             var factory = DbProviderFactories.GetFactory(Connection);
-            return new DbParameterCollection(() => factory.CreateParameter());
+            return new DaoParameterCollection(() => factory.CreateParameter());
         }
 
         /// <inheritdoc/>
         public int ExecuteNonQuery(
             string sql,
-            IDbParameterCollection parameters = null,
+            IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.Text,
             ITransaction transaction = null)
         {
@@ -93,7 +98,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <inheritdoc/>
         public async Task<int> ExecuteNonQueryAsync(
             string sql,
-            IDbParameterCollection parameters = null,
+            IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.Text,
             ITransaction transaction = null,
             CancellationToken cancellationToken = default)
@@ -103,7 +108,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null)
+        public TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null)
         {
             using var command = CreateCommand(sql, parameters);
             var result = command.ExecuteScalar();
@@ -113,7 +118,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <inheritdoc/>
         public async Task<TResult> ScalarAsync<TResult>(
             string sql,
-            IDbParameterCollection parameters = null,
+            IDaoParameterCollection parameters = null,
             CancellationToken cancellationToken = default)
         {
             using var command = CreateCommand(sql, parameters);
@@ -131,12 +136,12 @@ namespace KUtilitiesCore.DataAccess.DAL
 #if NETFRAMEWORK
             // EF6: BeginTransaction retorna DbContextTransaction
             var efTransaction = _context.Database.BeginTransaction(isolationLevel);
-            return new TransactionBase(efTransaction);
+            return new TransactionEF(efTransaction);
 #elif NETCOREAPP
             // EF Core: BeginTransaction retorna IDbContextTransaction
             IDbContextTransaction efTransaction = _context.Database.BeginTransaction();
             
-            return new TransactionBase(efTransaction);
+            return new TransactionEF(efTransaction);
 #endif
         }
 
@@ -192,7 +197,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// </summary>
         private DbCommand CreateCommand(
             string sql,
-            IDbParameterCollection parameters = null,
+            IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.Text,
             ITransaction transaction = null)
         {

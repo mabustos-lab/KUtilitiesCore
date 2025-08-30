@@ -3,14 +3,10 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 
-#if NETCOREAPP
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-#endif
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
-    class TransactionBase : ITransaction
+    public class TransactionBase : ITransaction
     {
         #region Fields
 
@@ -34,24 +30,6 @@ namespace KUtilitiesCore.DataAccess.DAL
             _disposedValue = false;
             Debug.WriteLine($"Se inicia una Transacción ID: {_idTransaction}", "Transacción");
         }
-
-#if NETCOREAPP
-        /// <summary>
-        /// Constructor para EF Core (Microsoft.EntityFrameworkCore)
-        /// </summary>
-        public TransactionBase(IDbContextTransaction transaction)
-            : this(transaction.GetDbTransaction()) // Convertir a DbTransaction
-        {
-        }
-#elif NETFRAMEWORK
-        /// <summary>
-        /// Constructor para EF6 (System.Data.Entity)
-        /// </summary>
-        public TransactionBase(System.Data.Entity.DbContextTransaction transaction)
-            : this(transaction.UnderlyingTransaction) // Convertir a DbTransaction
-        {
-        }
-#endif
 
         #endregion Constructors
 

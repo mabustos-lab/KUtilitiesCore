@@ -11,6 +11,6 @@
         /// </summary>
         /// <typeparam name="TResult">El tipo del conjunto de resultados.</typeparam>
         /// <returns>La instancia actual de IDataReaderConverter.</returns>
-        IDataReaderConverter WithResult<TResult>() where TResult : new();
+        IDataReaderConverter WithResult<TResult>() where TResult : class,new();
     }
 }

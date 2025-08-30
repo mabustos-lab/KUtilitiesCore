@@ -11,7 +11,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Implementación decolección de parámetros de base de datos.
     /// </summary>
-    sealed class DbParameterCollection : IDbParameterCollection
+    sealed class DaoParameterCollection : IDaoParameterCollection
     {
         private readonly Func<DbParameter> _parameterFactory;
         private readonly Dictionary<string, DbParameter> _parameters;
@@ -53,7 +53,7 @@ namespace KUtilitiesCore.DataAccess.DAL
            { typeof(DateTimeOffset?), DbType.DateTimeOffset }
         };
 
-        public DbParameterCollection(Func<DbParameter> parameterFactory)
+        public DaoParameterCollection(Func<DbParameter> parameterFactory)
         {
             _parameterFactory = parameterFactory ?? throw new ArgumentNullException(nameof(parameterFactory));
             _parameters = [];

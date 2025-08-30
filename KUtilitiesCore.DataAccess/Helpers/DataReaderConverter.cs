@@ -27,9 +27,7 @@ namespace KUtilitiesCore.DataAccess.Helpers
         /// Indica si el convertidor puede realizar conversiones
         /// </summary>
         public bool RequiredConvert => _resultSets.Count > 0;
-        /// <summary>
-        /// Indica si el convertidor contiene algún conjunto de resultados.
-        /// </summary>
+        /// <inheritdoc/>
         public bool HasResultsets => readerResultSet.HasResultsets;
 
         /// <summary>
@@ -82,24 +80,30 @@ namespace KUtilitiesCore.DataAccess.Helpers
             return new DataReaderConverter();
         }
 
-        /// <summary>
-        /// Recupera un conjunto de resultados fuertemente tipado por índice.
-        /// </summary>
-        /// <typeparam name="TResult">El tipo del conjunto de resultados.</typeparam>
-        /// <param name="index">El índice del conjunto de resultados a recuperar.</param>
-        /// <returns>Un enumerable del tipo especificado.</returns>
-        IEnumerable<TResult> IReaderResultSet.GetResult<TResult>(int index)
+        /// <inheritdoc/>
+        IEnumerable<TResult> IReaderResultSet.GetResult<TResult>()
         {
-            return readerResultSet.GetResult<TResult>(index);
+            return readerResultSet.GetResult<TResult>();
         }
         /// <summary>
         /// Agrega una transformación de conjunto de resultados al convertidor.
         /// </summary>
         /// <typeparam name="TResult">El tipo del conjunto de resultados.</typeparam>
         /// <returns>La instancia actual de IDataReaderConverter.</returns>
-        IDataReaderConverter IDataReaderConverter.WithResult<TResult>()
+        IDataReaderConverter IDataReaderConverter.WithResult<TResult>()            
         {
-            _resultSets.Add((reader) => reader.Translate<TResult>().ToList());
+            _resultSets.Add((reader) =>
+            {
+                try
+                {
+                    return reader.Translate<TResult>().ToList();
+                }
+                catch (Exception ex)
+                {
+                    ex.Data.Add("TResultType", typeof(TResult).FullName);
+                    throw;
+                }
+            });
             return this;
         }
 
@@ -111,47 +115,5 @@ namespace KUtilitiesCore.DataAccess.Helpers
         {
             readerResultSet.AddResult(resultSet);
         }
-    }
-
-    /// <summary>
-    /// Representa una colección de conjuntos de resultados recuperados de un lector de datos.
-    /// </summary>
-    sealed class ReaderResultSet : IReaderResultSet
-    {
-        private readonly List<IEnumerable> resultSets;
-
-        /// <summary>
-        /// Inicializa una nueva instancia de la clase ReaderResultSet.
-        /// </summary>
-        public ReaderResultSet()
-        {
-            resultSets = new List<IEnumerable>();
-        }
-
-        /// <summary>
-        /// Indica si la colección de conjuntos de resultados contiene algún conjunto de resultados.
-        /// </summary>
-        public bool HasResultsets => resultSets.Count > 0;
-
-        /// <summary>
-        /// Recupera un conjunto de resultados fuertemente tipado por índice.
-        /// </summary>
-        /// <typeparam name="TResult">El tipo del conjunto de resultados.</typeparam>
-        /// <param name="index">El índice del conjunto de resultados a recuperar.</param>
-        /// <returns>Un enumerable del tipo especificado.</returns>
-        public IEnumerable<TResult> GetResult<TResult>(int index = 0)
-        {
-            return resultSets[index].OfType<TResult>();
-        }
-
-        /// <summary>
-        /// Agrega un conjunto de resultados a la colección.
-        /// </summary>
-        /// <param name="value">El conjunto de resultados a agregar.</param>
-        internal void AddResult(IEnumerable value)
-        {
-            resultSets.Add(value);
-        }
-     
     }
 }

@@ -20,8 +20,8 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <summary>
         /// Crea una nueva colección de parámetros para comandos SQL.
         /// </summary>
-        /// <returns>Instancia de <see cref="IDbParameterCollection"/> para agregar parámetros.</returns>
-        IDbParameterCollection CreateParameterCollection();
+        /// <returns>Instancia de <see cref="IDaoParameterCollection"/> para agregar parámetros.</returns>
+        IDaoParameterCollection CreateParameterCollection();
 
         /// <summary>
         /// Ejecuta un comando SQL que no retorna resultados (por ejemplo, INSERT, UPDATE, DELETE).
@@ -31,7 +31,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="commandType">Tipo de comando (Texto, Procedimiento almacenado, etc.).</param>
         /// <param name="transaction">Transacción opcional en la que ejecutar el comando.</param>
         /// <returns>Número de filas afectadas.</returns>
-        int ExecuteNonQuery(string sql, IDbParameterCollection parameters = null,
+        int ExecuteNonQuery(string sql, IDaoParameterCollection parameters = null,
                            CommandType commandType = CommandType.Text, ITransaction transaction = null);
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="transaction">Transacción opcional.</param>
         /// <param name="cancellationToken">Token de cancelación.</param>
         /// <returns>Número de filas afectadas.</returns>
-        Task<int> ExecuteNonQueryAsync(string sql, IDbParameterCollection parameters = null,
+        Task<int> ExecuteNonQueryAsync(string sql, IDaoParameterCollection parameters = null,
                                       CommandType commandType = CommandType.Text, ITransaction transaction = null,
                                       CancellationToken cancellationToken = default);
 
@@ -54,7 +54,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="sql">Cadena SQL a ejecutar.</param>
         /// <param name="parameters">Colección de parámetros para el comando.</param>
         /// <returns>Valor escalar obtenido de la consulta.</returns>
-        TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null);
+        TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null);
 
         /// <summary>
         /// Ejecuta asincrónicamente una consulta SQL y retorna el primer valor de la primera fila del resultado.
@@ -64,7 +64,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="parameters">Colección de parámetros para el comando.</param>
         /// <param name="cancellationToken">Token de cancelación.</param>
         /// <returns>Valor escalar obtenido de la consulta.</returns>
-        Task<TResult> ScalarAsync<TResult>(string sql, IDbParameterCollection parameters = null,
+        Task<TResult> ScalarAsync<TResult>(string sql, IDaoParameterCollection parameters = null,
                                           CancellationToken cancellationToken = default);
     }
 }

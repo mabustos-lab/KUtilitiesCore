@@ -22,7 +22,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <remarks>Esta clase sirve como punto central para ejecutar operaciones de base de datos, como ejecutar
     /// consultas, gestionar transacciones e interactuar con conjuntos de datos. Abstrae el proveedor de base de datos subyacente y
     /// asegura patrones de acceso consistentes.</remarks>
-    public class DataAccessObjectContext : IDaoContext
+    public class DaoContext : IDaoContext
     {
         #region Fields
 
@@ -35,13 +35,13 @@ namespace KUtilitiesCore.DataAccess.DAL
 
         #region Constructors
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="DataAccessObjectContext"/> con la conexión especificada
+        /// Inicializa una nueva instancia de la clase <see cref="DaoContext"/> con la conexión especificada
         /// constructor.
         /// </summary>
         /// <param name="cnnStr">El constructor de conexión que proporciona la cadena de conexión y el nombre del proveedor para el acceso a la base de datos.  Este parámetro
         /// no puede ser <see langword="null"/>.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="cnnStr"/> is <see langword="null"/>.</exception>.
-        public DataAccessObjectContext(IConnectionBuilder cnnStr)
+        public DaoContext(IConnectionBuilder cnnStr)
         {
             _connectionString = cnnStr ?? throw new ArgumentNullException(nameof(cnnStr));
             _factory = DbProviderFactories.GetFactory(cnnStr.ProviderName);
@@ -77,7 +77,7 @@ namespace KUtilitiesCore.DataAccess.DAL
 
         /// <inheritdoc/>
         public DbCommand CreateCommand(string sql,
-            IDbParameterCollection parameters = null,
+            IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.Text, ITransaction transaction = null)
         {
             DbCommand command = _factory.CreateCommand();
@@ -103,9 +103,9 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public IDbParameterCollection CreateParameterCollection()
+        public IDaoParameterCollection CreateParameterCollection()
         {
-            return new DbParameterCollection(CreateParameter);
+            return new DaoParameterCollection(CreateParameter);
         }
 
         /// <inheritdoc/>
@@ -135,7 +135,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public int ExecuteNonQuery(string sql, IDbParameterCollection parameters = null,
+        public int ExecuteNonQuery(string sql, IDaoParameterCollection parameters = null,
                     CommandType commandType = CommandType.Text, ITransaction transaction = null)
         {
             using DbCommand command = CreateCommand(sql, parameters, commandType, transaction);
@@ -143,7 +143,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public Task<int> ExecuteNonQueryAsync(string sql, IDbParameterCollection parameters = null,
+        public Task<int> ExecuteNonQueryAsync(string sql, IDaoParameterCollection parameters = null,
                     CommandType commandType = CommandType.Text, ITransaction transaction = null,
                     CancellationToken cancellationToken = default)
         {
@@ -153,7 +153,7 @@ namespace KUtilitiesCore.DataAccess.DAL
 
         /// <inheritdoc/>
         public IReaderResultSet ExecuteReader(string sql,
-            IDataReaderConverter translate, IDbParameterCollection parameters = null,
+            IDataReaderConverter translate, IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.StoredProcedure)
         {
             translate ??= DataReaderConverter.Create();
@@ -167,7 +167,7 @@ namespace KUtilitiesCore.DataAccess.DAL
 
         /// <inheritdoc/>
         public async Task<IReaderResultSet> ExecuteReaderAsync(string sql,
-            IDataReaderConverter translate, IDbParameterCollection parameters = null,
+            IDataReaderConverter translate, IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.StoredProcedure,
             CancellationToken cancellationToken = default)
         {
@@ -186,7 +186,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public void FillDataSet(string sql, string srcTable, DataSet ds, IDbParameterCollection parameters = null)
+        public void FillDataSet(string sql, string srcTable, DataSet ds, IDaoParameterCollection parameters = null)
         {
             using DbCommand command = CreateCommand(sql, parameters);
             using DbDataAdapter adapter = _factory.CreateDataAdapter();
@@ -195,14 +195,14 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <inheritdoc/>
-        public TResult Scalar<TResult>(string sql, IDbParameterCollection parameters = null)
+        public TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null)
         {
             using DbCommand command = CreateCommand(sql, parameters);
             return (TResult)command.ExecuteScalar();
         }
 
         /// <inheritdoc/>
-        public async Task<TResult> ScalarAsync<TResult>(string sql, IDbParameterCollection parameters = null,
+        public async Task<TResult> ScalarAsync<TResult>(string sql, IDaoParameterCollection parameters = null,
             CancellationToken cancellationToken = default)
         {
             using DbCommand command = CreateCommand(sql, parameters);

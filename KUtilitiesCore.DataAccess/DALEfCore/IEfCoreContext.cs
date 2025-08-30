@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using KUtilitiesCore.DataAccess.DAL;
+
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
 // Usings específicos de Entity Framework 6 (.NET Framework)
@@ -9,7 +11,7 @@ using System.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 #endif
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.DataAccess.DALEfCore
 {
     /// <summary>
     /// Interfaz específica para Entity Framework Core que extiende las capacidades de ejecución SQL

@@ -28,7 +28,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="transaction">La transacción asociada al comando, si existe.</param>
         /// <returns>Un nuevo objeto <see cref="DbCommand"/>.</returns>
         DbCommand CreateCommand(string sql,
-            IDbParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null);
+            IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null);
 
         /// <summary>
         /// Crea un generador de comandos para construir automáticamente comandos de inserción, actualización y eliminación.
@@ -45,7 +45,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
-            IDbParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure);
+            IDaoParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure);
         /// <summary>
         /// Ejecuta de manera asincrona una consulta y devuelve una colección de objetos mapeados.
         /// </summary>
@@ -56,7 +56,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         Task<IReaderResultSet> ExecuteReaderAsync(string sql, IDataReaderConverter translate,
-            IDbParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure,
+            IDaoParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <param name="srcTable">Nombre de la tabla de origen que se va a utilizar para la asignación de tabla.</param>
         /// <param name="ds">Objeto <see cref="DataSet"/> que se va a rellenar con registros y, si es necesario, con esquema.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        void FillDataSet(string sql, string srcTable, DataSet ds, IDbParameterCollection parameters = null);
+        void FillDataSet(string sql, string srcTable, DataSet ds, IDaoParameterCollection parameters = null);
 
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.

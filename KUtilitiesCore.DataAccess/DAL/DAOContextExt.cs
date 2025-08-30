@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
-    public static class DAOContextExt
+    public static class DaoContextExt
     {
         /// <summary>
         /// Obtiene el nombre del servidor publicado asociado al contexto de datos.
@@ -50,7 +50,7 @@ namespace KUtilitiesCore.DataAccess.DAL
             if (context.Connection.State != ConnectionState.Open)
                 await context.Connection.OpenAsync(cancellationToken);
 
-            IDbParameterCollection dbParameterCollection = context.CreateParameterCollection();
+            IDaoParameterCollection dbParameterCollection = context.CreateParameterCollection();
             dbParameterCollection.Add(nameof(key), key);
             dbParameterCollection.Add(nameof(value), value);
             await context.ExecuteNonQueryAsync("EXEC sp_set_session_context @key = @key, @value = @value", dbParameterCollection);

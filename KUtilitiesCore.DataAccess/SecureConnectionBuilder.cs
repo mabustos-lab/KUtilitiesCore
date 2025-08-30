@@ -295,7 +295,7 @@ namespace KUtilitiesCore.DataAccess
             {
                 try
                 {
-                    using IDaoContext ctx = new DataAccessObjectContext(this);
+                    using IDaoContext ctx = new DaoContext(this);
                     // Obtener los catálogos (bases de datos)
                     DataTable schemaTable = ctx.Connection.GetSchema("Databases");
 
@@ -331,7 +331,7 @@ namespace KUtilitiesCore.DataAccess
             TestConnectionResult ret = TestConnectionResult.SucessTest;
             try
             {
-                using IDaoContext ctx = new DataAccessObjectContext(this);
+                using IDaoContext ctx = new DaoContext(this);
                 ret.PublishedServerName = ctx.GetPublishedServerNameAsync().ConfigureAwait(true).GetAwaiter().GetResult();
                 ret.ServerVersion = ctx.Connection.ServerVersion;
             }

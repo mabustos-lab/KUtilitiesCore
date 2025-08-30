@@ -9,7 +9,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// <summary>
     /// Colección de parámetros de base de datos con funcionalidad de solo lectura y manipulación avanzada.
     /// </summary>
-    public interface IDbParameterCollection : IReadOnlyCollection<DbParameter>
+    public interface IDaoParameterCollection : IReadOnlyCollection<DbParameter>
     {
         /// <summary>
         /// Acceso por nombre a los parámetros.
