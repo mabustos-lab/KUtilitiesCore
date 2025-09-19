@@ -1,12 +1,7 @@
 ﻿using KUtilitiesCore.Logger;
 using KUtilitiesCore.MVVM.ActionResult;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
@@ -15,7 +10,6 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// </summary>
     public interface IStoreProcedureHelper
     {
-        
         #region Properties
 
         /// <summary>
@@ -157,9 +151,10 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// establece el servicio de Log para depurar los procedimeintos almacenados.
         /// </summary>
         /// <param name="loggerServiceFactory"></param>
-        /// /// <param name="includeParams">Indica se se expone la información sensible de los parametros</param>
+        /// ///
+        /// <param name="includeParams">Indica se se expone la información sensible de los parametros</param>
         /// <returns></returns>
-        IStoreProcedureHelper SetLoger(ILoggerServiceFactory loggerServiceFactory, bool includeParams=false);
+        IStoreProcedureHelper SetLoger(ILoggerServiceFactory loggerServiceFactory, bool includeParams = false);
 
         /// <summary>
         /// Define el tipo de resultado transformandolo de un DataTable.

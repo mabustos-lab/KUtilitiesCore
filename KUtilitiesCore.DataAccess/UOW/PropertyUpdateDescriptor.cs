@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.DataAccess.UOW
 {
@@ -14,17 +9,7 @@ namespace KUtilitiesCore.DataAccess.UOW
     /// <typeparam name="TEntity">El tipo de la entidad a actualizar.</typeparam>
     public class PropertyUpdateDescriptor<TEntity> where TEntity : class
     {
-        /// <summary>
-        /// Selector de la propiedad a actualizar (ej. p => p.Name).
-        /// Debe ser una expresión que seleccione un miembro.
-        /// </summary>
-        public LambdaExpression PropertySelector { get; }
-
-        /// <summary>
-        /// Expresión que define el nuevo valor para la propiedad.
-        /// Puede ser una constante o una expresión basada en la entidad (ej. p => "Nuevo Valor" o p => p.Price * 1.1M).
-        /// </summary>
-        public LambdaExpression ValueExpression { get; }
+        #region Constructors
 
         /// <summary>
         /// Constructor interno para controlar la creación. Usar los métodos factory Create.
@@ -52,32 +37,36 @@ namespace KUtilitiesCore.DataAccess.UOW
             ValueExpression = valueExpression;
         }
 
-        private static bool ValidatePropertySelector(Expression selectorBody)
-        {
-            return selectorBody switch
-            {
-                // Caso directo: p => p.Prop
-                MemberExpression member => IsValidPropertyAccess(member),
-                // Caso conversión: p => (object)p.Prop
-                UnaryExpression unary when unary.NodeType == ExpressionType.Convert =>
-                    IsValidPropertyAccess(unary.Operand as MemberExpression),
-                _ => false
-            };           
-        }
+        #endregion Constructors
 
-        private static bool IsValidPropertyAccess(MemberExpression memberExpr)
-        {
-            return memberExpr?.Expression is ParameterExpression param
-                   && param.Type == typeof(TEntity)
-                   && memberExpr.Member.MemberType == MemberTypes.Property;
-        }
+        #region Properties
+
+        /// <summary>
+        /// Selector de la propiedad a actualizar (ej. p =&gt; p.Name). Debe ser una expresión que
+        /// seleccione un miembro.
+        /// </summary>
+        public LambdaExpression PropertySelector { get; }
+
+        /// <summary>
+        /// Expresión que define el nuevo valor para la propiedad. Puede ser una constante o una
+        /// expresión basada en la entidad (ej. p =&gt; "Nuevo Valor" o p =&gt; p.Price * 1.1M).
+        /// </summary>
+        public LambdaExpression ValueExpression { get; }
+
+        #endregion Properties
+
+        #region Methods
 
         /// <summary>
         /// Crea un descriptor de actualización de propiedad donde el nuevo valor es una expresión.
         /// </summary>
         /// <typeparam name="TProperty">El tipo de la propiedad.</typeparam>
-        /// <param name="propertySelector">Expresión para seleccionar la propiedad (ej. entity => entity.PropertyName).</param>
-        /// <param name="valueExpression">Expresión para calcular el nuevo valor (ej. entity => entity.OldValue + 10).</param>
+        /// <param name="propertySelector">
+        /// Expresión para seleccionar la propiedad (ej. entity =&gt; entity.PropertyName).
+        /// </param>
+        /// <param name="valueExpression">
+        /// Expresión para calcular el nuevo valor (ej. entity =&gt; entity.OldValue + 10).
+        /// </param>
         /// <returns>Un nuevo PropertyUpdateDescriptor.</returns>
         public static PropertyUpdateDescriptor<TEntity> Create<TProperty>(
             Expression<Func<TEntity, TProperty>> propertySelector,
@@ -90,7 +79,9 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// Crea un descriptor de actualización de propiedad donde el nuevo valor es una constante.
         /// </summary>
         /// <typeparam name="TProperty">El tipo de la propiedad.</typeparam>
-        /// <param name="propertySelector">Expresión para seleccionar la propiedad (ej. entity => entity.PropertyName).</param>
+        /// <param name="propertySelector">
+        /// Expresión para seleccionar la propiedad (ej. entity =&gt; entity.PropertyName).
+        /// </param>
         /// <param name="constantValue">El valor constante para asignar a la propiedad.</param>
         /// <returns>Un nuevo PropertyUpdateDescriptor.</returns>
         public static PropertyUpdateDescriptor<TEntity> Create<TProperty>(
@@ -98,13 +89,35 @@ namespace KUtilitiesCore.DataAccess.UOW
             TProperty constantValue)
         {
             // Envuelve el valor constante en una expresión lambda que toma TEntity como parámetro
-            // para que coincida con la firma esperada por ValueExpression.
-            // El parámetro de la entidad no se usa en el cuerpo de esta lambda específica.
+            // para que coincida con la firma esperada por ValueExpression. El parámetro de la
+            // entidad no se usa en el cuerpo de esta lambda específica.
             ParameterExpression entityParameter = Expression.Parameter(typeof(TEntity), "e_const_val_param");
             ConstantExpression constantExpr = Expression.Constant(constantValue, typeof(TProperty));
             Expression<Func<TEntity, TProperty>> valueLambda = Expression.Lambda<Func<TEntity, TProperty>>(constantExpr, entityParameter);
 
             return new PropertyUpdateDescriptor<TEntity>(propertySelector, valueLambda);
         }
+
+        private static bool IsValidPropertyAccess(MemberExpression memberExpr)
+        {
+            return memberExpr?.Expression is ParameterExpression param
+                   && param.Type == typeof(TEntity)
+                   && memberExpr.Member.MemberType == MemberTypes.Property;
+        }
+
+        private static bool ValidatePropertySelector(Expression selectorBody)
+        {
+            return selectorBody switch
+            {
+                // Caso directo: p => p.Prop
+                MemberExpression member => IsValidPropertyAccess(member),
+                // Caso conversión: p => (object)p.Prop
+                UnaryExpression unary when unary.NodeType == ExpressionType.Convert =>
+                    IsValidPropertyAccess(unary.Operand as MemberExpression),
+                _ => false
+            };
+        }
+
+        #endregion Methods
     }
 }

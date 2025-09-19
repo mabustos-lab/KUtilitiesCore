@@ -1,31 +1,18 @@
 ﻿using KUtilitiesCore.Data.ValidationAttributes;
 using KUtilitiesCore.DataAccess.Helpers;
 using Newtonsoft.Json;
-using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace KUtilitiesCore.DataAccess
+namespace KUtilitiesCore.DataAccess.ConnectionBuilder
 {
     /// <summary>
     /// Interfaz para la construcción de cadenas de conexión independiente de la infraestructura de datos.
     /// </summary>
     public interface IConnectionBuilder : IConnectionString, IDataErrorInfo
     {
-        /// <summary>
-        /// Regresa un DataTable con la lista de las bases de datos disponibles en el Servidor
-        /// </summary>
-        /// <returns>Regresa un DataTable con las columnas: Owner, DatabaseName y CreatedDate</returns>
-        DataTable ListDatabases();
-
-        /// <summary>
-        /// Indica si existe la configuración minima para listar las Bases de datos
-        /// </summary>
-        /// <returns>True si se puede listar las bases de datos, de lo contrario false.</returns>
-        bool CanListDatabases();
 
         /// <summary>
         /// Establece o obtiene el nombre de la aplicación que realiza la conexión.
@@ -33,6 +20,13 @@ namespace KUtilitiesCore.DataAccess
         [JsonProperty("AN")]
         [JsonPropertyName("AN")]
         string ApplicationName { get; set; }
+
+        /// <summary>
+        /// Obtiene o establece el tiempo máximo, en segundos, para esperar a que se establezca una conexión.
+        /// </summary>
+        [JsonProperty("CT")]
+        [JsonPropertyName("CT")]
+        int ConnectionTimeout { get; set; }
 
         /// <summary>
         /// Indica si se utiliza cifrado SSL en la conexión.
@@ -50,9 +44,9 @@ namespace KUtilitiesCore.DataAccess
         string InitialCatalog { get; set; }
 
         /// <summary>
-        /// Obtiene o establece un valor booleano que indica si se utilizan las credenciales actuales de la cuenta de Windows
-        /// para la autenticación (cuando es true) o si se especifican el identificador de usuario y la contraseña en la
-        /// conexión (cuando es false).
+        /// Obtiene o establece un valor booleano que indica si se utilizan las credenciales
+        /// actuales de la cuenta de Windows para la autenticación (cuando es true) o si se
+        /// especifican el identificador de usuario y la contraseña en la conexión (cuando es false).
         /// </summary>
         [JsonProperty("IS")]
         [JsonPropertyName("IS")]
@@ -66,18 +60,14 @@ namespace KUtilitiesCore.DataAccess
         string Password { get; set; }
 
         /// <summary>
-        /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base de datos.
+        /// Establece o obtiene el nombre o la dirección IP del servidor donde se encuentra la base
+        /// de datos.
         /// </summary>
         [JsonProperty("SN")]
         [JsonPropertyName("SN")]
         [Required(AllowEmptyStrings = false)]
         string ServerName { get; set; }
-        /// <summary>
-        /// Obtiene o establece el tiempo máximo, en segundos, para esperar a que se establezca una conexión.
-        /// </summary>
-        [JsonProperty("CT")]
-        [JsonPropertyName("CT")]
-        int ConnectionTimeout { get;set; }
+
         /// <summary>
         /// Indica si se confía en el certificado del servidor.
         /// </summary>
@@ -92,6 +82,18 @@ namespace KUtilitiesCore.DataAccess
         [JsonPropertyName("UID")]
         [RequiredIf("IntegratedSecurity", false)]
         string UserName { get; set; }
+
+        /// <summary>
+        /// Indica si existe la configuración minima para listar las Bases de datos
+        /// </summary>
+        /// <returns>True si se puede listar las bases de datos, de lo contrario false.</returns>
+        bool CanListDatabases();
+
+        /// <summary>
+        /// Regresa un DataTable con la lista de las bases de datos disponibles en el Servidor
+        /// </summary>
+        /// <returns>Regresa un DataTable con las columnas: Owner, DatabaseName y CreatedDate</returns>
+        DataTable ListDatabases();
 
         /// <summary>
         /// Carga los valores almacenados en el objeto.
@@ -115,5 +117,6 @@ namespace KUtilitiesCore.DataAccess
         /// Un objeto <see cref="TestConnectionResult"/> que contiene el resultado de la prueba de conexión.
         /// </returns>
         TestConnectionResult TestConnection();
+
     }
 }

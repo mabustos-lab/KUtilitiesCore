@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
 
 namespace KUtilitiesCore.DataAccess.BulkInsert
 {
@@ -12,9 +7,11 @@ namespace KUtilitiesCore.DataAccess.BulkInsert
     /// </summary>
     public interface IBulkOperationsService
     {
+
         /// <summary>
         /// Inserta un DataTable en la base de datos utilizando la estrategia óptima según el proveedor.
         /// </summary>
         void BulkCopy(DataTable dataTable);
+
     }
 }

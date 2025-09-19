@@ -1,8 +1,5 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Diagnostics;
-using System.Linq;
-
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
@@ -11,8 +8,8 @@ namespace KUtilitiesCore.DataAccess.DAL
         #region Fields
 
         private readonly Guid _idTransaction;
-        private bool _IsCommited;
         private bool _disposedValue;
+        private bool _IsCommited;
         private DbTransaction _transaction;
 
         #endregion Fields
@@ -52,6 +49,20 @@ namespace KUtilitiesCore.DataAccess.DAL
         }
 
         /// <summary>
+        /// Libera los recursos asociados a la transacción.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        public DbTransaction GetTransactionObject()
+        {
+            return _transaction;
+        }
+
+        /// <summary>
         /// Revierte los cambios realizados en la transacción.
         /// </summary>
         public virtual void Rollback()
@@ -73,21 +84,6 @@ namespace KUtilitiesCore.DataAccess.DAL
                 Debug.Fail($"Error al realizar Rollback en la Transacción ID: {_idTransaction}", ex.ToString());
             }
         }
-
-        public DbTransaction GetTransactionObject()
-        {
-            return _transaction;
-        }
-
-        /// <summary>
-        /// Libera los recursos asociados a la transacción.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
         protected virtual void Dispose(bool disposing)
         {
             if (_disposedValue)

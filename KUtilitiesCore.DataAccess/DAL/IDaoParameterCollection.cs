@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace KUtilitiesCore.DataAccess.DAL
@@ -11,6 +9,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     /// </summary>
     public interface IDaoParameterCollection : IReadOnlyCollection<DbParameter>
     {
+
         /// <summary>
         /// Acceso por nombre a los parámetros.
         /// </summary>
@@ -73,6 +72,14 @@ namespace KUtilitiesCore.DataAccess.DAL
         bool Contains(string parameterName);
 
         /// <summary>
+        /// Obtiene el valor del parametro.
+        /// </summary>
+        /// <typeparam name="TValue">Especifica el tipo de conversion del objeto</typeparam>
+        /// <param name="parameterName">Nombre del parametro</param>
+        /// <returns></returns>
+        TValue GetParamValue<TValue>(string parameterName);
+
+        /// <summary>
         /// Elimina un parámetro por nombre.
         /// </summary>
         bool Remove(string parameterName);
@@ -82,12 +89,5 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// </summary>
         bool Remove(DbParameter param);
 
-        /// <summary>
-        /// Obtiene el valor del parametro.
-        /// </summary>
-        /// <typeparam name="TValue">Especifica el tipo de conversion del objeto</typeparam>
-        /// <param name="parameterName">Nombre del parametro</param>
-        /// <returns></returns>
-        TValue GetParamValue<TValue>(string parameterName);
     }
 }

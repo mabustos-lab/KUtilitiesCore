@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Data;
-using System.Data.Common;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.DataAccess.Helpers
 {
     public static class IDataReaderExt
     {
+        #region Fields
+
+        // Cache de mapeos para mejora de rendimiento
+        private static readonly ConcurrentDictionary<Type, Dictionary<PropertyInfo, int>> PropertyMapCache =
+            new ConcurrentDictionary<Type, Dictionary<PropertyInfo, int>>();
+
+        #endregion Fields
+
+        #region Methods
+
         /// <summary>
         /// Traduce un IDataReader a una colección de objetos del tipo especificado.
         /// </summary>
@@ -33,6 +37,18 @@ namespace KUtilitiesCore.DataAccess.Helpers
             }
         }
 
+        private static void AssignValues<TResult>(TResult instance, IDataReader reader, Dictionary<PropertyInfo, int> propertyMap)
+        {
+            foreach (var propertyInfo in propertyMap.Keys)
+            {
+                var columnIndex = propertyMap[propertyInfo];
+                if (reader.IsDBNull(columnIndex)) continue;
+
+                var value = reader.GetValue(columnIndex);
+                SetPropertyValue(instance, propertyInfo, value);
+            }
+        }
+
         // Métodos privados optimizados
         private static Dictionary<string, int> GetColumnMetaData(IDataReader reader)
         {
@@ -46,10 +62,15 @@ namespace KUtilitiesCore.DataAccess.Helpers
             return columnMap;
         }
 
+        private static Dictionary<PropertyInfo, int> GetPropertyMapCache<TResult>(Dictionary<PropertyInfo, int> map)
+        {
+            return PropertyMapCache.GetOrAdd(typeof(TResult), _ => map);
+        }
+
         private static Dictionary<PropertyInfo, int> GetPropertyMapping<TResult>(Dictionary<string, int> columnMap)
         {
             var properties = typeof(TResult).GetProperties()
-                .Where(p=>p.CanWrite);
+                .Where(p => p.CanWrite);
             var propertyMap = new Dictionary<PropertyInfo, int>();
 
             foreach (var prop in properties)
@@ -61,18 +82,6 @@ namespace KUtilitiesCore.DataAccess.Helpers
             }
 
             return propertyMap;
-        }
-
-        private static void AssignValues<TResult>(TResult instance, IDataReader reader, Dictionary<PropertyInfo, int> propertyMap)
-        {
-            foreach (var propertyInfo in propertyMap.Keys)
-            {
-                var columnIndex = propertyMap[propertyInfo];
-                if (reader.IsDBNull(columnIndex)) continue;
-
-                var value = reader.GetValue(columnIndex);
-                SetPropertyValue(instance, propertyInfo, value);
-            }
         }
 
         private static void SetPropertyValue<TResult>(TResult instance, PropertyInfo property, object value)
@@ -89,13 +98,6 @@ namespace KUtilitiesCore.DataAccess.Helpers
             }
         }
 
-        // Cache de mapeos para mejora de rendimiento
-        private static readonly ConcurrentDictionary<Type, Dictionary<PropertyInfo, int>> PropertyMapCache =
-            new ConcurrentDictionary<Type, Dictionary<PropertyInfo, int>>();
-
-        private static Dictionary<PropertyInfo, int> GetPropertyMapCache<TResult>(Dictionary<PropertyInfo, int> map)
-        {
-            return PropertyMapCache.GetOrAdd(typeof(TResult), _ => map);
-        }
+        #endregion Methods
     }
 }

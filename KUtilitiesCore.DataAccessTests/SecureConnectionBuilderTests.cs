@@ -1,4 +1,4 @@
-﻿using KUtilitiesCore.DataAccess;
+﻿using KUtilitiesCore.DataAccess.ConnectionBuilder;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;

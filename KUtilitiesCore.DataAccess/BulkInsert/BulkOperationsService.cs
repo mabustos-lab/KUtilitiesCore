@@ -1,32 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using KUtilitiesCore.DataAccess.ConnectionBuilder;
 using System.Data.Common;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
+
 #if NET48
+
 using SqlClient = System.Data.SqlClient;
+
 #else
 using SqlClient = Microsoft.Data.SqlClient;
 #endif
 
-
 namespace KUtilitiesCore.DataAccess.BulkInsert
 {
     /// <summary>
-    /// Implementación de <see cref="IBulkOperationsService"/> para realizar inserciones masivas en SQL Server
-    /// utilizando <see cref="SqlClient.SqlBulkCopy"/> y <see cref="DbConnection"/>. También soporta estrategias genéricas para otros
-    /// proveedores de bases de datos.
+    /// Implementación de <see cref="IBulkOperationsService"/> para realizar inserciones masivas en
+    /// SQL Server utilizando <see cref="SqlClient.SqlBulkCopy"/> y <see cref="DbConnection"/>.
+    /// También soporta estrategias genéricas para otros proveedores de bases de datos.
     /// </summary>
-    /// <remarks>
-    /// Constructor que inicializa la configuración para la inserción masiva.
-    /// </remarks>
+    /// <remarks>Constructor que inicializa la configuración para la inserción masiva.</remarks>
     /// <param name="config">Configuración para la inserción masiva.</param>
     /// <param name="connectionString">Encapsulación de la cadena de conección</param>
     /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
-    public class BulkOperationsService(BulkOperationsConfig config,IConnectionString connectionString) : IBulkOperationsService
+    public class BulkOperationsService(BulkOperationsConfig config, IConnectionString connectionString) : IBulkOperationsService
     {
         private readonly BulkOperationsConfig _config = config ?? throw new ArgumentNullException(nameof(config));
         private readonly IConnectionString _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));

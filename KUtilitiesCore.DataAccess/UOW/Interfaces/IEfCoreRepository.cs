@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KUtilitiesCore.DataAccess.UOW.Interfaces
+﻿namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
     /// <summary>
-    /// Interfaz específica para repositorios que soportan operaciones masivas de EF Core 7+.
-    /// Hereda de IRepository para incluir todas las operaciones estándar.
+    /// Interfaz específica para repositorios que soportan operaciones masivas de EF Core 7+. Hereda
+    /// de IRepository para incluir todas las operaciones estándar.
     /// </summary>
     /// <typeparam name="TEntity">El tipo de la entidad.</typeparam>
     public interface IEfCoreRepository<TEntity> : IRepository<TEntity>

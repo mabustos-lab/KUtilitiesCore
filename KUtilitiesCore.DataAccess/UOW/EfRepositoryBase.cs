@@ -1,19 +1,17 @@
 ﻿using KUtilitiesCore.DataAccess.Paging;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using KUtilitiesCore.Logger;
 
-
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
+
 // Usings específicos de Entity Framework 6 (.NET Framework)
 using System.Data.Entity;
+
 #elif NETCOREAPP
 // Usings específicos de Entity Framework Core (.NET Core)
 using Microsoft.EntityFrameworkCore;
@@ -25,12 +23,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KUtilitiesCore.DataAccess.UOW
 {
-    /// <summary>
-    /// Implementación base genérica del repositorio que implementa IRepository<TEntity>.
-    /// Ya no utiliza TPrimaryKey.
-    /// </summary>
-    /// <typeparam name="TEntity">El tipo de la entidad.</typeparam>
-    /// <typeparam name="TDbContext">El tipo del DbContext específico (EF6 o EF Core).</typeparam>
+    /// <summary> Implementación base genérica del repositorio que implementa IRepository<TEntity>.
+    /// Ya no utiliza TPrimaryKey. </summary> <typeparam name="TEntity">El tipo de la
+    /// entidad.</typeparam> <typeparam name="TDbContext">El tipo del DbContext específico (EF6 o EF Core).</typeparam>
     public abstract class EfRepositoryBase<TEntity, TDbContext> : IRepository<TEntity> where TEntity : class
 #if NETFRAMEWORK
         where TDbContext : DbContext
@@ -56,13 +51,13 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual async Task<TEntity> FindOneAsync(ISpecification<TEntity> specification = null)
         {
-            specification??=Specification<TEntity>.Empty;
+            specification ??= Specification<TEntity>.Empty;
             IQueryable<TEntity> query = ApplySpecification(specification);
             return await query.SingleOrDefaultAsync();
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IReadOnlyList<TEntity>> FindAsync(ISpecification<TEntity> specification=null)
+        public virtual async Task<IReadOnlyList<TEntity>> FindAsync(ISpecification<TEntity> specification = null)
         {
             specification ??= Specification<TEntity>.Empty;
             IQueryable<TEntity> query = ApplySpecification(specification);
@@ -72,7 +67,7 @@ namespace KUtilitiesCore.DataAccess.UOW
         /// <inheritdoc/>
         public virtual async Task<IPagedResult<TEntity>> GetPagedAsync(
             IPagingOptions pagingOptions,
-            ISpecification<TEntity> specification=null)
+            ISpecification<TEntity> specification = null)
         {
             if (pagingOptions == null)
                 throw new ArgumentNullException(nameof(pagingOptions));
@@ -156,14 +151,14 @@ namespace KUtilitiesCore.DataAccess.UOW
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> ExistsAsync(ISpecification<TEntity> specification=null)
+        public virtual async Task<bool> ExistsAsync(ISpecification<TEntity> specification = null)
         {
             specification ??= Specification<TEntity>.Empty;
             return await ApplySpecification(specification).AnyAsync();
         }
 
         /// <inheritdoc/>
-        public virtual async Task<int> CountAsync(ISpecification<TEntity> specification=null)
+        public virtual async Task<int> CountAsync(ISpecification<TEntity> specification = null)
         {
             specification ??= Specification<TEntity>.Empty;
             return await ApplySpecification(specification).CountAsync();
@@ -212,9 +207,9 @@ namespace KUtilitiesCore.DataAccess.UOW
             return Task.CompletedTask;
         }
 
-        // GetByIdAsync(TPrimaryKey id) y DeleteAsync(TPrimaryKey id) han sido eliminados
-        // de IRepository<TEntity> y por lo tanto de esta clase base.
-        // Las operaciones por ID ahora se manejan a través de especificaciones.
+        // GetByIdAsync(TPrimaryKey id) y DeleteAsync(TPrimaryKey id) han sido eliminados de
+        // IRepository<TEntity> y por lo tanto de esta clase base. Las operaciones por ID ahora se
+        // manejan a través de especificaciones.
 
         /// <summary>
         /// Aplica una especificación a un IQueryable base.
@@ -290,5 +285,6 @@ namespace KUtilitiesCore.DataAccess.UOW
             }
         }
     }
+
 #pragma warning restore CRR0029
 }

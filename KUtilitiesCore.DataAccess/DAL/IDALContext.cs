@@ -1,23 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
     /// <summary>
     /// Define una interfaz para interactuar con el contexto de acceso a datos.
     /// </summary>
-    public interface IDalContext:IDisposable
+    public interface IDalContext : IDisposable
     {
+
         /// <summary>
         /// Inicia una nueva transacción con el nivel de aislamiento especificado.
         /// </summary>
         /// <param name="isolationLevel">El nivel de aislamiento para la transacción.</param>
-        /// <returns>Una instancia de <see cref="ITransaction"/> que representa la transacción iniciada.</returns>
+        /// <returns>
+        /// Una instancia de <see cref="ITransaction"/> que representa la transacción iniciada.
+        /// </returns>
         ITransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.Snapshot);
 
         /// <summary>

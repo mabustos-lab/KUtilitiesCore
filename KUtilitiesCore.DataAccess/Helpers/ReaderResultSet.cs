@@ -1,15 +1,19 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
+﻿using System.Collections;
 
 namespace KUtilitiesCore.DataAccess.Helpers
 {
     /// <summary>
     /// Representa una colección de conjuntos de resultados recuperados de un lector de datos.
     /// </summary>
-    sealed class ReaderResultSet : IReaderResultSet
+    internal sealed class ReaderResultSet : IReaderResultSet
     {
+        #region Fields
+
         private readonly List<IEnumerable> resultSets;
+
+        #endregion Fields
+
+        #region Constructors
 
         /// <summary>
         /// Inicializa una nueva instancia de la clase ReaderResultSet.
@@ -19,8 +23,16 @@ namespace KUtilitiesCore.DataAccess.Helpers
             resultSets = new List<IEnumerable>();
         }
 
+        #endregion Constructors
+
+        #region Properties
+
         /// <inheritdoc/>
         public bool HasResultsets => resultSets.Count > 0;
+
+        #endregion Properties
+
+        #region Methods
 
         /// <inheritdoc/>
         public IEnumerable<TResult> GetResult<TResult>()
@@ -37,5 +49,6 @@ namespace KUtilitiesCore.DataAccess.Helpers
             resultSets.Add(value);
         }
 
+        #endregion Methods
     }
 }

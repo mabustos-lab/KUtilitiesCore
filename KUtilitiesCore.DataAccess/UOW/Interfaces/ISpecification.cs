@@ -1,22 +1,18 @@
-﻿using KUtilitiesCore.DataAccess.Paging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
     /// <summary>
-    /// Define un contrato para el patrón de Especificación, permitiendo encapsular
-    /// la lógica de consulta (filtrado, ordenación e inclusiones).
-    /// La paginación se maneja externamente a través de IPagingOptions.
+    /// Define un contrato para el patrón de Especificación, permitiendo encapsular la lógica de
+    /// consulta (filtrado, ordenación e inclusiones). La paginación se maneja externamente a través
+    /// de IPagingOptions.
     /// </summary>
     /// <typeparam name="T">El tipo de entidad al que se aplica la especificación.</typeparam>
     public interface ISpecification<T>
         where T : class
     {
+        #region Properties
+
         /// <summary>
         /// Expresión de criterio para filtrar las entidades.
         /// </summary>
@@ -41,5 +37,7 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// Expresión para ordenar los resultados en orden descendente.
         /// </summary>
         Expression<Func<T, object>> OrderByDescending { get; }
+
+        #endregion Properties
     }
 }

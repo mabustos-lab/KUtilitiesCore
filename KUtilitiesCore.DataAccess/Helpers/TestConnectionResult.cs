@@ -1,10 +1,4 @@
-﻿using KUtilitiesCore.DataAccess.Utils;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using KUtilitiesCore.DataAccess.Exceptions;
 
 namespace KUtilitiesCore.DataAccess.Helpers
 {
@@ -13,20 +7,24 @@ namespace KUtilitiesCore.DataAccess.Helpers
     /// </summary>
     public class TestConnectionResult
     {
+        #region Properties
+
+        /// <summary>
+        /// Obtiene un resultado de prueba de conexión exitosa.
+        /// </summary>
+        public static TestConnectionResult SucessTest
+        {
+            get
+            {
+                return new TestConnectionResult
+                { Sucess = true };
+            }
+        }
+
         /// <summary>
         /// Excepción que ocurrió durante la prueba de conexión, si aplica.
         /// </summary>
         public DataAccessException Ex { get; set; }
-
-        /// <summary>
-        /// Indica si la prueba de conexión fue exitosa.
-        /// </summary>
-        public bool Sucess { get; set; }
-
-        /// <summary>
-        /// Versión del servidor al que se intentó conectar.
-        /// </summary>
-        public string ServerVersion { get; internal set; }
 
         /// <summary>
         /// Nombre publicado del servidor al que se intentó conectar.
@@ -34,22 +32,18 @@ namespace KUtilitiesCore.DataAccess.Helpers
         public string PublishedServerName { get; internal set; }
 
         /// <summary>
-        /// Establece la versión del servidor.
+        /// Versión del servidor al que se intentó conectar.
         /// </summary>
-        /// <param name="serverVersion">La versión del servidor.</param>
-        internal void SetServerVersion(string serverVersion)
-        {
-            ServerVersion = serverVersion;
-        }
+        public string ServerVersion { get; internal set; }
 
         /// <summary>
-        /// Establece el nombre publicado del servidor.
+        /// Indica si la prueba de conexión fue exitosa.
         /// </summary>
-        /// <param name="publishedServerName">El nombre publicado del servidor.</param>
-        internal void SetPublishedServerName(string publishedServerName)
-        {
-            PublishedServerName = publishedServerName;
-        }
+        public bool Sucess { get; set; }
+
+        #endregion Properties
+
+        #region Methods
 
         /// <summary>
         /// Crea un resultado de prueba de conexión fallida.
@@ -66,15 +60,23 @@ namespace KUtilitiesCore.DataAccess.Helpers
         }
 
         /// <summary>
-        /// Obtiene un resultado de prueba de conexión exitosa.
+        /// Establece el nombre publicado del servidor.
         /// </summary>
-        public static TestConnectionResult SucessTest
+        /// <param name="publishedServerName">El nombre publicado del servidor.</param>
+        internal void SetPublishedServerName(string publishedServerName)
         {
-            get
-            {
-                return new TestConnectionResult
-                { Sucess = true };
-            }
+            PublishedServerName = publishedServerName;
         }
+
+        /// <summary>
+        /// Establece la versión del servidor.
+        /// </summary>
+        /// <param name="serverVersion">La versión del servidor.</param>
+        internal void SetServerVersion(string serverVersion)
+        {
+            ServerVersion = serverVersion;
+        }
+
+        #endregion Methods
     }
 }

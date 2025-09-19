@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.DataAccess.Helpers;
+﻿using KUtilitiesCore.DataAccess.ConnectionBuilder;
+using KUtilitiesCore.DataAccess.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,13 +16,14 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.DataAccess.DAL
 {
     /// <summary>
-    /// Proporciona un contexto para las operaciones de acceso a datos, 
-    /// incluyendo la creación de comandos, transacciones y gestión de conexiones
-    /// a la base de datos.
+    /// Proporciona un contexto para las operaciones de acceso a datos, incluyendo la creación de
+    /// comandos, transacciones y gestión de conexiones a la base de datos.
     /// </summary>
-    /// <remarks>Esta clase sirve como punto central para ejecutar operaciones de base de datos, como ejecutar
-    /// consultas, gestionar transacciones e interactuar con conjuntos de datos. Abstrae el proveedor de base de datos subyacente y
-    /// asegura patrones de acceso consistentes.</remarks>
+    /// <remarks>
+    /// Esta clase sirve como punto central para ejecutar operaciones de base de datos, como
+    /// ejecutar consultas, gestionar transacciones e interactuar con conjuntos de datos. Abstrae el
+    /// proveedor de base de datos subyacente y asegura patrones de acceso consistentes.
+    /// </remarks>
     public class DaoContext : IDaoContext
     {
         #region Fields
@@ -34,13 +36,19 @@ namespace KUtilitiesCore.DataAccess.DAL
         #endregion Fields
 
         #region Constructors
+
         /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="DaoContext"/> con la conexión especificada
-        /// constructor.
+        /// Inicializa una nueva instancia de la clase <see cref="DaoContext"/> con la conexión
+        /// especificada constructor.
         /// </summary>
-        /// <param name="cnnStr">El constructor de conexión que proporciona la cadena de conexión y el nombre del proveedor para el acceso a la base de datos.  Este parámetro
-        /// no puede ser <see langword="null"/>.</param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="cnnStr"/> is <see langword="null"/>.</exception>.
+        /// <param name="cnnStr">
+        /// El constructor de conexión que proporciona la cadena de conexión y el nombre del
+        /// proveedor para el acceso a la base de datos. Este parámetro no puede ser <see langword="null"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="cnnStr"/> is <see langword="null"/>.
+        /// </exception>
+        /// .
         public DaoContext(IConnectionBuilder cnnStr)
         {
             _connectionString = cnnStr ?? throw new ArgumentNullException(nameof(cnnStr));

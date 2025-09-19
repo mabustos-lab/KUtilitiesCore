@@ -1,8 +1,4 @@
 ﻿using KUtilitiesCore.DataAccess.DAL;
-using System;
-using System.Data.Common;
-using System.Diagnostics;
-using System.Linq;
 
 #if NETCOREAPP
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KUtilitiesCore.DataAccess.DALEfCore
 {
-    public class TransactionEF: TransactionBase
+    public class TransactionEF : TransactionBase
     {
 #if NETCOREAPP
         /// <summary>
@@ -22,6 +18,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
         {
         }
 #elif NETFRAMEWORK
+
         /// <summary>
         /// Constructor para EF6 (System.Data.Entity)
         /// </summary>
@@ -29,6 +26,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
             : base(transaction.UnderlyingTransaction) // Convertir a DbTransaction
         {
         }
+
 #endif
     }
 }

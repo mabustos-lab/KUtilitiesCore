@@ -1,17 +1,16 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
     /// <summary>
     /// Interfaz para operaciones básicas de ejecución SQL sobre un contexto de acceso a datos.
-    /// Permite ejecutar comandos SQL, consultas escalares y operaciones asincrónicas,
-    /// así como la gestión de parámetros y transacciones.
+    /// Permite ejecutar comandos SQL, consultas escalares y operaciones asincrónicas, así como la
+    /// gestión de parámetros y transacciones.
     /// </summary>
     public interface ISqlExecutorContext : IDalContext
     {
+
         /// <summary>
         /// Obtiene la conexión de base de datos asociada al contexto.
         /// </summary>
@@ -57,7 +56,8 @@ namespace KUtilitiesCore.DataAccess.DAL
         TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null);
 
         /// <summary>
-        /// Ejecuta asincrónicamente una consulta SQL y retorna el primer valor de la primera fila del resultado.
+        /// Ejecuta asincrónicamente una consulta SQL y retorna el primer valor de la primera fila
+        /// del resultado.
         /// </summary>
         /// <typeparam name="TResult">Tipo de dato esperado como resultado.</typeparam>
         /// <param name="sql">Cadena SQL a ejecutar.</param>
@@ -66,5 +66,6 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// <returns>Valor escalar obtenido de la consulta.</returns>
         Task<TResult> ScalarAsync<TResult>(string sql, IDaoParameterCollection parameters = null,
                                           CancellationToken cancellationToken = default);
+
     }
 }

@@ -2,28 +2,24 @@
 using System.Data.Entity;
 #elif NETCOREAPP
 using KUtilitiesCore;
-using KUtilitiesCore.DataAccess;
 using KUtilitiesCore.DataAccess.DAL;
-using KUtilitiesCore.DataAccess.DALEfCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 #endif
 
-using System;
 using System.Data;
 using System.Data.Common;
-using KUtilitiesCore.DataAccess.DAL;
 
 namespace KUtilitiesCore.DataAccess.DALEfCore
 {
     /// <summary>
-    /// Implementación concreta de <see cref="IEfCoreContext"/> que proporciona acceso
-    /// a funcionalidades de Entity Framework (EF6 y EF Core) junto con ejecución SQL.
+    /// Implementación concreta de <see cref="IEfCoreContext"/> que proporciona acceso a
+    /// funcionalidades de Entity Framework (EF6 y EF Core) junto con ejecución SQL.
     /// </summary>
     /// <remarks>
-    /// Esta clase implementa el patrón Adapter para exponer un DbContext de Entity Framework
-    /// como un contexto compatible con las interfaces de acceso a datos unificadas.
-    /// 
+    /// Esta clase implementa el patrón Adapter para exponer un DbContext de Entity Framework como
+    /// un contexto compatible con las interfaces de acceso a datos unificadas.
+    ///
     /// - Gestiona transacciones usando TransactionBase
     /// - Proporciona acceso directo al DbContext subyacente
     /// - Implementa ejecución SQL directa usando la conexión del contexto
@@ -36,7 +32,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
         private readonly DbContext _context;
         private bool _disposed;
 
-        #endregion
+        #endregion Fields
 
         #region Constructors
 
@@ -50,14 +46,14 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        #endregion
+        #endregion Constructors
 
         #region IEfCoreContext Implementation
 
         /// <inheritdoc/>
         public DbContext Context => _context;
 
-        #endregion
+        #endregion IEfCoreContext Implementation
 
         #region ISqlExecutorContext Implementation
 
@@ -126,7 +122,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
             return result is DBNull or null ? default : (TResult)result;
         }
 
-        #endregion
+        #endregion ISqlExecutorContext Implementation
 
         #region IDalContext Implementation
 
@@ -140,7 +136,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
 #elif NETCOREAPP
             // EF Core: BeginTransaction retorna IDbContextTransaction
             IDbContextTransaction efTransaction = _context.Database.BeginTransaction();
-            
+
             return new TransactionEF(efTransaction);
 #endif
         }
@@ -162,10 +158,9 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
             {
                 return false;
             }
-
         }
 
-        #endregion
+        #endregion IDalContext Implementation
 
         #region IDisposable Implementation
 
@@ -188,7 +183,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
             }
         }
 
-        #endregion
+        #endregion IDisposable Implementation
 
         #region Private Helpers
 
@@ -219,6 +214,6 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
             return command;
         }
 
-        #endregion
+        #endregion Private Helpers
     }
 }

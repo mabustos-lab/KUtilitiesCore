@@ -1,23 +1,21 @@
 ﻿using KUtilitiesCore.Data;
 using KUtilitiesCore.Data.ValidationAttributes;
 using KUtilitiesCore.DataAccess.DAL;
+using KUtilitiesCore.DataAccess.Exceptions;
 using KUtilitiesCore.DataAccess.Helpers;
-using KUtilitiesCore.DataAccess.Utils;
 using KUtilitiesCore.Extensions;
 using Newtonsoft.Json;
-using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace KUtilitiesCore.DataAccess
+namespace KUtilitiesCore.DataAccess.ConnectionBuilder
 {
     /// <summary>
     /// Proporciona una implementación segura de <see cref="IConnectionBuilder"/> que permite
@@ -220,7 +218,6 @@ namespace KUtilitiesCore.DataAccess
             TrustServerCertificate = true;
             if (CustomDefaultConfig != null)
                 CustomDefaultConfig(this);
-                      
         }
 
         /// <summary>
