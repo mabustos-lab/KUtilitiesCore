@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\KUtilitiesCore.MVVM.Messaging\KUtilitiesCore.MVVM.Messaging.csproj" />
     <ProjectReference Include="..\KUtilitiesCore.MVVM\KUtilitiesCore.MVVM.csproj" />
   </ItemGroup>
 

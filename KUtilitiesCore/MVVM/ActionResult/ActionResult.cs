@@ -76,9 +76,6 @@
                 Exception = exception
             };
 
-            if (exception != null)
-                LogError(message, exception);
-
             return result;
         }
 

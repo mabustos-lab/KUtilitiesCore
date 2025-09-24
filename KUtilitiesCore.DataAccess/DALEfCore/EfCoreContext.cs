@@ -1,14 +1,16 @@
-﻿#if NETFRAMEWORK
+﻿using KUtilitiesCore;
+using KUtilitiesCore.DataAccess.DAL;
+using System.Data;
+using System.Data.Common;
+
+#if NETFRAMEWORK
 using System.Data.Entity;
 #elif NETCOREAPP
-using KUtilitiesCore;
-using KUtilitiesCore.DataAccess.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 #endif
 
-using System.Data;
-using System.Data.Common;
+
 
 namespace KUtilitiesCore.DataAccess.DALEfCore
 {

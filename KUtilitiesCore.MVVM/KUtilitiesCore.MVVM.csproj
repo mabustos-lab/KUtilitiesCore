@@ -13,8 +13,11 @@
  </PropertyGroup>
 <ItemGroup>
   <Compile Remove="ActionResult\**" />
+  <Compile Remove="Messaging\**" />
   <EmbeddedResource Remove="ActionResult\**" />
+  <EmbeddedResource Remove="Messaging\**" />
   <None Remove="ActionResult\**" />
+  <None Remove="Messaging\**" />
 </ItemGroup>
 <ItemGroup>
   <Compile Remove="Helpers\ExpressionsExtCore.cs" />
