@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data
 {
+    /// <summary>
+    /// Implementacion mejorada de <see cref="IDataErrorInfo"/>
+    /// </summary>
     public interface IValidationErrorInfo:IDataErrorInfo
     {
         /// <summary>

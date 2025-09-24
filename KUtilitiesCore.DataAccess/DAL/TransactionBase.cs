@@ -3,6 +3,9 @@ using System.Diagnostics;
 
 namespace KUtilitiesCore.DataAccess.DAL
 {
+    /// <summary>
+    /// Encapsula las acciones de Transacción en la base de datos
+    /// </summary>
     public class TransactionBase : ITransaction
     {
         #region Fields

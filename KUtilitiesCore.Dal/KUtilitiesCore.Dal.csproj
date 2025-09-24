@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net48;net8.0</TargetFrameworks>
+		<OutputType>Library</OutputType>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<Title>KUtilitiesCore.Dal</Title>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+	</ItemGroup>
+</Project>

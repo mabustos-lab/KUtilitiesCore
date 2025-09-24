@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.Text.Json" Version="9.0.7" />	  
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Text.Json" Version="9.0.9" />	  
   </ItemGroup>
 	<!-- Referencia condicional para .NET Framework 4.8 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
