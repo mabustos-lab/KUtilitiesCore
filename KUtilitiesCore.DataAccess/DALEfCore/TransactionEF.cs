@@ -1,9 +1,10 @@
-﻿using KUtilitiesCore.DataAccess.DAL;
-
+﻿
 #if NETCOREAPP
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 #endif
+
+using KUtilitiesCore.Dal;
 
 namespace KUtilitiesCore.DataAccess.DALEfCore
 {

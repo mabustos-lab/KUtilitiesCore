@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Define una interfaz para interactuar con el contexto de acceso a datos.

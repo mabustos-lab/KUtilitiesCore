@@ -1,7 +1,7 @@
 ﻿using System.Data.Common;
 using System.Diagnostics;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Encapsula las acciones de Transacción en la base de datos

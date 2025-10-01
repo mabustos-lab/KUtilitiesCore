@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 
-namespace KUtilitiesCore.DataAccess.ConnectionBuilder
+namespace KUtilitiesCore.Dal.ConnectionBuilder
 {
     /// <summary>
     /// Define el contrato para una cadena de conexión a base de datos, incluyendo la propia cadena

@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace KUtilitiesCore.DataAccess.Helpers
+namespace KUtilitiesCore.Dal.Helpers
 {
     /// <summary>
     /// Representa una colección de conjuntos de resultados recuperados de un lector de datos.

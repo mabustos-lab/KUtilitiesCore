@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Define una interfaz para manejar transacciones, proporcionando métodos para confirmar o revertir cambios,

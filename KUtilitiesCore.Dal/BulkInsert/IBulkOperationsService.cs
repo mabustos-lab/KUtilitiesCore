@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace KUtilitiesCore.DataAccess.BulkInsert
+namespace KUtilitiesCore.Dal.BulkInsert
 {
     /// <summary>
     /// Interfaz genérica para realizar operaciones masivas de datos.

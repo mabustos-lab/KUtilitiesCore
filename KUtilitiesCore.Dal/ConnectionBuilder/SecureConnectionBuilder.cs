@@ -1,8 +1,7 @@
-﻿using KUtilitiesCore.Data;
+﻿using KUtilitiesCore.Dal.Exceptions;
+using KUtilitiesCore.Dal.Helpers;
+using KUtilitiesCore.Data;
 using KUtilitiesCore.Data.ValidationAttributes;
-using KUtilitiesCore.DataAccess.DAL;
-using KUtilitiesCore.DataAccess.Exceptions;
-using KUtilitiesCore.DataAccess.Helpers;
 using KUtilitiesCore.Extensions;
 using Newtonsoft.Json;
 using System.ComponentModel;
@@ -15,7 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace KUtilitiesCore.DataAccess.ConnectionBuilder
+namespace KUtilitiesCore.Dal.ConnectionBuilder
 {
     /// <summary>
     /// Proporciona una implementación segura de <see cref="IConnectionBuilder"/> que permite

@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Interfaz para operaciones básicas de ejecución SQL sobre un contexto de acceso a datos.

@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.DataAccess.BulkInsert
+﻿namespace KUtilitiesCore.Dal.BulkInsert
 {
     /// <summary>
     /// Configuración para el proceso de inserción masiva de datos.

@@ -1,6 +1,7 @@
-﻿using KUtilitiesCore.DataAccess.ConnectionBuilder;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Data;
+using KUtilitiesCore.Dal.ConnectionBuilder;
+
 
 #if NET48
 
@@ -10,7 +11,7 @@ using SqlClient = System.Data.SqlClient;
 using SqlClient = Microsoft.Data.SqlClient;
 #endif
 
-namespace KUtilitiesCore.DataAccess.BulkInsert
+namespace KUtilitiesCore.Dal.BulkInsert
 {
     /// <summary>
     /// Implementación de <see cref="IBulkOperationsService"/> para realizar inserciones masivas en

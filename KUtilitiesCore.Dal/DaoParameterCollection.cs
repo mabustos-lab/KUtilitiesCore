@@ -4,12 +4,12 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Implementación decolección de parámetros de base de datos.
     /// </summary>
-    internal sealed class DaoParameterCollection : IDaoParameterCollection
+    public sealed class DaoParameterCollection : IDaoParameterCollection
     {
         #region Fields
 

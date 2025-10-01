@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Data;
 
-namespace KUtilitiesCore.DataAccess.Helpers
+namespace KUtilitiesCore.Dal.Helpers
 {
     /// <summary>
     /// Convierte datos de un IDataReader en conjuntos de resultados fuertemente tipados.

@@ -1,5 +1,4 @@
-﻿using KUtilitiesCore;
-using KUtilitiesCore.DataAccess.DAL;
+﻿using KUtilitiesCore.Dal;
 using System.Data;
 using System.Data.Common;
 

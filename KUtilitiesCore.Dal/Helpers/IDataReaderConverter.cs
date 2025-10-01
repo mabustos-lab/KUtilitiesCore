@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.DataAccess.Helpers
+﻿namespace KUtilitiesCore.Dal.Helpers
 {
     public interface IDataReaderConverter
     {

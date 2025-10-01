@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.DataAccess.Helpers;
+﻿
+using KUtilitiesCore.Dal.Helpers;
 using KUtilitiesCore.Extensions;
 using KUtilitiesCore.Logger;
 using KUtilitiesCore.MVVM.ActionResult;
@@ -8,7 +9,7 @@ using System.Collections;
 using System.Data;
 using System.Data.Common;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Facilita la ejecución de procedimientos almacenados.

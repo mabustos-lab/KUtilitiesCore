@@ -1,13 +1,10 @@
-﻿using KUtilitiesCore.DataAccess.DAL;
-
+﻿
+using KUtilitiesCore.Dal;
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
-
 // Usings específicos de Entity Framework 6 (.NET Framework)
 using System.Data.Entity;
-
 #elif NETCOREAPP
-// Usings específicos de Entity Framework Core (.NET Core)
 using Microsoft.EntityFrameworkCore;
 #endif
 

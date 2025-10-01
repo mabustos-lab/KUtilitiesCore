@@ -2,7 +2,7 @@
 using System.Data;
 using System.Reflection;
 
-namespace KUtilitiesCore.DataAccess.Helpers
+namespace KUtilitiesCore.Dal.Helpers
 {
     public static class IDataReaderExt
     {

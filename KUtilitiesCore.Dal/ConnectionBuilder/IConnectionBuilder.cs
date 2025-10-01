@@ -1,12 +1,12 @@
-﻿using KUtilitiesCore.Data.ValidationAttributes;
-using KUtilitiesCore.DataAccess.Helpers;
+﻿using KUtilitiesCore.Dal.Helpers;
+using KUtilitiesCore.Data.ValidationAttributes;
 using Newtonsoft.Json;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Text.Json.Serialization;
 
-namespace KUtilitiesCore.DataAccess.ConnectionBuilder
+namespace KUtilitiesCore.Dal.ConnectionBuilder
 {
     /// <summary>
     /// Interfaz para la construcción de cadenas de conexión independiente de la infraestructura de datos.

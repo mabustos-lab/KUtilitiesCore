@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.DataAccess.Exceptions
+﻿namespace KUtilitiesCore.Dal.Exceptions
 {
     public class ConcurrencyException : DataAccessException
     {

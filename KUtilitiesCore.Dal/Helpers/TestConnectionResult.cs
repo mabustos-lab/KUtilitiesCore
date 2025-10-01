@@ -1,6 +1,6 @@
-﻿using KUtilitiesCore.DataAccess.Exceptions;
+﻿using KUtilitiesCore.Dal.Exceptions;
 
-namespace KUtilitiesCore.DataAccess.Helpers
+namespace KUtilitiesCore.Dal.Helpers
 {
     /// <summary>
     /// Encapsula el resultado de una prueba de conexión.

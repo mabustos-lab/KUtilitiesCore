@@ -1,7 +1,10 @@
 ﻿using System.Data;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
+    /// <summary>
+    /// Funcionalidades extras al DaoContext
+    /// </summary>
     public static class DaoContextExt
     {
         #region Methods

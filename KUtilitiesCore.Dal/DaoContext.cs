@@ -1,19 +1,10 @@
-﻿using KUtilitiesCore.DataAccess.ConnectionBuilder;
-using KUtilitiesCore.DataAccess.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿
+using KUtilitiesCore.Dal.ConnectionBuilder;
+using KUtilitiesCore.Dal.Helpers;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Proporciona un contexto para las operaciones de acceso a datos, incluyendo la creación de
@@ -28,7 +19,7 @@ namespace KUtilitiesCore.DataAccess.DAL
     {
         #region Fields
 
-        private readonly IConnectionBuilder _connectionString;
+        private readonly IConnectionString _connectionString;
         private readonly DbProviderFactory _factory;
         private Lazy<DbConnection> _connection;
         private bool _disposedValue;
@@ -49,7 +40,7 @@ namespace KUtilitiesCore.DataAccess.DAL
         /// Thrown if <paramref name="cnnStr"/> is <see langword="null"/>.
         /// </exception>
         /// .
-        public DaoContext(IConnectionBuilder cnnStr)
+        public DaoContext(IConnectionString cnnStr)
         {
             _connectionString = cnnStr ?? throw new ArgumentNullException(nameof(cnnStr));
             _factory = DbProviderFactories.GetFactory(cnnStr.ProviderName);
@@ -171,6 +162,19 @@ namespace KUtilitiesCore.DataAccess.DAL
             return translate.RequiredConvert
                 ? ((DataReaderConverter)translate).Translate(reader)
                 : new ReaderResultSet();
+        }
+        /// <inheritdoc/>
+        public DataSet ExecuteReader(string sql,
+           IDaoParameterCollection parameters = null,
+           CommandType commandType = CommandType.StoredProcedure)
+        {
+            
+            using DbCommand command = CreateCommand(sql, parameters, commandType);
+            using DbDataAdapter adapter= CreateAdapter(command);
+            DataSet dataSet = new DataSet();
+            adapter.Fill(dataSet);
+
+            return dataSet;
         }
 
         /// <inheritdoc/>

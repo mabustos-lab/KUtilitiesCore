@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.DataAccess.Helpers
+﻿namespace KUtilitiesCore.Dal.Helpers
 {
     /// <summary>
     /// Interfaz que representa una colección de conjuntos de resultados recuperados de un lector de datos.

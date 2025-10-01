@@ -1,6 +1,4 @@
-﻿using KUtilitiesCore.Dal.Exceptions;
-
-namespace KUtilitiesCore.DataAccess.Exceptions
+﻿namespace KUtilitiesCore.Dal.Exceptions
 {
     public class RepositoryException : DataAccessException
     {

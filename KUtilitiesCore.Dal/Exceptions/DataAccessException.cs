@@ -1,4 +1,4 @@
-﻿namespace KUtilitiesCore.DataAccess.Exceptions
+﻿namespace KUtilitiesCore.Dal.Exceptions
 {
     /// <summary>
     /// Representa errores que ocurren durante las operaciones de acceso a datos.

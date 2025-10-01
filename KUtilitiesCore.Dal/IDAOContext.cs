@@ -1,8 +1,8 @@
-﻿using KUtilitiesCore.DataAccess.Helpers;
+﻿using KUtilitiesCore.Dal.Helpers;
 using System.Data;
 using System.Data.Common;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Define una interfaz para interactuar con el contexto de acceso a datos, proporcionando
@@ -51,6 +51,18 @@ namespace KUtilitiesCore.DataAccess.DAL
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
             IDaoParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure);
 
+        /// <summary>
+        /// Ejecuta una consulta y devuelve los resultados en un <see cref="DataSet"/>.
+        /// </summary>
+        /// <param name="sql">
+        /// La consulta SQL que debe retornar resultados del tipo del objeto a mapear.
+        /// </param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
+        DataSet ExecuteReader(
+            string sql,
+            IDaoParameterCollection parameters = null,
+            CommandType commandType = CommandType.StoredProcedure);
         /// <summary>
         /// Ejecuta de manera asincrona una consulta y devuelve una colección de objetos mapeados.
         /// </summary>

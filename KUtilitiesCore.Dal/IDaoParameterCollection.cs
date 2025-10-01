@@ -2,7 +2,7 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Colección de parámetros de base de datos con funcionalidad de solo lectura y manipulación avanzada.

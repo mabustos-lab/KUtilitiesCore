@@ -1,9 +1,10 @@
-﻿using KUtilitiesCore.Logger;
+﻿
+using KUtilitiesCore.Logger;
 using KUtilitiesCore.MVVM.ActionResult;
 using System.Data;
 using System.Data.Common;
 
-namespace KUtilitiesCore.DataAccess.DAL
+namespace KUtilitiesCore.Dal
 {
     /// <summary>
     /// Interface para ayudar con la ejecución de procedimientos almacenados.
