@@ -1,18 +1,17 @@
-﻿using KUtilitiesCore.DataAccess.Exceptions;
+﻿using KUtilitiesCore.Dal.Exceptions;
+using KUtilitiesCore.DataAccess.Exceptions;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
-using KUtilitiesCore.DataAccess.Utils;
 using KUtilitiesCore.Logger;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
-
 
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
+
 // Usings específicos de Entity Framework 6 (.NET Framework)
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
+
 #elif NETCOREAPP
 // Usings específicos de Entity Framework Core (.NET Core)
 using Microsoft.EntityFrameworkCore;
@@ -42,16 +41,14 @@ namespace KUtilitiesCore.DataAccess.UOW
     //        public EfProductRepository(TDbContext context, ILoggerServiceFactory loggerFactory = null)
     //            : base(context, loggerFactory) { }
 
-    //        public async Task<IPagedResult<Product>> GetProductsByCategoryPagedAsync(int categoryId, IPagingOptions pagingOptions)
-    //        {
-    //            Expression<Func<Product, bool>> criteria = p => p.CategoryId == categoryId;
-    //            var spec = new AnonymousSpecification<Product>(criteria);
-    //            // Es importante definir una ordenación para que Keyset funcione consistentemente
-    //            spec.ApplyOrderBy(p => p.Id); // O p.Name, o cualquier otra propiedad adecuada
-    //            return await GetPagedAsync(pagingOptions, spec);
-    //        }
-    //        private class AnonymousSpecification<T> : Specification<T> where T : class { public AnonymousSpecification(Expression<Func<T, bool>> criteria) : base(criteria) { } }
-    //    }
+    // public async Task<IPagedResult<Product>> GetProductsByCategoryPagedAsync(int categoryId,
+    // IPagingOptions pagingOptions) { Expression<Func<Product, bool>> criteria = p => p.CategoryId
+    // == categoryId; var spec = new AnonymousSpecification<Product>(criteria); // Es importante
+    // definir una ordenación para que Keyset funcione consistentemente spec.ApplyOrderBy(p =>
+    // p.Id); // O p.Name, o cualquier otra propiedad adecuada return await
+    // GetPagedAsync(pagingOptions, spec); } private class AnonymousSpecification<T> :
+    // Specification<T> where T : class { public AnonymousSpecification(Expression<Func<T, bool>>
+    // criteria) : base(criteria) { } } }
 
     /// <summary>
     /// Implementación base de la Unidad de Trabajo.
@@ -181,7 +178,7 @@ namespace KUtilitiesCore.DataAccess.UOW
             _currentTransaction = _currentTransaction ?? await efCoreContext.Database.BeginTransactionAsync();
             try {
                 BeforeSavechanges();
-                result = await efCoreContext.SaveChangesAsync(); await _currentTransaction.CommitAsync(); 
+                result = await efCoreContext.SaveChangesAsync(); await _currentTransaction.CommitAsync();
             }
             catch (DbUpdateConcurrencyException ex) { await RollbackTransactionAsync(); throw new ConcurrencyException("Conflicto de concurrencia.", ex); }
             catch (DbUpdateException ex) { await RollbackTransactionAsync(); throw new RepositoryException("Error al actualizar DB.", ex); }
@@ -190,8 +187,9 @@ namespace KUtilitiesCore.DataAccess.UOW
 #endif
             return result;
         }
+
 #if NETCOREAPP
-        private async Task RollbackTransactionAsync() 
+        private async Task RollbackTransactionAsync()
         {
             try
             {
@@ -211,12 +209,17 @@ namespace KUtilitiesCore.DataAccess.UOW
             }
         }
 #endif
+
         /// <summary>
         /// Permite ejeutar una acción antes de que se invoke SaveChanges
         /// </summary>
         protected virtual void BeforeSavechanges()
         { }
-        public void Dispose() { Dispose(true); GC.SuppressFinalize(this); }
-        protected virtual void Dispose(bool disposing) { if (!_disposed) { if (disposing) { Context?.Dispose(); } _disposed = true; } }
+
+        public void Dispose()
+        { Dispose(true); GC.SuppressFinalize(this); }
+
+        protected virtual void Dispose(bool disposing)
+        { if (!_disposed) { if (disposing) { Context?.Dispose(); } _disposed = true; } }
     }
 }

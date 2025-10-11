@@ -1,18 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using KUtilitiesCore.DataAccess.Utils;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.Logger;
 
-
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK
+
 // Usings específicos de Entity Framework 6 (.NET Framework)
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Validation;
+
 #elif NETCOREAPP
 // Usings específicos de Entity Framework Core (.NET Core)
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +44,7 @@ namespace KUtilitiesCore.DataAccess.UOW
             : base(context, loggerFactory) { }
 
 #if NETCOREAPP
-        /// <inheritdoc />
+        /// <inheritdoc/>
         public virtual async Task<int> ExecuteUpdateAsync(ISpecification<TEntity> specification, IEnumerable<PropertyUpdateDescriptor<TEntity>> updates)
         {
             if (specification == null) throw new ArgumentNullException(nameof(specification));
@@ -80,7 +78,7 @@ namespace KUtilitiesCore.DataAccess.UOW
             return await query.ExecuteUpdateAsync(updateLambda);
         }
 
-        /// <inheritdoc />
+        /// <inheritdoc/>
         public virtual async Task<int> ExecuteDeleteAsync(ISpecification<TEntity> specification)
         {
             if (specification == null) throw new ArgumentNullException(nameof(specification));
@@ -88,12 +86,14 @@ namespace KUtilitiesCore.DataAccess.UOW
             return await query.ExecuteDeleteAsync();
         }
 
-
 #else
+
         public virtual Task<int> ExecuteUpdateAsync(ISpecification<TEntity> specification, IEnumerable<PropertyUpdateDescriptor<TEntity>> updates)
         { throw new PlatformNotSupportedException("ExecuteUpdateAsync solo es compatible con EF Core 7.0+."); }
+
         public virtual Task<int> ExecuteDeleteAsync(ISpecification<TEntity> specification)
         { throw new PlatformNotSupportedException("ExecuteDeleteAsync solo es compatible con EF Core 7.0+."); }
+
 #endif
     }
 }

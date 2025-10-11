@@ -23,19 +23,6 @@ namespace KUtilitiesCore.MVVM.ActionResult
 
         #endregion Properties
 
-        #region Methods
-
-        /// <summary>
-        /// Registra un mensaje de error.
-        /// </summary>
-        /// <param name="message">Mensaje del error.</param>
-        /// <param name="exception">Excepción asociada (opcional).</param>
-        protected static void LogError(string message, Exception? exception = null)
-        {
-            var logLevel = exception != null ? "Error" : "Warning";
-            Debug.WriteLine($"{logLevel}: {message}", exception?.Message);
-        }
-
-        #endregion Methods
+       
     }
 }
