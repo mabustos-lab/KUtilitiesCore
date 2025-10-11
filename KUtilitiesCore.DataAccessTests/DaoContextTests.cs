@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
@@ -14,8 +15,13 @@ namespace KUtilitiesCore.Dal.Tests
     [TestClass()]
     public class DaoContextTests
     {
-        private SecureConnectionBuilder builder;
-
+        private SecureConnectionBuilder? builder;
+        internal class ActiveTypeModel
+        {
+            public int ID { get; set; }
+            public string Context { get; set; }
+            public string Description { get; set; }
+        }
         [TestInitialize]
         public void Initilize()
         {
@@ -27,25 +33,31 @@ namespace KUtilitiesCore.Dal.Tests
                 InitialCatalog = "SiomaxDB",
                 ServerName = "localhost",
                 Encrypt = true,
-                TrustServerCertificate = true,
-                UserName = "sa",
-                Password = "@!Sefoil2908"
+                IntegratedSecurity =true,
+                TrustServerCertificate = true
             };
         }
 
         [TestMethod()]
         public void DaoContextTest()
         {
-             DaoContext dao = new DaoContext(builder);
-             var result= dao.ExecuteReader("Select * From ProfileScenario",null, System.Data.CommandType.Text);
-            Assert.IsTrue(result.Tables.Count>0);
+            using DaoContext dao = new DaoContext(builder);
+            DataSet ds =new DataSet(); 
+            dao.FillDataSet("Select * From ProfileScenario", ds);
+            
+            Assert.IsTrue(ds.Tables.Count>0);
         }
 
-        //[TestMethod()]
-        //public void BeginTransactionTest()
-        //{
-
-        //}
+        [TestMethod()]
+        public void ExecuteReader_WithResult_Test()
+        {
+           using DaoContext dao = new DaoContext(builder);
+            var converter= Helpers.DataReaderConverter.Create()
+                .WithResult<ActiveTypeModel>()
+                .SetStrictMapping(true);
+            var result= dao.ExecuteReader("Select * From ActiveType", converter, commandType: CommandType.Text);
+            Assert.IsTrue(result.HasResultsets);
+        }
 
         //[TestMethod()]
         //public void CreateAdapterTest()

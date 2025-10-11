@@ -2,7 +2,7 @@
 
 namespace KUtilitiesCore.DataAccess.Exceptions
 {
-    public class RepositoryException : DataAccessException
+    public class RepositoryException : Exception
     {
         #region Constructors
 

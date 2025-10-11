@@ -1,5 +1,11 @@
 ﻿using System.Data;
 
+#if NET8_0_OR_GREATER
+using Microsoft.Data.SqlClient;
+#else
+using System.Data.SqlClient;
+#endif
+
 namespace KUtilitiesCore.Dal
 {
     /// <summary>
@@ -8,6 +14,32 @@ namespace KUtilitiesCore.Dal
     public static class DaoContextExt
     {
         #region Methods
+        /// <summary>
+        /// Si la conexión es SqlConnection, suscribe un handler al evento InfoMessage
+        /// para capturar mensajes de debug (PRINT, RAISERROR, warnings).
+        /// </summary>
+        public static void EnableSqlLogging<TDAO>(this TDAO context, Action<string> logAction)
+            where TDAO : ISqlExecutorContext
+        {
+            if ( context.Connection is SqlConnection sqlConn)
+            {
+                // Limpia suscripciones previas para evitar duplicados
+                sqlConn.InfoMessage -= OnInfoMessage;
+                sqlConn.InfoMessage += OnInfoMessage;
+                void OnInfoMessage(object sender, SqlInfoMessageEventArgs e)
+                {
+                    foreach (SqlError err in e.Errors)
+                    {
+                        logAction?.Invoke($"[SQL] {err.Message} (Número: {err.Number}, Severidad: {err.Class})");
+                    }
+                }
+            }
+            else
+            {
+                // Para otros proveedores no hay InfoMessage
+                logAction?.Invoke("La conexión no es SqlConnection, no se puede habilitar logging de InfoMessage.");
+            }
+        }
 
         /// <summary>
         /// Obtiene el nombre del servidor publicado asociado al contexto de datos.
@@ -40,18 +72,20 @@ namespace KUtilitiesCore.Dal
         /// sesión en la base de datos.
         /// </summary>
         /// <param name="context">Conexión ADO.NET (DbConnection).</param>
-        /// <param name="key">Clave del contexto (ej. "CurrentUserID").</param>
-        /// <param name="value">Valor para establecer (puede ser GUID, int, string, etc.).</param>
+        /// <param name="sessionValue">Objeto que representa el nombre de la clave (Key) y su valor (Value)</param>
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        /// <remarks>
+        /// Los valores de sesion solo pueden ser unsados en el mismo contexto de conexión, al cerrar la conexión se pierden los valores.
+        /// </remarks>
         public static async Task SetSessionContextAsync<TDAO>(this TDAO context,
-            string key, object value, CancellationToken cancellationToken = default) where TDAO : ISqlExecutorContext
+            KeyValuePair<string,object> sessionValue, CancellationToken cancellationToken = default) where TDAO : ISqlExecutorContext
         {
             if (context.Connection.State != ConnectionState.Open)
                 await context.Connection.OpenAsync(cancellationToken);
 
             IDaoParameterCollection dbParameterCollection = context.CreateParameterCollection();
-            dbParameterCollection.Add(nameof(key), key);
-            dbParameterCollection.Add(nameof(value), value);
+            dbParameterCollection.Add("key", sessionValue.Key);
+            dbParameterCollection.Add("value", sessionValue.Value);
             await context.ExecuteNonQueryAsync("EXEC sp_set_session_context @key = @key, @value = @value", dbParameterCollection);
         }
 

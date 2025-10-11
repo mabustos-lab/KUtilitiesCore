@@ -1,34 +1,32 @@
 ﻿namespace KUtilitiesCore.Dal.Exceptions
 {
     /// <summary>
-    /// Representa errores que ocurren durante las operaciones de acceso a datos.
+    /// Excepción personalizada para errores de acceso a datos.
     /// </summary>
     public class DataAccessException : Exception
     {
-        #region Constructors
+        /// <summary>
+        /// Obtiene la sentencia SQL que causó la excepción.
+        /// </summary>
+        public string Sql { get; }
+
+        /// <summary>
+        /// Obtiene el nombre del proveedor de base de datos.
+        /// </summary>
+        public string ProviderName { get; }
 
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="DataAccessException"/>.
         /// </summary>
-        public DataAccessException()
-        { }
-
-        /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="DataAccessException"/> con un
-        /// mensaje de error especificado.
-        /// </summary>
-        /// <param name="message">El mensaje que describe el error.</param>
-        public DataAccessException(string message) : base(message) { }
-
-        /// <summary>
-        /// Inicializa una nueva instancia de la clase <see cref="DataAccessException"/> con un
-        /// mensaje de error especificado y una referencia a la excepción interna que es la causa de
-        /// esta excepción.
-        /// </summary>
-        /// <param name="message">El mensaje que describe el error.</param>
-        /// <param name="innerException">La excepción que es la causa de la excepción actual.</param>
-        public DataAccessException(string message, Exception innerException) : base(message, innerException) { }
-
-        #endregion Constructors
+        /// <param name="message">Mensaje que describe el error.</param>
+        /// <param name="sql">Sentencia SQL relacionada con el error.</param>
+        /// <param name="providerName">Nombre del proveedor de base de datos.</param>
+        /// <param name="innerException">Excepción interna que causó este error.</param>
+        public DataAccessException(string message, string sql, string providerName, Exception innerException)
+            : base(message, innerException)
+        {
+            Sql = sql;
+            ProviderName = providerName;
+        }
     }
 }

@@ -17,6 +17,11 @@ namespace KUtilitiesCore.Dal
         DbConnection Connection { get; }
 
         /// <summary>
+        /// Obtiene o establece el tiempo de espera (en segundos) antes de terminar el intento de ejecutar el comando y generar un error.
+        /// </summary>
+        int ConnectionTimeout { get; set; }
+
+        /// <summary>
         /// Crea una nueva colección de parámetros para comandos SQL.
         /// </summary>
         /// <returns>Instancia de <see cref="IDaoParameterCollection"/> para agregar parámetros.</returns>

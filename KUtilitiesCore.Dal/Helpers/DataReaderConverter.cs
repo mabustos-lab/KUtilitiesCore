@@ -11,64 +11,52 @@ namespace KUtilitiesCore.Dal.Helpers
         #region Fields
 
         private readonly List<Func<IDataReader, IEnumerable>> _resultSets;
-        private readonly ReaderResultSet readerResultSet;
+        private readonly ReaderResultSet _readerResultSet;
+        private bool _useDefaultDataTable;
+        private readonly TranslateOptions _translateOptions;
 
         #endregion Fields
 
         #region Constructors
 
-        /// <summary>
-        /// Constructor privado para inicializar el DataReaderConverter.
-        /// </summary>
         private DataReaderConverter()
         {
             _resultSets = new List<Func<IDataReader, IEnumerable>>();
-            readerResultSet = new ReaderResultSet();
+            _readerResultSet = new ReaderResultSet();
+            _useDefaultDataTable = false;
+            _translateOptions = new TranslateOptions();
         }
 
         #endregion Constructors
 
         #region Properties
 
-        /// <inheritdoc/>
-        public bool HasResultsets => readerResultSet.HasResultsets;
-
-        /// <summary>
-        /// Indica si el convertidor puede realizar conversiones
-        /// </summary>
-        public bool RequiredConvert => _resultSets.Count > 0;
+        public bool HasResultsets => _readerResultSet.HasResultsets;
+        public int ResultSetCount => _readerResultSet.ResultSetCount;
+        public bool RequiredConvert => _resultSets.Count > 0 || _useDefaultDataTable;
 
         #endregion Properties
 
         #region Methods
 
-        /// <summary>
-        /// Método de fábrica para crear una nueva instancia de DataReaderConverter.
-        /// </summary>
-        /// <returns>Una instancia de IDataReaderConverter.</returns>
         public static IDataReaderConverter Create()
         {
             return new DataReaderConverter();
         }
 
-        /// <inheritdoc/>
-        IEnumerable<TResult> IReaderResultSet.GetResult<TResult>()
+        public IDataReaderConverter WithResult<TResult>() where TResult : class, new()
         {
-            return readerResultSet.GetResult<TResult>();
-        }
-
-        /// <summary>
-        /// Agrega una transformación de conjunto de resultados al convertidor.
-        /// </summary>
-        /// <typeparam name="TResult">El tipo del conjunto de resultados.</typeparam>
-        /// <returns>La instancia actual de IDataReaderConverter.</returns>
-        IDataReaderConverter IDataReaderConverter.WithResult<TResult>()
-        {
+            _useDefaultDataTable = false;
             _resultSets.Add((reader) =>
             {
                 try
                 {
-                    return reader.Translate<TResult>().ToList();
+                    _translateOptions.RequiredProperties = [];
+                    if (_translateOptions.StrictMapping)
+                    {
+                        _translateOptions.RequiredProperties = IDataReaderExt.GetPropertiesRequired<TResult>();
+                    }
+                    return reader.Translate<TResult>(_translateOptions).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -79,67 +67,98 @@ namespace KUtilitiesCore.Dal.Helpers
             return this;
         }
 
-        /// <summary>
-        /// Agrega un conjunto de resultados a la colección interna.
-        /// </summary>
-        /// <param name="resultSet">El conjunto de resultados a agregar.</param>
-        internal void AddResultSet(IEnumerable resultSet)
+        public IDataReaderConverter WithDefaultDataTable()
         {
-            readerResultSet.AddResult(resultSet);
+            _useDefaultDataTable = true;
+            return this;
         }
 
-        /// <summary>
-        /// Traduce los datos de un IDataReader en una colección de conjuntos de resultados
-        /// fuertemente tipados.
-        /// </summary>
-        /// <param name="reader">
-        /// El lector de datos que contiene los conjuntos de resultados a traducir.
-        /// </param>
-        /// <returns>
-        /// Una instancia de IReaderResultSet que contiene los conjuntos de resultados traducidos.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Se lanza si el parámetro <paramref name="reader"/> es nulo.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">
-        /// Se lanza si no hay transformaciones definidas o si alguna transformación es nula.
-        /// </exception>
-        /// <exception cref="DataException">
-        /// Se lanza si ocurre un error al procesar los datos del lector.
-        /// </exception>
         internal IReaderResultSet Translate(IDataReader reader)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader), "El parámetro reader no puede ser nulo.");
 
-            if (_resultSets == null || !_resultSets.Any())
-                throw new InvalidOperationException("No hay transformaciones definidas para procesar el lector de datos.");
-
             try
             {
-                foreach (var translate in _resultSets)
+                int resultSetIndex = 0;
+
+                do
                 {
-                    if (translate == null)
+                    IEnumerable resultSet;
+
+                    if (_useDefaultDataTable || resultSetIndex >= _resultSets.Count)
                     {
-                        throw new InvalidOperationException("Se encontró una transformación nula.");
+                        // Comportamiento por defecto: convertir a DataTable
+                        resultSet = (IEnumerable)ConvertToDataTable(reader);
+                    }
+                    else
+                    {
+                        // Usar transformación específica
+                        var transform = _resultSets[resultSetIndex];
+                        if (transform == null)
+                            throw new InvalidOperationException($"Se encontró una transformación nula en el índice {resultSetIndex}.");
+
+                        resultSet = transform(reader);
                     }
 
-                    readerResultSet.AddResult(translate(reader));
+                    _readerResultSet.AddResult(resultSet);
+                    resultSetIndex++;
 
-                    if (!reader.NextResult())
-                    {
-                        break; // Salir si no hay más conjuntos de resultados.
-                    }
-                }
+                } while (reader.NextResult());
+
+                return this;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is InvalidOperationException))
             {
                 throw new DataException("Ocurrió un error al traducir los datos del IDataReader.", ex);
             }
-
-            return readerResultSet;
         }
 
+        private DataTable ConvertToDataTable(IDataReader reader)
+        {
+            var dataTable = new DataTable();
+            dataTable.Load(reader);
+            return dataTable;
+        }
+
+        public IEnumerable<TResult> GetResult<TResult>(int index = 0) where TResult : class, new()
+        {
+            return _readerResultSet.GetResult<TResult>(index);
+        }
+
+        public DataTable GetDataTable(int index = 0)
+        {
+            return _readerResultSet.GetDataTable(index);
+        }
+
+        public DataTable[] GetAllDataTables()
+        {
+            return _readerResultSet.GetAllDataTables();
+        }
         #endregion Methods
+        /// <summary>
+        /// Si es true, lanza excepción cuando no se pueden mapear todas las propiedades requeridas
+        /// </summary>
+        public IDataReaderConverter SetStrictMapping(bool value)
+        {
+            _translateOptions.StrictMapping = value;
+            return this;
+        }
+        /// <summary>
+        /// Si es true, ignora propiedades que no existen en el resultado del reader
+        /// </summary>
+        public IDataReaderConverter SetIgnoreMissingColumns(bool value)
+        {
+            _translateOptions.IgnoreMissingColumns = value;
+            return this;
+        }
+        /// <summary>
+        /// Prefijos a remover de los nombres de columna antes del mapeo
+        /// </summary>
+        public IDataReaderConverter SetColumnPrefixesToRemove(params string[] args)
+        {
+            _translateOptions.ColumnPrefixesToRemove = args;
+            return this;
+        }
     }
 }

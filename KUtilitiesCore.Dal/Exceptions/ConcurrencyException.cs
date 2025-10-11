@@ -1,6 +1,6 @@
 ﻿namespace KUtilitiesCore.Dal.Exceptions
 {
-    public class ConcurrencyException : DataAccessException
+    public class ConcurrencyException : Exception
     {
         #region Constructors
 

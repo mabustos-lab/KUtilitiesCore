@@ -51,18 +51,18 @@ namespace KUtilitiesCore.Dal
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
             IDaoParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure);
 
-        /// <summary>
-        /// Ejecuta una consulta y devuelve los resultados en un <see cref="DataSet"/>.
-        /// </summary>
-        /// <param name="sql">
-        /// La consulta SQL que debe retornar resultados del tipo del objeto a mapear.
-        /// </param>
-        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
-        DataSet ExecuteReader(
-            string sql,
-            IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.StoredProcedure);
+        ///// <summary>
+        ///// Ejecuta una consulta y devuelve los resultados en un <see cref="DataSet"/>.
+        ///// </summary>
+        ///// <param name="sql">
+        ///// La consulta SQL que debe retornar resultados del tipo del objeto a mapear.
+        ///// </param>
+        ///// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        ///// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
+        //DataSet ExecuteReader(
+        //    string sql,
+        //    IDaoParameterCollection parameters = null,
+        //    CommandType commandType = CommandType.StoredProcedure);
         /// <summary>
         /// Ejecuta de manera asincrona una consulta y devuelve una colección de objetos mapeados.
         /// </summary>
@@ -85,15 +85,11 @@ namespace KUtilitiesCore.Dal
         /// </summary>
         /// <param name="sql">
         /// La consulta SQL a ejecutar. Comando SELECT: se requieren las columnas clave.
-        /// </param>
-        /// <param name="srcTable">
-        /// Nombre de la tabla de origen que se va a utilizar para la asignación de tabla.
-        /// </param>
         /// <param name="ds">
         /// Objeto <see cref="DataSet"/> que se va a rellenar con registros y, si es necesario, con esquema.
         /// </param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        void FillDataSet(string sql, string srcTable, DataSet ds, IDaoParameterCollection parameters = null);
+        void FillDataSet(string sql,  DataSet ds, IDaoParameterCollection parameters = null);
 
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.

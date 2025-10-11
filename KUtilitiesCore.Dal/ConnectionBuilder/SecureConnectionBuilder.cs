@@ -243,7 +243,8 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
                 }
                 catch (Exception ex)
                 {
-                    throw new DataAccessException("Error al serializar y encriptar la configuración de conexión.", ex);
+                    Debug.WriteLine(ex.Message);
+                    throw  ;
                 }
 
                 try
@@ -252,20 +253,24 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    throw new DataAccessException("No se tienen permisos para escribir el archivo de configuración.", ex);
+                    Debug.WriteLine(ex.Message);
+                    throw;
                 }
                 catch (DirectoryNotFoundException ex)
                 {
-                    throw new DataAccessException("El directorio especificado para el archivo de configuración no existe.", ex);
+                    Debug.WriteLine(ex.Message);
+                    throw;
                 }
                 catch (IOException ex)
                 {
-                    throw new DataAccessException("Ocurrió un error de E/S al guardar el archivo de configuración.", ex);
+                    Debug.WriteLine(ex.Message);
+                    throw;
                 }
             }
             catch (Exception ex) when (!(ex is DataAccessException))
             {
-                throw new DataAccessException("Error inesperado al guardar la configuración de conexión.", ex);
+                Debug.WriteLine(ex.Message);
+                throw;
             }
         }
 
@@ -291,7 +296,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
             {
                 try
                 {
-                    using IDaoContext ctx = new DaoContext(this);
+                    using DaoContext ctx = new DaoContext(this);
                     // Obtener los catálogos (bases de datos)
                     DataTable schemaTable = ctx.Connection.GetSchema("Databases");
 
@@ -312,7 +317,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
                 }
                 catch (Exception ex)
                 {
-                    throw new DataAccessException("Error al listar las bases de datos.", ex);
+                    throw new DataAccessException("Error al listar las bases de datos.","GetSchema",null, ex);
                 }
             }
             return dt;
@@ -338,7 +343,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
                 if (!ex.Data.Contains("Database"))
                     ex.Data.Add("Database", InitialCatalog);
                 ret = TestConnectionResult.
-                    FailTest(new DataAccessException("No se pudo abrir la conexion a la Base de datos.", ex));
+                    FailTest(new DataAccessException("No se pudo abrir la conexion a la Base de datos.",null,null, ex));
             }
             return ret;
         }
