@@ -24,7 +24,7 @@ namespace KUtilitiesCore.Data
         #region Properties
 
         /// <summary>
-        /// Mustra el error general de la fila
+        /// Muestra el error general de la fila
         /// </summary>
         [Display(AutoGenerateField = false)]
         public string Error { get; private set; } = string.Empty;
@@ -73,7 +73,6 @@ namespace KUtilitiesCore.Data
             ((IValidationErrorInfo)this).HasValidationErrors = false;
             Error = string.Empty;
             if (errColumns != null && errColumns.Count > 0) errColumns.Clear();
-            errColumns = null;
         }
 
        
@@ -102,7 +101,6 @@ namespace KUtilitiesCore.Data
         private string GetErrorMessageCore(string columnName)
         {
             if (errColumns == null) errColumns = new Dictionary<string, string>();
-            IValidationErrorInfo errInfo = this;
             string ret = string.Empty;
             if (!errColumns.ContainsKey(columnName))
             {
@@ -119,14 +117,13 @@ namespace KUtilitiesCore.Data
         /// Explora las propiedades del objeto en busca de atributos de validacion
         /// </summary>
         /// <param name="Deep"></param>
-        /// <param name="debugProperty"></param>
         /// <returns></returns>
-        protected internal virtual bool HasErrors(int Deep = 2, bool debugProperty = false)
+        protected internal virtual bool HasErrors(int Deep = 2)
         {
             IValidationErrorInfo errInfo = this;
             errInfo.ClearErrorInfo();
 
-            errInfo.HasValidationErrors = this.HasErrors(Deep, debugProperty)
+            errInfo.HasValidationErrors = DataErrorInfoExt.HasErrors(this,true, Deep)
                                           || !string.IsNullOrEmpty(Error)
                                           || (errColumns != null && errColumns.Count > 0);
             return errInfo.HasValidationErrors;

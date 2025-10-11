@@ -1,7 +1,5 @@
 ﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
-using System;
 using System.Data.Entity;
-using System.Linq;
 
 namespace KUtilitiesCore.DataAccess.UOW
 {
@@ -10,6 +8,8 @@ namespace KUtilitiesCore.DataAccess.UOW
     /// </summary>
     public static class SpecificationEvaluator<TEntity> where TEntity : class
     {
+        #region Methods
+
         /// <summary>
         /// Aplica la especificación dada a la consulta IQueryable de entrada.
         /// </summary>
@@ -18,18 +18,20 @@ namespace KUtilitiesCore.DataAccess.UOW
             ISpecification<TEntity> specification)
         {
             var query = inputQuery;
-            if(specification.Criteria != null)
+            if (specification.Criteria != null)
                 query = query.Where(specification.Criteria);
-            if(specification.Includes != null)
+            if (specification.Includes != null)
                 query = specification.Includes.Aggregate(query, (current, include) => current.Include(include));
-            if(specification.IncludeStrings != null)
+            if (specification.IncludeStrings != null)
                 query = specification.IncludeStrings.Aggregate(query, (current, include) => current.Include(include));
 
-            if(specification.OrderBy != null)
+            if (specification.OrderBy != null)
                 query = query.OrderBy(specification.OrderBy);
-            else if(specification.OrderByDescending != null)
+            else if (specification.OrderByDescending != null)
                 query = query.OrderByDescending(specification.OrderByDescending);
             return query;
         }
+
+        #endregion Methods
     }
 }

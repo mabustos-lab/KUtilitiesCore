@@ -1,13 +1,19 @@
-﻿using KUtilitiesCore.DataAccess;
+﻿using KUtilitiesCore.Dal.ConnectionBuilder;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
+#if NET8_0_OR_GREATER
+using Microsoft.Data.SqlClient;
+#else
+using System.Data.SqlClient;
+#endif
 
 namespace KUtilitiesCore.DataAccess.Tests
 {
@@ -21,6 +27,9 @@ namespace KUtilitiesCore.DataAccess.Tests
         public void Setup()
         {
             idCode=Guid.NewGuid().ToString();
+#if NET8_0_OR_GREATER
+            DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);
+#endif
         }
 
         [TestMethod()]

@@ -26,6 +26,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.GitHubUpdate
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.LoggerTests", "KUtilitiesCore.LoggerTests\KUtilitiesCore.LoggerTests.csproj", "{8714C780-5072-4091-A5A3-EAF80013ACD1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.MVVM.Messaging", "KUtilitiesCore.MVVM.Messaging\KUtilitiesCore.MVVM.Messaging.csproj", "{33599D10-41D1-4E6D-894E-ECF069BE978F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Dal", "KUtilitiesCore.Dal\KUtilitiesCore.Dal.csproj", "{B2D78A74-65B7-4F26-A24C-617090F88899}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +80,14 @@ Global
 		{8714C780-5072-4091-A5A3-EAF80013ACD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8714C780-5072-4091-A5A3-EAF80013ACD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8714C780-5072-4091-A5A3-EAF80013ACD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33599D10-41D1-4E6D-894E-ECF069BE978F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33599D10-41D1-4E6D-894E-ECF069BE978F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33599D10-41D1-4E6D-894E-ECF069BE978F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33599D10-41D1-4E6D-894E-ECF069BE978F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2D78A74-65B7-4F26-A24C-617090F88899}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2D78A74-65B7-4F26-A24C-617090F88899}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2D78A74-65B7-4F26-A24C-617090F88899}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2D78A74-65B7-4F26-A24C-617090F88899}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

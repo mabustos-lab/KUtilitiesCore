@@ -30,13 +30,9 @@
         /// </summary>
         /// <param name="message">Mensaje del error.</param>
         /// <param name="exception">Excepción asociada (opcional).</param>
-        /// <param name="logError">Indica si se debe registrar el error.</param>
-        public static ActionResult CreateFaultedResult(string message, Exception? exception = null, bool logError = true)
+        public static ActionResult CreateFaultedResult(string message, Exception? exception = null)
         {
             var result = new ActionResult { Status = ActionResultStatus.Faulted, ErrorMessage = message, Exception = exception };
-
-            if (logError)
-                LogError(message, exception);
 
             return result;
         }
@@ -78,9 +74,6 @@
                 ErrorMessage = message,
                 Exception = exception
             };
-
-            if (exception != null)
-                LogError(message, exception);
 
             return result;
         }

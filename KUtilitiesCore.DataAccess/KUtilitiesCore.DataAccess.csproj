@@ -11,21 +11,24 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="EntityFramework" Version="6.5.1" />
-	  <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+	  <Compile Remove="Exceptions\ConcurrencyException.cs" />
+	  <Compile Remove="Exceptions\DataAccessException.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj" />
-	  <ProjectReference Include="..\KUtilities.Logger\KUtilitiesCore.Logger.csproj" />
-	  <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
+	  <PackageReference Include="EntityFramework" Version="6.5.1" />
+	  <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\KUtilitiesCore.Dal\KUtilitiesCore.Dal.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
 	  <PackageReference Include="Microsoft.EntityFrameworkCore">
-	    <Version>9.0.7</Version>
+	    <Version>9.0.9</Version>
 	  </PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
 	</ItemGroup>
 
 </Project>
