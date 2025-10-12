@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,10 +38,19 @@ namespace KUtilitiesCore.Dal.Tests
                 TrustServerCertificate = true
             };
         }
-
+        
         [TestMethod()]
         public void DaoContextTest()
         {
+            // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                Assert.Inconclusive("Esta prueba se omite en GitHub Actions.");
+            }
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
+            }
             using DaoContext dao = new DaoContext(builder);
             DataSet ds =new DataSet(); 
             dao.FillDataSet("Select * From ProfileScenario", ds);
@@ -51,7 +61,17 @@ namespace KUtilitiesCore.Dal.Tests
         [TestMethod()]
         public void ExecuteReader_WithResult_Test()
         {
-           using DaoContext dao = new DaoContext(builder);
+            // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                Assert.Inconclusive("Esta prueba se omite en GitHub Actions.");
+            }
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
+            }
+            
+            using DaoContext dao = new(builder,metrics: new Telemetry.LoggerMetrics());
             var converter= Helpers.DataReaderConverter.Create()
                 .WithResult<ActiveTypeModel>()
                 .SetStrictMapping(true);
