@@ -53,7 +53,7 @@ namespace KUtilitiesCore.Dal.Tests
             }
             using DaoContext dao = new DaoContext(builder);
             DataSet ds =new DataSet(); 
-            dao.FillDataSet("Select * From ProfileScenario", ds);
+            dao.FillDataSet("Select * From ProfileScenario", ds, "ProfileScenario");
             
             Assert.IsTrue(ds.Tables.Count>0);
         }
