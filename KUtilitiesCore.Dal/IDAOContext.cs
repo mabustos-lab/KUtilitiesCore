@@ -88,8 +88,9 @@ namespace KUtilitiesCore.Dal
         /// <param name="ds">
         /// Objeto <see cref="DataSet"/> que se va a rellenar con registros y, si es necesario, con esquema.
         /// </param>
+        /// <param name="tableName">El nombre de la tabla de origen que se utilizará para la asignación de tablas.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        void FillDataSet(string sql,  DataSet ds, IDaoParameterCollection parameters = null);
+        void FillDataSet(string sql,  DataSet ds,string tableName, IDaoParameterCollection parameters = null);
 
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.

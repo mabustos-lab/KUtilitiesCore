@@ -1,1 +1,3 @@
 # KUtilitiesCore
+KUtilitiesCore es una colección completa de utilidades y Frameworks .NET reutilizables, diseñados para acelerar el desarrollo de aplicaciones en los ámbitos de MVVM, acceso a datos, registro y seguridad. Este repositorio ofrece un ecosistema modular de bibliotecas que se pueden utilizar de forma independiente o conjunta para crear aplicaciones .NET sólidas, tanto para .NET Framework 4.8 como para .NET 8.0.
+El repositorio contiene seis bibliotecas básicas y sus correspondientes proyectos de prueba, cada uno de los cuales aborda problemas de desarrollo específicos. Para obtener información detallada sobre los componentes individuales, consulte Core Utilities, MVVM Framework, Data Access Layer, Logging System, Security and Encryption y Application Updates.

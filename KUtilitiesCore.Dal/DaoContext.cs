@@ -375,7 +375,7 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public void FillDataSet(string sql, DataSet ds, IDaoParameterCollection parameters = null)
+        public void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
@@ -385,7 +385,7 @@ namespace KUtilitiesCore.Dal
                 using DbCommand command = CreateCommand(sql, parameters);
                 using DbDataAdapter adapter = _factory.CreateDataAdapter();
                 adapter.SelectCommand = command;
-                adapter.Fill(ds);
+                adapter.Fill(ds,tableName);
 
                 stopwatch.Stop();
                 _metrics.TrackMetric("FillDataSetExecutionTime", stopwatch.ElapsedMilliseconds);
