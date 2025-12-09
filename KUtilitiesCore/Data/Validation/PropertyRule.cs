@@ -70,7 +70,7 @@ namespace KUtilitiesCore.Data.Validation
                     string formattedMessage = FormatMessageTemplate(messageTemplate, validator, context, propertyValue, PropertyName);
 
                     failures.Add(new ValidationFailure(
-                        PropertyName,
+                        PropertyName, -1,
                         formattedMessage,
                         propertyValue // Valor que causó el fallo
                     ));

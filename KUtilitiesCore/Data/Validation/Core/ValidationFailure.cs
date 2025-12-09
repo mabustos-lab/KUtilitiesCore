@@ -9,8 +9,9 @@ namespace KUtilitiesCore.Data.Validation.Core
     /// <summary>
     /// Representa un fallo de validación individual.
     /// </summary>
-    public class ValidationFailure(string propertyName, string errorMessage, object? attemptedValue = null)
+    public class ValidationFailure(string propertyName, int rowIdx, string errorMessage, object? attemptedValue = null)
     {
+        
         #region Properties
 
         /// <summary>
@@ -29,11 +30,16 @@ namespace KUtilitiesCore.Data.Validation.Core
         /// </summary>
         public string PropertyName { get; } = propertyName;
 
+        /// <summary>
+        /// Indica la fila donde se encuentra el error.
+        /// </summary>
+        public int RowIndex { get; } = rowIdx;
+
         #endregion Properties
 
         #region Methods
 
-        public override string ToString() => ErrorMessage;
+        public override string ToString() => $"{(RowIndex>=0?$"Indice: [{RowIndex}] ":string.Empty)}{ErrorMessage}";
 
         #endregion Methods
     }
