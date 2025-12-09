@@ -2,12 +2,13 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Data.FieldDefinition
+namespace KUtilitiesCore.Data.ImportDefinition
 {
     /// <summary>
     /// Define las características de un campo.
@@ -26,23 +27,31 @@ namespace KUtilitiesCore.Data.FieldDefinition
         string Description { get; }
 
         /// <summary>
-        /// Nombre del campo para mostrar al usuario.
+        /// Nombre del campo para mostrar al usuario o al crear una nueva plantilla.
         /// </summary>
+        [Required]
         string DisplayName { get; }
+
+        /// <summary>
+        /// Nombre de la columna en el archivo origen de datos (ej. Excel, CSV).
+        /// </summary>
+        [Required]
+        string SourceColumnName { get; set; }
 
         /// <summary>
         /// Nombre interno o técnico del campo.
         /// </summary>
-        string FieldName { get; }
+        [Required]
+        string ColumnName { get; }
 
         /// <summary>
         /// Tipo de dato esperado para el campo.
         /// </summary>
         Type FieldType { get; }
 
-        ///// <summary>
-        ///// Obtiene un valor que indica si el campo debe ser único.
-        ///// </summary>
-        //bool IsUnique { get; set; }
+        /// <summary>
+        /// Obtiene un valor que indica si el campo debe ser único.
+        /// </summary>
+        bool IsUnique { get;  }
     }
 }

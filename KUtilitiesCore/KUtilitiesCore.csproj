@@ -32,6 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\ImportDefinition\IFieldValidation.cs" />
+    <Compile Remove="Data\ImportDefinition\ImportedFieldValue.cs" />
     <Compile Remove="OrderedInfo\PNameInfo.cs" />
   </ItemGroup>
 

@@ -105,7 +105,7 @@ namespace KUtilitiesCoreTests.Data.Validation
                         {
                             // Añadir fallo específico. No se asocia a una propiedad concreta,
                             // o se puede asociar a una de ellas (ej: FechaFin).
-                            failures.Add(new ValidationFailure(nameof(Periodo.FechaFin),
+                            failures.Add(new ValidationFailure(nameof(Periodo.FechaFin),-1,
                                 "La fecha de fin debe ser posterior o igual a la fecha de inicio.",
                                 periodo.FechaFin.Value));
                         }

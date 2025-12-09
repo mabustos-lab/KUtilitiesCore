@@ -10,11 +10,17 @@ namespace KUtilitiesCore.Data.Validation.Core
     {
         #region Fields
 
+        private readonly List<string> _errorMessages = new List<string>();
         private readonly List<ValidationFailure> _errors = new List<ValidationFailure>();
 
         #endregion Fields
 
         #region Properties
+
+        /// <summary>
+        /// Lista de mensajes generales
+        /// </summary>
+        public List<string> ErrorMessages => _errorMessages;
 
         /// <summary>
         /// Lista de fallos de validación.
@@ -24,11 +30,18 @@ namespace KUtilitiesCore.Data.Validation.Core
         /// <summary>
         /// Indica si la validación fue exitosa (no hay errores).
         /// </summary>
-        public bool IsValid => _errors.Count == 0;
+        public bool IsValid => _errorMessages.Count == 0 && _errors.Count == 0;
 
         #endregion Properties
 
         #region Methods
+
+        /// <summary>
+        /// Agrega un mensaje de error generico
+        /// </summary>
+        /// <param name="message"></param>
+        public void AddErrorMessage(string message)
+            => _errorMessages.Add(message);
 
         /// <summary>
         /// Añade un fallo de validación a la lista.
@@ -48,6 +61,15 @@ namespace KUtilitiesCore.Data.Validation.Core
         {
             if (failures == null) throw new ArgumentNullException(nameof(failures));
             _errors.AddRange(failures.Where(f => f != null));
+        }
+
+        /// <summary>
+        /// Borra todos los registros de error
+        /// </summary>
+        public void Clear()
+        {
+            _errorMessages.Clear();
+            _errors.Clear();
         }
 
         #endregion Methods

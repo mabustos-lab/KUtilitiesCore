@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
-namespace KUtilitiesCore.Data.FieldDefinition
+namespace KUtilitiesCore.Data.ImportDefinition
 {
     /// <summary>
     /// Define las características de un campo.
@@ -29,16 +29,20 @@ namespace KUtilitiesCore.Data.FieldDefinition
         {
             if (fieldProperty == null)
                 throw new ArgumentNullException(nameof(fieldProperty));
-            
+
             LoadInfo(fieldProperty);
         }
 
-        public FieldDefinitionBase(string fieldName, string displayName, string description, Type fieldType, bool allowNull)
+        public FieldDefinitionBase(string fieldName, string displayName, string sourceColumnName = "",
+            string description = "", Type? fieldType = null, bool allowNull = false)
         {
-            FieldName = fieldName;
+            ColumnName = fieldName;
             DisplayName = displayName;
+            if (string.IsNullOrEmpty(sourceColumnName))
+                sourceColumnName = displayName;
+            SourceColumnName = sourceColumnName;
             Description = description;
-            FieldType = fieldType;
+            FieldType = fieldType ?? typeof(string);
             AllowNull = allowNull;
         }
 
@@ -48,13 +52,19 @@ namespace KUtilitiesCore.Data.FieldDefinition
 
         /// <inheritdoc/>
         public bool AllowNull
-        { get; private set; }
+        { get; protected set; }
+
+        /// <inheritdoc/>
+        [Required]
+        public string ColumnName
+        { get; protected set; } = string.Empty;
 
         /// <inheritdoc/>
         public string Description
         { get; set; } = string.Empty;
 
         /// <inheritdoc/>
+        [Required]
         public string DisplayName
         {
             get => displayName;
@@ -66,19 +76,26 @@ namespace KUtilitiesCore.Data.FieldDefinition
         }
 
         /// <inheritdoc/>
-        public string FieldName
-        { get; private set; } = string.Empty;
-
-        /// <inheritdoc/>
         public Type FieldType
         {
             get => fieldType;
-            private set
+            protected set
             {
                 fieldType = value;
                 OnFieldTypeChanged();
             }
         }
+
+        /// <inheritdoc/>
+        public bool IsUnique { get; protected set; } = false;
+
+        /// <inheritdoc/>
+        [Required]
+        public string SourceColumnName { get; set; }
+
+        #endregion Properties
+
+        #region Methods
 
         internal virtual void LoadInfo(PropertyInfo fieldProperty)
         {
@@ -86,7 +103,7 @@ namespace KUtilitiesCore.Data.FieldDefinition
             var underlyingType = Nullable.GetUnderlyingType(fieldProperty.PropertyType);
             var resolvedType = (AllowNull ? underlyingType : fieldProperty.PropertyType) ?? throw new InvalidOperationException($"No se pudo determinar el tipo de campo para la propiedad '{fieldProperty.Name}'.");
             FieldType = resolvedType;
-            FieldName = fieldProperty.Name;
+            ColumnName = fieldProperty.Name;
             DisplayName = fieldProperty.DataAnnotationsDisplayName();
             Description = fieldProperty.DataAnnotationsDescription();
         }
@@ -94,7 +111,7 @@ namespace KUtilitiesCore.Data.FieldDefinition
         internal virtual void OnDisplayNameChanged()
         {
             if (string.IsNullOrEmpty(DisplayName))
-                DisplayName = FieldName;
+                DisplayName = ColumnName;
         }
 
         internal abstract void OnFieldTypeChanged();
