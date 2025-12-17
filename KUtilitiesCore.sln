@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.MVVM.Messagi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Dal", "KUtilitiesCore.Dal\KUtilitiesCore.Dal.csproj", "{B2D78A74-65B7-4F26-A24C-617090F88899}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Data", "KUtilitiesCore.Data\KUtilitiesCore.Data.csproj", "{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{B2D78A74-65B7-4F26-A24C-617090F88899}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B2D78A74-65B7-4F26-A24C-617090F88899}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B2D78A74-65B7-4F26-A24C-617090F88899}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
