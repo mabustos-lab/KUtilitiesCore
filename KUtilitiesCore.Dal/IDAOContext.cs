@@ -10,7 +10,6 @@ namespace KUtilitiesCore.Dal
     /// </summary>
     public interface IDaoContext : ISqlExecutorContext
     {
-
         /// <summary>
         /// Crea un adaptador de datos basado en un comando de base de datos.
         /// </summary>
@@ -80,17 +79,13 @@ namespace KUtilitiesCore.Dal
             IDaoParameterCollection parameters = null, CommandType commandType = CommandType.StoredProcedure,
             CancellationToken cancellationToken = default);
 
-        /// <summary>
-        /// Ejecuta una consulta SELECT y rellena un DataSet con la información.
-        /// </summary>
-        /// <param name="sql">
-        /// La consulta SQL a ejecutar. Comando SELECT: se requieren las columnas clave.
-        /// <param name="ds">
-        /// Objeto <see cref="DataSet"/> que se va a rellenar con registros y, si es necesario, con esquema.
-        /// </param>
-        /// <param name="tableName">El nombre de la tabla de origen que se utilizará para la asignación de tablas.</param>
+        /// <summary> Ejecuta una consulta SELECT y rellena un DataSet con la información.
+        /// </summary> <param name="sql"> La consulta SQL a ejecutar. Comando SELECT: se requieren
+        /// las columnas clave. <param name="ds"> Objeto <see cref="DataSet"/> que se va a rellenar
+        /// con registros y, si es necesario, con esquema. </param> <param name="tableName">El
+        /// nombre de la tabla de origen que se utilizará para la asignación de tablas.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
-        void FillDataSet(string sql,  DataSet ds,string tableName, IDaoParameterCollection parameters = null);
+        void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null);
 
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.
