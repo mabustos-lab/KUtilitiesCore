@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data
 {
@@ -14,37 +14,10 @@ namespace KUtilitiesCore.Data
         /// </summary>
         public static void ToCsv(this DataTable dataSource, string filePath, bool openFile = true, string separator = ",")
         {
-            if (dataSource == null) throw new ArgumentNullException(nameof(dataSource));
-            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Ruta inválida", nameof(filePath));
+            ValidateParameters(dataSource, filePath, separator);
+            var columnsToExport = GetExportableColumns(dataSource);
 
-            // Filtrar columnas excluidas
-            var columnsToExport = dataSource.Columns.Cast<DataColumn>()
-                                    .Where(c => !c.IsExcluded())
-                                    .ToList();
-
-            using (StreamWriter sw = new StreamWriter(filePath, false, Encoding.UTF8))
-            {
-                // 1. Escribir Encabezados
-                var headers = columnsToExport.Select(c => EscapeCsvValue(
-                    !string.IsNullOrWhiteSpace(c.Caption) ? c.Caption : c.ColumnName, separator)
-                );
-                sw.WriteLine(string.Join(separator, headers));
-
-                // 2. Escribir Filas
-                foreach (DataRow row in dataSource.Rows)
-                {
-                    var fields = columnsToExport.Select(c =>
-                    {
-                        var value = row[c];
-                        string stringValue = value == DBNull.Value || value == null
-                            ? ""
-                            : GetFormattedValue(value, c); // Usa el formato si existe
-                        return EscapeCsvValue(stringValue, separator);
-                    });
-
-                    sw.WriteLine(string.Join(separator, fields));
-                }
-            }
+            WriteCsvFile(filePath, dataSource, columnsToExport, separator);
 
             if (openFile)
             {
@@ -52,9 +25,75 @@ namespace KUtilitiesCore.Data
             }
         }
 
+        private static void ValidateParameters(DataTable dataSource, string filePath, string separator)
+        {
+            if (dataSource == null)
+                throw new ArgumentNullException(nameof(dataSource));
+
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Ruta inválida", nameof(filePath));
+
+            if (string.IsNullOrWhiteSpace(separator))
+                throw new ArgumentException("Separador no puede estar vacío", nameof(separator));
+        }
+
+        private static List<DataColumn> GetExportableColumns(DataTable dataSource)
+        {
+            return dataSource.Columns.Cast<DataColumn>()
+                                    .Where(c => !c.IsExcluded())
+                                    .ToList();
+        }
+
+        private static void WriteCsvFile(string filePath, DataTable dataSource, List<DataColumn> columns, string separator)
+        {
+            using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+            {
+                WriteHeaders(writer, columns, separator);
+                WriteDataRows(writer, dataSource, columns, separator);
+            }
+        }
+
+        private static void WriteHeaders(StreamWriter writer, List<DataColumn> columns, string separator)
+        {
+            var headerValues = columns.Select(c => GetColumnHeader(c));
+            var escapedHeaders = headerValues.Select(h => EscapeCsvValue(h, separator));
+
+            writer.WriteLine(string.Join(separator, escapedHeaders));
+        }
+
+        private static string GetColumnHeader(DataColumn column)
+        {
+            return !string.IsNullOrWhiteSpace(column.Caption)
+                ? column.Caption
+                : column.ColumnName;
+        }
+
+        private static void WriteDataRows(StreamWriter writer, DataTable dataSource, List<DataColumn> columns, string separator)
+        {
+            foreach (DataRow row in dataSource.Rows)
+            {
+                WriteDataRow(writer, row, columns, separator);
+            }
+        }
+
+        private static void WriteDataRow(StreamWriter writer, DataRow row, List<DataColumn> columns, string separator)
+        {
+            var fieldValues = columns.Select(c => GetFormattedFieldValue(row[c], c));
+            var escapedFields = fieldValues.Select(v => EscapeCsvValue(v, separator));
+
+            writer.WriteLine(string.Join(separator, escapedFields));
+        }
+
+        private static string GetFormattedFieldValue(object value, DataColumn column)
+        {
+            if (value == DBNull.Value || value == null)
+                return string.Empty;
+
+            return GetFormattedValue(value, column);
+        }
+
         private static string GetFormattedValue(object value, DataColumn column)
         {
-            // Intentar usar el formato definido en las extensiones
             string format = column.GetDisplayFormat();
 
             if (!string.IsNullOrEmpty(format) && value is IFormattable formattable)
@@ -62,11 +101,15 @@ namespace KUtilitiesCore.Data
                 return formattable.ToString(format, System.Globalization.CultureInfo.CurrentCulture);
             }
 
-            // Fallback especial para fechas si no hay formato
-            if (value is DateTime dt)
-                return dt.ToString("yyyy-MM-dd HH:mm:ss");
+            if (value is DateTime dateTime)
+                return FormatDateTime(dateTime);
 
             return value.ToString();
+        }
+
+        private static string FormatDateTime(DateTime dateTime)
+        {
+            return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         /// <summary>
@@ -75,21 +118,28 @@ namespace KUtilitiesCore.Data
         /// </summary>
         private static string EscapeCsvValue(string value, string separator)
         {
-            if (string.IsNullOrEmpty(value)) return "";
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
 
-            bool needsQuotes = value.Contains(separator) ||
-                               value.Contains("\"") ||
-                               value.Contains("\r") ||
-                               value.Contains("\n");
-
-            if (needsQuotes)
-            {
-                // Duplicar comillas dobles existentes
-                value = value.Replace("\"", "\"\"");
-                return $"\"{value}\"";
-            }
+            if (RequiresQuoting(value, separator))
+                return QuoteAndEscapeValue(value);
 
             return value;
+        }
+
+        private static bool RequiresQuoting(string value, string separator)
+        {
+            return value.Contains(separator) ||
+                   value.Contains("\"") ||
+                   value.Contains("\r") ||
+                   value.Contains("\n");
+        }
+
+        private static string QuoteAndEscapeValue(string value)
+        {
+            // Duplicar comillas dobles existentes
+            string escapedValue = value.Replace("\"", "\"\"");
+            return $"\"{escapedValue}\"";
         }
     }
 }
