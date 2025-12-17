@@ -127,6 +127,8 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
                 _logger?.LogDebug("Timeout de conexión establecido en {Timeout} segundos", value);
             }
         }
+        /// <inheritdoc>
+        public Action<ISqlExecutorContext> OnConnectionOpened { get; set; } 
 
         /// <inheritdoc/>
         public IDaoParameterCollection CreateParameterCollection()
@@ -530,6 +532,7 @@ namespace KUtilitiesCore.DataAccess.DALEfCore
                 {
                     connection.Open();
                     _logger?.LogDebug("Conexión de EF abierta exitosamente");
+                    OnConnectionOpened?.Invoke(this);
                 }
                 catch (Exception ex)
                 {
