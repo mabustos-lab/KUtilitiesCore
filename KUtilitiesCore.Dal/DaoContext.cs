@@ -4,6 +4,7 @@ using KUtilitiesCore.Dal.Helpers;
 using KUtilitiesCore.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
+using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
@@ -103,6 +104,10 @@ namespace KUtilitiesCore.Dal
                 _logger?.LogDebug("Timeout de conexión establecido en {Timeout} segundos", value);
             }
         }
+
+        /// <inheritdoc/>
+        public Action<ISqlExecutorContext> OnConnectionOpened { get; set; }
+
 
         #endregion Properties
 
@@ -562,6 +567,9 @@ namespace KUtilitiesCore.Dal
 
                 if (_logger != null)
                     this.EnableSqlLogging(x => _logger?.LogDebug(x));
+
+                // Invocar delegado si está configurado
+                OnConnectionOpened?.Invoke(this);
 
                 return connection;
             }

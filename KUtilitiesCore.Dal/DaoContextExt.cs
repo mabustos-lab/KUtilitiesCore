@@ -78,7 +78,8 @@ namespace KUtilitiesCore.Dal
         /// Los valores de sesion solo pueden ser unsados en el mismo contexto de conexión, al cerrar la conexión se pierden los valores.
         /// </remarks>
         public static async Task SetSessionContextAsync<TDAO>(this TDAO context,
-            KeyValuePair<string,object> sessionValue, CancellationToken cancellationToken = default) where TDAO : ISqlExecutorContext
+            KeyValuePair<string,object> sessionValue, CancellationToken cancellationToken = default) 
+            where TDAO : ISqlExecutorContext
         {
             if (context.Connection.State != ConnectionState.Open)
                 await context.Connection.OpenAsync(cancellationToken);
