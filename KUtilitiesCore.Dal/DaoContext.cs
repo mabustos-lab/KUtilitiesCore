@@ -108,6 +108,8 @@ namespace KUtilitiesCore.Dal
         /// <inheritdoc/>
         public Action<ISqlExecutorContext> OnConnectionOpened { get; set; }
 
+        /// <inheritdoc/>
+        public string ProviderName => _connectionString.ProviderName;
 
         #endregion Properties
 
@@ -390,7 +392,7 @@ namespace KUtilitiesCore.Dal
                 using DbCommand command = CreateCommand(sql, parameters);
                 using DbDataAdapter adapter = _factory.CreateDataAdapter();
                 adapter.SelectCommand = command;
-                adapter.Fill(ds,tableName);
+                adapter.Fill(ds, tableName);
 
                 stopwatch.Stop();
                 _metrics.TrackMetric("FillDataSetExecutionTime", stopwatch.ElapsedMilliseconds);

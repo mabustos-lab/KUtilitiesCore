@@ -9,6 +9,12 @@ namespace KUtilitiesCore.Dal
     {
 
         /// <summary>
+        /// Obtiene el nombre del proveedor de conexión a la base de datos usado.
+        /// </summary>
+        /// <returns></returns>
+        string ProviderName { get; }
+
+        /// <summary>
         /// Inicia una nueva transacción con el nivel de aislamiento especificado.
         /// </summary>
         /// <param name="isolationLevel">El nivel de aislamiento para la transacción.</param>
