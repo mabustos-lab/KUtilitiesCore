@@ -20,34 +20,33 @@ namespace KUtilitiesCore.Dal.BulkInsert
     /// </summary>
     /// <remarks>Constructor que inicializa la configuración para la inserción masiva.</remarks>
     /// <param name="config">Configuración para la inserción masiva.</param>
-    /// <param name="connectionString">Encapsulación de la cadena de conección</param>
+    ///// <param name="connectionString">Encapsulación de la cadena de conección</param>
     /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
-    public class BulkOperationsService(BulkOperationsConfig config, IConnectionString connectionString) : IBulkOperationsService
+    public class BulkOperationsService(BulkOperationsConfig config) : IBulkOperationsService
     {
         private readonly BulkOperationsConfig _config = config ?? throw new ArgumentNullException(nameof(config));
-        private readonly IConnectionString _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+        //private readonly IConnectionString _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
 
         /// <summary>
         /// Realiza una inserción masiva de datos desde un DataTable a la base de datos.
         /// </summary>
         /// <param name="dataTable">El DataTable que contiene los datos a insertar.</param>
+        /// <param name="context">Contexto de conexión a la base de datos</param>
         /// <exception cref="ArgumentException">Se lanza si el DataTable es nulo o está vacío.</exception>
-        public void BulkCopy(DataTable dataTable)
+        public void BulkCopy<TContext>(DataTable dataTable, TContext context)
+            where TContext : ISqlExecutorContext
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
                 throw new ArgumentException("El DataTable no puede estar vacío.");
 
-            using DbConnection connection = CreateDbConnection();
-            connection.Open();
-
-            if (_connectionString.ProviderName is "System.Data.SqlClient" or "Microsoft.Data.SqlClient")
+            if (context.ProviderName is "System.Data.SqlClient" or "Microsoft.Data.SqlClient")
             {
-                using (DbTransaction transaction = connection.BeginTransaction())
+                using (ITransaction transaction = context.BeginTransaction())
                 {
                     try
                     {
                         // SqlBulkCopy solo se ejecuta si el proveedor es SQL Server
-                        using var bulkCopy = new SqlClient.SqlBulkCopy((SqlClient.SqlConnection)connection);
+                        using var bulkCopy = new SqlClient.SqlBulkCopy((SqlClient.SqlConnection)context.Connection);
                         bulkCopy.DestinationTableName = _config.DestinationTableName;
                         bulkCopy.BatchSize = _config.BatchSize;
                         bulkCopy.BulkCopyTimeout = _config.BulkCopyTimeout;
@@ -70,22 +69,11 @@ namespace KUtilitiesCore.Dal.BulkInsert
             else
             {
                 // Estrategia genérica para otros proveedores (ejemplo: INSERT con múltiples valores)
-                BulkInsertGeneric(connection, dataTable);
+                BulkInsertGeneric(context.Connection, dataTable);
             }
         }
 
-        /// <summary>
-        /// Crea y configura una conexión de base de datos utilizando el proveedor especificado.
-        /// </summary>
-        /// <returns>Una instancia de DbConnection configurada.</returns>
-        private DbConnection CreateDbConnection()
-        {
-            DbProviderFactory factory = DbProviderFactories.GetFactory(_connectionString.ProviderName);
-            DbConnection connection = factory.CreateConnection();
-            connection.ConnectionString = _connectionString.CnnString;
-            return connection;
-        }
-
+    
         /// <summary>
         /// Realiza una inserción masiva genérica para proveedores que no soportan SqlBulkCopy.
         /// </summary>
