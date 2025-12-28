@@ -1,10 +1,11 @@
-﻿using KUtilitiesCore.DataAccess.Paging;
-using KUtilitiesCore.DataAccess.UOW.Interfaces;
+﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq.Expressions;
 using System.Reflection;
 using KUtilitiesCore.Logger;
+using KUtilitiesCore.Dal.Paging;
+
 
 // --- Compilación Condicional para Entity Framework ---
 #if NETFRAMEWORK

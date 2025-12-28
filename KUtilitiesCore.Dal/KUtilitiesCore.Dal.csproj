@@ -14,11 +14,14 @@
 	  <Compile Remove="Exceptions\RepositoryException.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj" />
 	  <ProjectReference Include="..\KUtilities.Logger\KUtilitiesCore.Logger.csproj" />
 	  <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Paging\" />
 	</ItemGroup>
 </Project>
