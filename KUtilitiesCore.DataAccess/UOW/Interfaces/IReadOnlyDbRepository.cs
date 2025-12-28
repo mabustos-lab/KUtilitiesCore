@@ -1,4 +1,4 @@
-﻿using KUtilitiesCore.DataAccess.Paging;
+﻿using KUtilitiesCore.Dal.Paging;
 
 namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
