@@ -78,7 +78,18 @@ namespace KUtilitiesCore.Dal
         /// <param name="tableName">El nombre de la tabla de origen que se utilizará para la asignación de tablas.</param>
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
         void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null);
-
+        /// <summary>
+        /// Ejecuta una consulta SELECT y rellena un DataSet con la información de manera asyncrona.
+        /// </summary>
+        /// <param name="sql"> La consulta SQL a ejecutar. Comando SELECT: se requieren
+        /// las columnas clave.</param>
+        /// <param name="ds"> Objeto <see cref="DataSet"/> que se va a rellenar
+        /// con registros y, si es necesario, con esquema. </param>
+        /// <param name="tableName">El nombre de la tabla de origen que se utilizará para la asignación de tablas.</param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        Task FillDataSetAsync(string sql, DataSet ds, string tableName,IDaoParameterCollection parameters = null,
+            CancellationToken cancellationToken = default);
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.
         /// </summary>
@@ -90,6 +101,18 @@ namespace KUtilitiesCore.Dal
         /// <param name="transaction">La transacción asociada, si existe.</param>
         /// <returns>El número de filas afectadas por la actualización.</returns>
         int UpdateDataSet(DataSet ds, string selectCommandText, string tableName, ITransaction transaction = null);
-
+        /// <summary>
+        /// Actualiza los cambios realizados en el DataSet para una tabla determinada.
+        /// </summary>
+        /// <param name="ds">El DataSet que contiene los cambios a actualizar.</param>
+        /// <param name="selectCommandText">
+        /// El comando SELECT con las columnas clave, utilizado para recuperar los datos originales.
+        /// </param>
+        /// <param name="tableName">El nombre de la tabla en el DataSet.</param>
+        /// <param name="transaction">La transacción asociada, si existe.</param>
+        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        /// <returns>El número de filas afectadas por la actualización.</returns>
+        Task<int> UpdateDataSetAsync(DataSet ds, string selectCommandText, string tableName, ITransaction transaction = null,
+            CancellationToken cancellationToken = default);
     }
 }

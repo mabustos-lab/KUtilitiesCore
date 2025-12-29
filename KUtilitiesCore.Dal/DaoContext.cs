@@ -1,6 +1,8 @@
 ﻿using KUtilitiesCore.Dal.ConnectionBuilder;
 using KUtilitiesCore.Dal.Exceptions;
 using KUtilitiesCore.Dal.Helpers;
+using KUtilitiesCore.Dal.SQLLog;
+using KUtilitiesCore.Logger;
 using KUtilitiesCore.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
@@ -9,6 +11,14 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+
+#if NET48
+
+using SqlClient = System.Data.SqlClient;
+
+#else
+using SqlClient = Microsoft.Data.SqlClient;
+#endif
 
 namespace KUtilitiesCore.Dal
 {
@@ -43,6 +53,7 @@ namespace KUtilitiesCore.Dal
         private TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
 
         private bool _disposedValue;
+        private IDisposable _sqlLoggerDisposable=null;
 
         #endregion Fields
 
@@ -522,12 +533,16 @@ namespace KUtilitiesCore.Dal
             {
                 if (disposing)
                 {
-                    // Liberar conexión
+                    _sqlLoggerDisposable?.Dispose();
+                    // Liberar conexión de forma segura
                     if (_connection != null && _connection.IsValueCreated)
                     {
                         try
                         {
-                            _connection.Value.Close();
+                            if (_connection.Value.State != ConnectionState.Closed)
+                            {
+                                _connection.Value.Close();
+                            }
                             _connection.Value.Dispose();
                             _logger?.LogDebug("Conexión de base de datos liberada");
                         }
@@ -537,12 +552,18 @@ namespace KUtilitiesCore.Dal
                         }
                     }
 
-                    // Liberar comandos del pool
+                    // Liberar comandos del pool con verificación de estado
+                    int disposedCount = 0;
                     while (_commandPool.TryTake(out DbCommand command))
                     {
                         try
                         {
+                            if (command.Connection?.State == ConnectionState.Open)
+                            {
+                                command.Cancel(); // Cancelar operaciones pendientes
+                            }
                             command.Dispose();
+                            disposedCount++;
                         }
                         catch (Exception ex)
                         {
@@ -550,7 +571,8 @@ namespace KUtilitiesCore.Dal
                         }
                     }
 
-                    _logger?.LogInformation("DaoContext liberado correctamente");
+                    _logger?.LogInformation("DaoContext liberado. {Count} comandos eliminados del pool",
+                        disposedCount);
                 }
 
                 _connection = null;
@@ -567,11 +589,10 @@ namespace KUtilitiesCore.Dal
                 connection.Open();
                 _logger?.LogDebug("Conexión de base de datos creada y abierta");
 
-                if (_logger != null)
-                    this.EnableSqlLogging(x => _logger?.LogDebug(x));
-
                 // Invocar delegado si está configurado
                 OnConnectionOpened?.Invoke(this);
+
+                EnableSqlLogging(connection);
 
                 return connection;
             }
@@ -582,6 +603,58 @@ namespace KUtilitiesCore.Dal
             }
         }
 
+        private void EnableSqlLogging(DbConnection connection)
+        {
+            if (_logger != null)
+            {
+                var options = new SqlLoggingOptions
+                {
+                    MinimumLogLevel = _logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug)
+                        ? SqlLogLevel.Debug
+                        : SqlLogLevel.Warning,
+                    FilterSystemMessages = true,
+                    IgnoredErrorNumbers = new[] { 5701 } // Ignorar "Changed database context"
+                };
+                if (_logger is ILoggerService KLogger)
+                {
+                    _sqlLoggerDisposable = connection.EnableSqlLogging(
+                        msg => KLogger.Log(
+                            MapToLogLevel(msg.LogLevel),
+                            Logger.CommonEventsID.DataAccess,
+                            "[SQL] {Message} (Proc:{Procedure}:{Line}, Err:{ErrorNumber}:{Severity})",
+                            msg.Message,
+                            msg.Procedure,
+                            msg.LineNumber,
+                            msg.ErrorNumber,
+                            msg.Severity),
+                        options);
+                }
+                else
+                {
+                    _sqlLoggerDisposable = connection.EnableSqlLogging(
+                        msg => _logger.Log(
+                            MapToLogLevel(msg.LogLevel),
+                            "[SQL] {Message} (Proc:{Procedure}:{Line}, Err:{ErrorNumber}:{Severity})",
+                            msg.Message,
+                            msg.Procedure,
+                            msg.LineNumber,
+                            msg.ErrorNumber,
+                            msg.Severity),
+                        options);
+                }
+            }
+        }
+        private static Microsoft.Extensions.Logging.LogLevel MapToLogLevel(SqlLogLevel sqlLevel)
+        {
+            return sqlLevel switch
+            {
+                SqlLogLevel.Error => Microsoft.Extensions.Logging.LogLevel.Error,
+                SqlLogLevel.Warning => Microsoft.Extensions.Logging.LogLevel.Warning,
+                SqlLogLevel.Info => Microsoft.Extensions.Logging.LogLevel.Information,
+                SqlLogLevel.Debug => Microsoft.Extensions.Logging.LogLevel.Debug,
+                _ => Microsoft.Extensions.Logging.LogLevel.Information
+            };
+        }
         private DbParameter CreateParameter()
                             => _factory.CreateParameter();
 
@@ -597,28 +670,146 @@ namespace KUtilitiesCore.Dal
         {
             if (_commandPool.TryTake(out DbCommand command))
             {
-                command.Parameters.Clear();
-                return command;
+                // Verificar que el comando esté en estado válido
+                if (command.Connection != null &&
+                    command.Connection.State == ConnectionState.Open)
+                {
+                    _logger?.LogTrace("Comando reutilizado del pool");
+                    return command;
+                }
+                else
+                {
+                    // Descargar comando con conexión inválida
+                    command.Dispose();
+                    _logger?.LogTrace("Comando descartado por conexión inválida");
+                }
             }
-            DbCommand dbCommand = _factory.CreateCommand();
-            return dbCommand;
+
+            // Crear nuevo comando
+            DbCommand newCommand = _factory.CreateCommand();
+            newCommand.CommandTimeout = (int)_defaultTimeout.TotalSeconds;
+            _logger?.LogTrace("Nuevo comando creado");
+
+            return newCommand;
         }
 
         private void ReturnToPool(DbCommand command)
         {
             if (command == null) return;
 
-            if (_commandPool.Count < _maxPoolSize)
+            // Resetear completamente el comando
+            ResetCommand(command);
+
+            if (_commandPool.Count < _maxPoolSize &&
+                command.Connection != null &&
+                command.Connection.State == ConnectionState.Open)
             {
-                command.Parameters.Clear();
                 _commandPool.Add(command);
+                _logger?.LogTrace("Comando devuelto al pool. Tamaño actual: {Count}", _commandPool.Count);
             }
             else
             {
                 command.Dispose();
+                _logger?.LogTrace("Comando descartado, pool lleno o conexión cerrada");
+            }
+        }
+        private void ResetCommand(DbCommand command)
+        {
+            if (command == null) return;
+
+            // Resetear todas las propiedades a valores por defecto
+            command.Parameters.Clear();
+            command.CommandText = null;
+            command.CommandType = CommandType.Text;
+            command.Transaction = null;
+            command.CommandTimeout = (int)_defaultTimeout.TotalSeconds;
+            command.UpdatedRowSource = UpdateRowSource.Both;
+            // Limpiar notificaciones (si aplica)
+            if (command is SqlClient.SqlCommand sqlCommand)
+            {
+                sqlCommand.Notification = null;
+            }
+        }
+        /// <inheritdoc/>
+        public async Task FillDataSetAsync(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null, CancellationToken cancellationToken = default)
+        {
+            EnsureNotDisposed();
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                using DbCommand command = CreateCommand(sql, parameters);
+                using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                DataTable dataTable = new DataTable(tableName);
+                dataTable.Load(reader);
+                ds.Tables.Add(dataTable);
+
+                stopwatch.Stop();
+                _metrics.TrackMetric("FillDataSetAsyncExecutionTime", stopwatch.ElapsedMilliseconds);
+                _logger?.LogDebug("FillDataSetAsync ejecutado en {Tiempo}ms", stopwatch.ElapsedMilliseconds);
+            }
+            catch (DbException ex)
+            {
+                stopwatch.Stop();
+                _logger?.LogError(ex, "Error en FillDataSetAsync: {Sql}", sql);
+                throw new DataAccessException("Error al llenar DataSet de forma asíncrona",
+                    sql, _connectionString.ProviderName, ex);
+            }
+        }
+        /// <inheritdoc/>
+        public async Task<int> UpdateDataSetAsync(DataSet ds, string selectCommandText, string tableName, ITransaction transaction = null, CancellationToken cancellationToken = default)
+        {
+            EnsureNotDisposed();
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                using DbCommand command = CreateCommand(selectCommandText, null,
+                    CommandType.Text, transaction);
+                using DbDataAdapter adapter = _factory.CreateDataAdapter();
+                adapter.SelectCommand = command;
+
+                using DbCommandBuilder builder = CreateCommandBuilder();
+
+                // Generar comandos de forma asíncrona si es posible
+                await Task.Run(() =>
+                {
+                    adapter.InsertCommand = builder.GetInsertCommand();
+                    adapter.UpdateCommand = builder.GetUpdateCommand();
+                    adapter.DeleteCommand = builder.GetDeleteCommand();
+                }, cancellationToken).ConfigureAwait(false);
+
+                // Asignar transacción a los comandos generados
+                if (transaction != null)
+                {
+                    var tx = ((TransactionBase)transaction).GetTransactionObject();
+                    if (adapter.InsertCommand != null) adapter.InsertCommand.Transaction = tx;
+                    if (adapter.UpdateCommand != null) adapter.UpdateCommand.Transaction = tx;
+                    if (adapter.DeleteCommand != null) adapter.DeleteCommand.Transaction = tx;
+                }
+
+                // Ejecutar actualización de forma asíncrona
+                int rowsAffected = await Task.Run(() => adapter.Update(ds, tableName),
+                    cancellationToken).ConfigureAwait(false);
+
+                stopwatch.Stop();
+                _metrics.TrackMetric("UpdateDataSetAsyncExecutionTime", stopwatch.ElapsedMilliseconds);
+                _logger?.LogDebug("UpdateDataSetAsync ejecutado: {FilasAfectadas} filas en {Tiempo}ms",
+                    rowsAffected, stopwatch.ElapsedMilliseconds);
+
+                return rowsAffected;
+            }
+            catch (DbException ex)
+            {
+                stopwatch.Stop();
+                _logger?.LogError(ex, "Error en UpdateDataSetAsync para tabla: {TableName}", tableName);
+                throw new DataAccessException("Error al actualizar DataSet de forma asíncrona",
+                    selectCommandText, _connectionString.ProviderName, ex);
             }
         }
 
-        #endregion Methods
+#endregion Methods
     }
 }
