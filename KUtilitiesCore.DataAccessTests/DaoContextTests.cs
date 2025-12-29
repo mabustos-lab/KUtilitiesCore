@@ -51,7 +51,11 @@ namespace KUtilitiesCore.Dal.Tests
             {
                 Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
             }
-            using DaoContext dao = new DaoContext(builder);
+            Logger.LoggerServiceFactory lf = new Logger.LoggerServiceFactory();
+            Logger.Options.LoggerOptions lo = new Logger.Options.LoggerOptions();
+            lo.MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug;
+            lf.AddProvider(new Logger.Providers.DebugLoggerServiceProvider(lo));
+            using DaoContext dao = new DaoContext(builder, lf.GetLogger<DaoContext>());
             DataSet ds =new DataSet(); 
             dao.FillDataSet("Select * From ProfileScenario", ds, "ProfileScenario");
             

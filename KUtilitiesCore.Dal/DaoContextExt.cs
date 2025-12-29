@@ -1,4 +1,8 @@
 ﻿using System.Data;
+using KUtilitiesCore.Dal.SQLLog;
+using System.Data.Common;
+
+
 
 #if NET8_0_OR_GREATER
 using Microsoft.Data.SqlClient;
@@ -15,29 +19,27 @@ namespace KUtilitiesCore.Dal
     {
         #region Methods
         /// <summary>
-        /// Si la conexión es SqlConnection, suscribe un handler al evento InfoMessage
-        /// para capturar mensajes de debug (PRINT, RAISERROR, warnings).
+        /// Configura el logging de mensajes SQL con opciones avanzadas para SqlConnection.
         /// </summary>
-        public static void EnableSqlLogging<TDAO>(this TDAO context, Action<string> logAction)
-            where TDAO : ISqlExecutorContext
+        public static IDisposable EnableSqlLogging<TDbConnection>(this TDbConnection connection,
+            Action<SqlLogEntry> logAction,
+            SqlLoggingOptions options = null)
+            where TDbConnection : DbConnection
         {
-            if ( context.Connection is SqlConnection sqlConn)
+            if (connection is SqlConnection sqlConn)
             {
-                // Limpia suscripciones previas para evitar duplicados
-                sqlConn.InfoMessage -= OnInfoMessage;
-                sqlConn.InfoMessage += OnInfoMessage;
-                void OnInfoMessage(object sender, SqlInfoMessageEventArgs e)
-                {
-                    foreach (SqlError err in e.Errors)
-                    {
-                        logAction?.Invoke($"[SQL] {err.Message} (Número: {err.Number}, Severidad: {err.Class})");
-                    }
-                }
+                return SqlConnectionLogger.Attach(sqlConn, logAction, options);
             }
+           
             else
             {
-                // Para otros proveedores no hay InfoMessage
-                logAction?.Invoke("La conexión no es SqlConnection, no se puede habilitar logging de InfoMessage.");
+                logAction?.Invoke(new SqlLogEntry
+                {
+                    Message = $"La conexión {connection.GetType().Name} no soporta logging de InfoMessage.",
+                    Timestamp = DateTime.UtcNow,
+                    LogLevel = SqlLogLevel.Warning
+                });
+                return NullDisposable.Instance;
             }
         }
 
