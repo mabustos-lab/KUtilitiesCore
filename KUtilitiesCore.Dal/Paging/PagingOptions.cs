@@ -77,7 +77,12 @@
         public int PageSize
         {
             get => _pageSize;
-            set => _pageSize = (value > 0) ? Math.Min(value, MaxPageSize) : DefaultPageSize;
+            set
+            {
+                // PageSize = -1, indica que no hay paginacion el procedimiento almacenado
+                if (SkipPagination) _pageSize = -1;
+                else _pageSize = (value > 0) ? Math.Min(value, MaxPageSize) : DefaultPageSize;
+            }
         }
 
         /// <inheritdoc/>
