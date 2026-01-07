@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace KUtilitiesCore.Data
+namespace KUtilitiesCore.Data.DataExporter
 {
     /// <summary>
     /// Exporta un DataTable a un archivo Excel (.xlsx).

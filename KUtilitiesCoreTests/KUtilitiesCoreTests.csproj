@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
     <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
   </ItemGroup>
 

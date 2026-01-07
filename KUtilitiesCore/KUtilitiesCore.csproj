@@ -23,10 +23,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\DataImporter\**" />
     <Compile Remove="Diagnostics\**" />
     <Compile Remove="MVVM\**" />
+    <EmbeddedResource Remove="Data\DataImporter\**" />
     <EmbeddedResource Remove="Diagnostics\**" />
     <EmbeddedResource Remove="MVVM\**" />
+    <None Remove="Data\DataImporter\**" />
     <None Remove="Diagnostics\**" />
     <None Remove="MVVM\**" />
   </ItemGroup>

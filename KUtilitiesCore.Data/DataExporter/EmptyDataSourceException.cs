@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Data
+namespace KUtilitiesCore.Data.DataExporter
 {
     [Serializable]
     public class EmptyDataSourceException : Exception
