@@ -1,13 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using KUtilitiesCore.Data.DataImporter;
+﻿using KUtilitiesCore.Data.ImportDefinition;
+using KUtilitiesCore.DataTests.DataImporter;
+using KUtilitiesCore.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using KUtilitiesCore.Data.ImportDefinition;
-using System.Diagnostics;
-using KUtilitiesCore.Extensions;
 
 namespace KUtilitiesCore.Data.DataImporter.Tests
 {
@@ -36,6 +36,20 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
             manager.LoadData(csvReader);
             Assert.IsTrue(ValidateImport(manager));
         }
+        [TestMethod("ImportManager Basic Load Test Excel")]
+        public void ImportManagerBasicLoadExcelTest()
+        {
+            var manager = new ImportManager();
+            manager.SetMapping(GetBasicMapping());
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string filePath = Path.Combine(baseDir, "TestData", "datos_test.xlsx");
+            using (var xlsxReader = ExcelSourceReaderFactory.Create(filePath, "TestData"))
+            {
+                xlsxReader.SheetName = "datos_basicos";
+                manager.LoadData(xlsxReader);
+                Assert.IsTrue(ValidateImport(manager));
+            }            
+        }
         [TestMethod("ImportManager Empty Load IsValid Test")]
         public void ImportManager_EmptyLoad_IsValid_Test()
         {
@@ -43,7 +57,7 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
             manager.SetMapping(GetBasicMapping());
             var csvReader = new CsvSourceReader(CsvSourceReaderDatagenerator.EmptyDataPath);
             manager.LoadData(csvReader);
-            Assert.IsFalse(ValidateImport(manager)); 
+            Assert.IsFalse(ValidateImport(manager));
         }
         [TestMethod("ImportManager Diferent Mapping Load Test")]
         public void ImportManagerMappingLoadTest()
@@ -74,13 +88,13 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
                     Debug.WriteLine("--Mensajes--");
                     Debug.WriteLine(string.Join("\n", manager.ValidationErrors.ErrorMessages));
                     Debug.WriteLine("--Celdas no válidas--");
-                    Debug.WriteLine(string.Join("\n", manager.ValidationErrors.Errors));                    
+                    Debug.WriteLine(string.Join("\n", manager.ValidationErrors.Errors));
                 }
 
             }
             Debug.WriteLine("--Datos importados--");
 
-            manager.Data.PrintPretty(true);
+            manager.DataSource.PrintPretty(true);
             return isValid;
         }
 

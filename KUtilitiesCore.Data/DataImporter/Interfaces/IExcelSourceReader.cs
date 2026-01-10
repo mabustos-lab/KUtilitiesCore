@@ -4,28 +4,61 @@ using System.Linq;
 namespace KUtilitiesCore.Data.DataImporter.Interfaces
 {
     /// <summary>
-    /// Interfaz extendida para lectores de Excel que requieren configuración de hoja.
+    /// Interfaz refactorizada para lectores de Excel
     /// </summary>
-    public interface IExcelSourceReader : IDataSourceReader
+    public interface IExcelSourceReader : IDataSourceReader, IDisposable
     {
         /// <summary>
-        /// Indica si la primera fila contiene los encabezados.
+        /// Ruta del archivo Excel
+        /// </summary>
+        string FilePath { get; set; }
+
+        /// <summary>
+        /// Nombre de la hoja a procesar
+        /// </summary>
+        string SheetName { get; set; }
+
+        /// <summary>
+        /// Indica si la primera fila contiene encabezados
         /// </summary>
         bool HasHeader { get; set; }
 
         /// <summary>
-        /// Ruta del archivo Excel seleccionado.
-        /// Se utiliza para pre-cargar la metadata (como las hojas) antes de la importación completa.
+        /// Obtiene la lista de nombres de todas las hojas disponibles
         /// </summary>
-        string FilePath { get; set; }
+        /// <returns>Lista de nombres de hojas</returns>
+        IReadOnlyList<string> GetSheets();
+
         /// <summary>
-        /// Nombre de la hoja seleccionada que se va a procesar.
+        /// Obtiene información adicional sobre las hojas
         /// </summary>
-        string SheetName { get; set; }
+        /// <returns>Información detallada de hojas</returns>
+        IReadOnlyList<SheetInfo> GetSheetInfo();
+    }
+
+    /// <summary>
+    /// Información detallada de una hoja de Excel
+    /// </summary>
+    public class SheetInfo
+    {
         /// <summary>
-        /// Obtiene la lista de nombres de todas las hojas disponibles en el archivo asignado a FilePath.
+        /// Nombre de la hoja
         /// </summary>
-        /// <returns>Lista de nombres de hojas.</returns>
-        List<string> GetSheets();
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Número de filas con datos
+        /// </summary>
+        public int RowCount { get; set; }
+
+        /// <summary>
+        /// Número de columnas con datos
+        /// </summary>
+        public int ColumnCount { get; set; }
+
+        /// <summary>
+        /// Posición de la hoja (índice base 0)
+        /// </summary>
+        public int Position { get; set; }
     }
 }

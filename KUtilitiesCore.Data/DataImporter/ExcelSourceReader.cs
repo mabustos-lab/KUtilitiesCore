@@ -1,4 +1,6 @@
 ﻿using ClosedXML.Excel;
+using KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml;
+using KUtilitiesCore.Data.DataImporter.Infrastructure;
 using KUtilitiesCore.Data.DataImporter.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -10,205 +12,304 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Data.DataImporter
 {
     /// <summary>
-    /// Implementación de lector de datos desde archivos Excel (.xlsx) usando ClosedXML.
+    /// Implementación refactorizada de lector de Excel
     /// </summary>
-    public class ExcelSourceReader : IExcelSourceReader, IDisposable
+    public class ExcelSourceReader : IExcelSourceReader
     {
-        private bool disposedValue;
-        private Stream _stream;
-        private readonly bool _leaveOpen;
-        private readonly string _filePath;
+        private readonly IExcelWorkbookReaderFactory _workbookFactory;
+        private readonly IDiskFileReader _fileReader;
+        private readonly ICellValueConverter _cellConverter;
+        private readonly ExcelParsingOptions _options;
+
+        private IExcelWorkbookReader _workbookReader;
+        private bool _disposed;
+
         /// <inheritdoc/>
         public string FilePath { get; set; }
         /// <inheritdoc/>
         public string SheetName { get; set; }
-        /// <summary>
-        /// Constructor para leer desde una ruta de archivo física.
-        /// </summary>
-        /// <param name="path">Ruta completa al archivo .xlsx.</param>
-        public ExcelSourceReader(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentNullException(nameof(path));
-            if (!File.Exists(path)) throw new FileNotFoundException("No se encontró el archivo Excel.", path);
-
-            _filePath = path;
-            // Se abrirá el stream en el momento de la lectura para no bloquear el archivo prematuramente.
-        }
-        /// <inheritdoc/>
-        public bool CanRead => !string.IsNullOrEmpty(FilePath) && !string.IsNullOrEmpty(SheetName);
-
         /// <inheritdoc/>
         public bool HasHeader { get; set; } = true;
         /// <inheritdoc/>
-        public List<string> GetSheets()
-        {
-            // Aseguramos que el stream esté disponible
-            EnsureStreamOpen();
+        public bool CanRead => !string.IsNullOrEmpty(FilePath) &&
+                              _fileReader.FileExists(FilePath) &&
+                              !string.IsNullOrEmpty(SheetName);
 
-            using var workbook = new XLWorkbook(_stream);
-            return [.. workbook.Worksheets.Select(x => x.Name)];
+        /// <summary>
+        /// Constructor principal con inyección de dependencias
+        /// </summary>
+        public ExcelSourceReader(
+            string filePath,
+            IExcelWorkbookReaderFactory workbookFactory = null,
+            IDiskFileReader fileReader = null,
+            ICellValueConverter cellConverter = null,
+            ExcelParsingOptions options = null)
+        {
+            FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+            _workbookFactory = workbookFactory ?? CreateDefaultFactory();
+            _fileReader = fileReader ?? new DefaultDiskFileReader();
+            _options = options?.Clone() ?? new ExcelParsingOptions();
+            _cellConverter = cellConverter ?? new DefaultCellValueConverter(_options);
         }
 
+        /// <inheritdoc/>
+        public IReadOnlyList<string> GetSheets()
+        {
+            EnsureWorkbookOpen();
+            return _workbookReader.GetSheetNames();
+        }
+        /// <inheritdoc/>
+        public IReadOnlyList<SheetInfo> GetSheetInfo()
+        {
+            EnsureWorkbookOpen();
+            var sheets = new List<SheetInfo>();
+            var sheetNames = _workbookReader.GetSheetNames();
+
+            for (int i = 0; i < sheetNames.Count; i++)
+            {
+                var worksheet = _workbookReader.GetWorksheet(sheetNames[i]);
+                sheets.Add(new SheetInfo
+                {
+                    Name = worksheet.Name,
+                    RowCount = worksheet.RowCount,
+                    ColumnCount = worksheet.ColumnCount,
+                    Position = i
+                });
+            }
+
+            return sheets.AsReadOnly();
+        }
+        /// <inheritdoc/>
         public DataTable ReadData()
         {
-            // Aseguramos que el stream esté disponible
-            EnsureStreamOpen();
-            DataTable dtResult = new DataTable();
+            ValidatePreconditions();
+            EnsureWorkbookOpen();
 
-            using var workbook = new XLWorkbook(_stream);
+            IExcelWorksheetReader worksheetReader = GetWorksheetReader();
+            DataTable dataTable = new DataTable(worksheetReader.Name);
 
-            IXLWorksheet worksheet;
+            var rows = ReadWorksheetRows(worksheetReader);
+            ProcessRowsToDataTable(rows, dataTable);
 
-            // Selección de la hoja de trabajo
-            if (!string.IsNullOrWhiteSpace(SheetName))
+            dataTable.AcceptChanges();
+            return dataTable;
+        }
+        /// <inheritdoc/>
+        public async Task<DataTable> ReadDataAsync()
+        {
+            return await Task.Run(() => ReadData())
+                .ConfigureAwait(false);
+        }
+
+        private void ValidatePreconditions()
+        {
+            if (string.IsNullOrEmpty(FilePath))
+                throw new InvalidOperationException("La ruta del archivo no está configurada");
+
+            if (!_fileReader.FileExists(FilePath))
+                throw new System.IO.FileNotFoundException($"El archivo no existe: {FilePath}", FilePath);
+        }
+
+        private void EnsureWorkbookOpen()
+        {
+            if (_workbookReader != null)
+                return;
+
+            using var stream = _fileReader.OpenRead(FilePath);
+            _workbookReader = _workbookFactory.CreateFromStream(stream, leaveOpen: false);
+        }
+
+        private IExcelWorksheetReader GetWorksheetReader()
+        {
+            if (!string.IsNullOrEmpty(SheetName))
             {
-                if (!workbook.Worksheets.TryGetWorksheet(SheetName, out worksheet))
+                if (!_workbookReader.ContainsSheet(SheetName))
                 {
-                    throw new DataLoadException($"La hoja de cálculo '{SheetName}' no existe en el archivo.");
+                    if (_options.ThrowOnMissingSheet)
+                        throw new ArgumentException($"La hoja '{SheetName}' no existe en el archivo");
+
+                    // Si no existe y no se debe lanzar excepción, usar la primera hoja
+                    return _workbookReader.GetFirstWorksheet();
                 }
+                return _workbookReader.GetWorksheet(SheetName);
             }
-            else
+
+            // Si no se especificó hoja, usar la primera
+            return _workbookReader.GetFirstWorksheet();
+        }
+
+        private IEnumerable<IExcelRow> ReadWorksheetRows(IExcelWorksheetReader worksheet)
+        {
+            if (_options.EndRow.HasValue)
             {
-                worksheet = workbook.Worksheets.FirstOrDefault();
-                if (worksheet == null) throw new DataLoadException("El archivo Excel no contiene hojas de cálculo.");
+                return worksheet.ReadRows(_options.StartRow, _options.EndRow.Value);
             }
 
-            // Obtener solo las filas con datos para evitar iterar millones de filas vacías
-            var rows = worksheet.RowsUsed();
+            return worksheet.ReadRows();
+        }
 
-            if (!rows.Any())
-            {
-                return dtResult;
-            }
-
-            List<string> headers = new List<string>();
+        private void ProcessRowsToDataTable(IEnumerable<IExcelRow> rows, DataTable dataTable)
+        {
             var rowsEnumerator = rows.GetEnumerator();
+            List<string> headers = new List<string>();
 
-            // Manejo de Encabezados
-            if (HasHeader)
+            // Procesar encabezados si corresponde
+            if (_options.HasHeader && rowsEnumerator.MoveNext())
             {
+                headers = ProcessHeaderRow(rowsEnumerator.Current, dataTable);
+            }
+            else if (!_options.HasHeader)
+            {
+                // Generar encabezados automáticos basados en la primera fila
                 if (rowsEnumerator.MoveNext())
                 {
-                    var headerRow = rowsEnumerator.Current;
-                    // Leemos las celdas de la primera fila usada para los encabezados
-                    headers = headerRow.Cells().Select(c => c.GetValue<string>()?.Trim()).ToList();
+                    headers = GenerateAutoHeaders(rowsEnumerator.Current, dataTable);
+                    // Reiniciar enumerador para incluir la primera fila como datos
+                    rowsEnumerator = rows.GetEnumerator();
+                    rowsEnumerator.MoveNext();
                 }
             }
-            else
-            {
-                // Si no hay encabezados, generamos nombres genéricos o dejamos que el ImportManager maneje índices
-                // Para consistencia con CsvSourceReader, si se espera header, debe existir.
-                // Aquí asumimos que si HasHeader es false, simplemente empezamos a leer datos.
-                if (rowsEnumerator.MoveNext())
-                {
-                    int cellCount = rowsEnumerator.Current.LastCellUsed()?.Address.ColumnNumber ?? 0;
-                    rowsEnumerator.Reset();
-                    for (int i = 0; i < cellCount; i++)
-                        headers.Add($"Col_{i + 1}");
-                }
-            }
-            foreach (string item in headers)
-            {
-                dtResult.Columns.Add(item, typeof(string));
-            }
-            // Iterar sobre las filas de datos
+
+            // Procesar filas de datos
             while (rowsEnumerator.MoveNext())
             {
                 var row = rowsEnumerator.Current;
-                // Si la fila está completamente vacía, la saltamos (ClosedXML RowsUsed suele manejar esto, pero es doble seguridad)
-                if (row.IsEmpty()) continue;
 
-                // Iteramos basándonos en el número de celdas de la fila actual o el número de headers
-                // Usamos el índice máximo para cubrir casos donde hay datos más allá de los headers o viceversa.
-                int cellCount = row.LastCellUsed()?.Address.ColumnNumber ?? 0;
-                int maxIndex = Math.Max(cellCount, headers.Count);
-                DataRow dtRow = dtResult.NewRow();
+                if (_options.IgnoreEmptyRows && row.IsEmpty)
+                    continue;
 
-                for (int i = 1; i <= maxIndex; i++) // ClosedXML usa índices base-1 para columnas
+                ProcessDataRow(row, headers, dataTable);
+            }
+        }
+
+        private List<string> ProcessHeaderRow(IExcelRow headerRow, DataTable dataTable)
+        {
+            var headers = new List<string>();
+            int columnIndex = 1;
+
+            foreach (var cell in headerRow.Cells)
+            {
+                string headerName = _cellConverter.ConvertToString(cell);
+
+                if (string.IsNullOrEmpty(headerName))
+                    headerName = $"Column{columnIndex}";
+
+                // Evitar duplicados
+                string uniqueName = headerName;
+                int suffix = 1;
+                while (headers.Contains(uniqueName))
                 {
-                    string header = headers[i - 1];
-                    // Obtener la celda de manera segura
-                    var cell = row.Cell(i);
-                    string value = GetCellValueAsString(cell);
-                    dtRow[header] = value;
+                    uniqueName = $"{headerName}_{suffix}";
+                    suffix++;
                 }
+
+                headers.Add(uniqueName);
+                dataTable.Columns.Add(uniqueName, typeof(string));
+                columnIndex++;
             }
 
-            return dtResult;
+            return headers;
+        }
+        /// <inheritdoc/>
+        private static List<string> GenerateAutoHeaders(IExcelRow firstRow, DataTable dataTable)
+        {
+            var headers = new List<string>();
+            int columnCount = 0;
+
+            foreach (var cell in firstRow.Cells)
+            {
+                columnCount++;
+                string headerName = $"Column{columnCount}";
+                headers.Add(headerName);
+                dataTable.Columns.Add(headerName, typeof(string));
+            }
+
+            return headers;
+        }
+
+        private void ProcessDataRow(IExcelRow excelRow, List<string> headers, DataTable dataTable)
+        {
+            DataRow dataRow = dataTable.NewRow();
+            int columnIndex = 0;
+
+            foreach (var cell in excelRow.Cells)
+            {
+                if (columnIndex >= headers.Count)
+                    break;
+
+                string value = _cellConverter.ConvertToString(cell);
+                dataRow[columnIndex] = string.IsNullOrEmpty(value) ? DBNull.Value : value;
+                columnIndex++;
+            }
+
+            // Rellenar columnas faltantes con valores vacíos
+            for (int i = columnIndex; i < headers.Count; i++)
+            {
+                dataRow[i] = DBNull.Value;
+            }
+
+            dataTable.Rows.Add(dataRow);
+        }
+
+        private IExcelWorkbookReaderFactory CreateDefaultFactory()
+        {
+            // Por defecto, usar ClosedXML para .xlsx/.xlsm
+            // Se podría extender para detectar y usar diferentes factories según el formato
+            return new ClosedXmlWorkbookReaderFactory();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposed)
             {
                 if (disposing)
                 {
-                    if (_stream != null)
-                        _stream.Dispose();
-                    _stream = null;
+                    _workbookReader?.Dispose();
                 }
 
-                // TODO: liberar los recursos no administrados (objetos no administrados) y reemplazar el finalizador
-                // TODO: establecer los campos grandes como NULL
-                disposedValue = true;
+                _disposed = true;
             }
         }
+    }
 
-        // // TODO: reemplazar el finalizador solo si "Dispose(bool disposing)" tiene código para liberar los recursos no administrados
-        // ~ExcelSourceReader()
-        // {
-        //     // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
-        //     Dispose(disposing: false);
-        // }
+    /// <summary>
+    /// Implementación por defecto de ICellValueConverter
+    /// </summary>
+    internal class DefaultCellValueConverter : ICellValueConverter
+    {
+        private readonly ExcelParsingOptions _options;
 
-        public void Dispose()
+        public DefaultCellValueConverter(ExcelParsingOptions options)
         {
-            // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            _options = options;
         }
-        /// <summary>
-        /// Convierte el valor de una celda a su representación en cadena de forma segura.
-        /// </summary>
-        private string GetCellValueAsString(IXLCell cell)
+
+        public string ConvertToString(IExcelCell cell)
         {
-            if (cell == null || cell.IsEmpty()) return string.Empty;
+            if (cell == null || cell.IsEmpty)
+                return _options.TreatEmptyAsNull ? null : string.Empty;
 
-            switch (cell.DataType)
+            string value = cell.FormattedValue;
+
+            if (_options.TrimValues && value != null)
             {
-                case XLDataType.Text:
-                    return cell.GetValue<string>()?.Trim();
-
-                case XLDataType.Boolean:
-                    return cell.GetValue<bool>().ToString();
-
-                case XLDataType.DateTime:
-                    // Devolvemos el formato estándar ISO o el que tenga la celda si se prefiere
-                    // cell.GetFormattedString() respeta el formato visual de Excel, lo cual suele ser preferible para importaciones.
-                    return cell.GetFormattedString();
-
-                case XLDataType.Number:
-                    return cell.GetValue<double>().ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-                case XLDataType.TimeSpan:
-                    return cell.GetValue<TimeSpan>().ToString();
-
-                default:
-                    return cell.GetFormattedString();
+                value = value.Trim();
             }
-        }
-        private void EnsureStreamOpen()
-        {
-            if (_stream != null) return;
 
-            if (!string.IsNullOrEmpty(FilePath))
+            // Formatear fechas si se especificó formato
+            if (!string.IsNullOrEmpty(_options.DateFormat) &&
+                DateTime.TryParse(value, out DateTime dateValue))
             {
-                _stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                value = dateValue.ToString(_options.DateFormat);
             }
-            else
-            {
-                throw new InvalidOperationException("No se ha proporcionado un Stream ni una ruta de archivo válida.");
-            }
+
+            return value;
         }
     }
 }

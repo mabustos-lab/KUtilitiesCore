@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Dal", "KUtil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Data", "KUtilitiesCore.Data\KUtilitiesCore.Data.csproj", "{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.DataTests", "KUtilitiesCore.DataTests\KUtilitiesCore.DataTests.csproj", "{9793BD05-5D5F-44BD-94B3-CC27FA1380EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A12DAD2F-A905-420B-B761-77B8ADFC1D7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9793BD05-5D5F-44BD-94B3-CC27FA1380EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9793BD05-5D5F-44BD-94B3-CC27FA1380EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9793BD05-5D5F-44BD-94B3-CC27FA1380EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9793BD05-5D5F-44BD-94B3-CC27FA1380EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -98,6 +104,7 @@ Global
 		{57D90377-8BCE-40CD-A29D-6661B84C9C63} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{AD52E299-EA0F-4D3A-8353-61D71D882620} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{8714C780-5072-4091-A5A3-EAF80013ACD1} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{9793BD05-5D5F-44BD-94B3-CC27FA1380EA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ABBF050F-7E9C-442B-B90F-35E0EF3EC12D}

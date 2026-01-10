@@ -7,17 +7,21 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Data.DataImporter.Interfaces
 {
     /// <summary>
-    /// Interfaz para obtener datos de una fuente de texto plano
+    /// Interfaz específica para fuentes de datos CSV
     /// </summary>
-    public interface ICsvSourceReader:IDataSourceReader
-    {        
+    /// <remarks>
+    public interface ICsvSourceReader : ITextSourceReader
+    {
         /// <summary>
-        /// Indica el archivo fuente
+        /// Ruta completa del archivo CSV
         /// </summary>
+        /// <value>Path del archivo a leer</value>
         string FilePath { get; set; }
+
         /// <summary>
-        /// Indica el caracter de separación de cada columna
+        /// Carácter separador de columnas
         /// </summary>
+        /// <value>String que actúa como separador (default: ",")</value>
         string SpliterChar { get; set; }
     }
 }

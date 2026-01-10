@@ -23,7 +23,7 @@ namespace KUtilitiesCore.Data.DataImporter
         {
             ColumnDefinitions = new FielDefinitionCollection();
             ValidationErrors = new ValidationResult();
-            Data = new DataTable();
+            DataSource = new DataTable();
         }
 
         #endregion Constructors
@@ -38,7 +38,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <summary>
         /// El DataTable mantiene todo como string para permitir edición en UI sin errores de cast inmediatos.
         /// </summary>
-        public DataTable Data { get; }
+        public DataTable DataSource { get; }
 
         /// <summary>
         /// Almacena errores de validación actuales para que la UI pueda consultarlos (pintar celdas rojas)
@@ -77,20 +77,28 @@ namespace KUtilitiesCore.Data.DataImporter
             {
                 ConfigurarDataTable();
                 var rawData = ReadDataWithValidation(reader);
-
-                Data.Clear();
+                
+                DataSource.Clear();
                 int rowIndex = 0;
 
                 foreach (DataRow rawRow in rawData.Rows)
                 {
-                    DataRow newRow = Data.NewRow();
+                    DataRow newRow = DataSource.NewRow();
 
                     // Mapeo seguro: Si la columna origen existe en el lector, la usamos.
                     foreach (var col in ColumnDefinitions)
                     {
-                        if (rawData.Columns.Contains(col.SourceColumnName))
+                        // Busqueda por case-insensitive
+                        DataColumn dtColumn = rawData.Columns
+                            .Cast<DataColumn>()
+                            .FirstOrDefault(
+                                x => string.Equals(
+                                    x.ColumnName,
+                                    col.SourceColumnName,
+                                    StringComparison.OrdinalIgnoreCase));                        
+                        if (dtColumn!=null)
                         {
-                            newRow[col.ColumnName] = rawRow[col.SourceColumnName]?.ToString();
+                            newRow[col.ColumnName] = rawRow[dtColumn.ColumnName]?.ToString();
                         }
                         else if (!col.AllowNull)
                         {
@@ -101,7 +109,7 @@ namespace KUtilitiesCore.Data.DataImporter
 
                     newRow["_RowIndex"] = rowIndex++;
                     newRow["_IsValid"] = false; // Se validará explícitamente después
-                    Data.Rows.Add(newRow);
+                    DataSource.Rows.Add(newRow);
                 }
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
@@ -125,9 +133,9 @@ namespace KUtilitiesCore.Data.DataImporter
             ColumnDefinitions = mapping ?? throw new ArgumentNullException(nameof(mapping), "La configuración de mapeo no puede ser nula.");
 
             // Reiniciar estado si hay definiciones nuevas
-            if (Data.Columns.Count > 0 && mapping.Count > 0)
+            if (DataSource.Columns.Count > 0 && mapping.Count > 0)
             {
-                Data.Reset();
+                DataSource.Reset();
                 ConfigurarDataTable();
             }
         }
@@ -141,7 +149,7 @@ namespace KUtilitiesCore.Data.DataImporter
         {
             ValidationErrors.Clear();
 
-            if (Data.Rows.Count == 0)
+            if (DataSource.Rows.Count == 0)
             {
                 ValidationErrors.AddErrorMessage("No hay datos para validar.");
                 return true;
@@ -153,7 +161,7 @@ namespace KUtilitiesCore.Data.DataImporter
             ValidateRequiredColumns();
 
             // Validar cada fila
-            foreach (DataRow row in Data.Rows)
+            foreach (DataRow row in DataSource.Rows)
             {
                 bool rowValid = ValidateRow(row);
                 row["_IsValid"] = rowValid;
@@ -172,7 +180,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <returns>Enumerable de filas válidas</returns>
         public IEnumerable<DataRow> GetValidRows()
         {
-            return Data.Rows.Cast<DataRow>()
+            return DataSource.Rows.Cast<DataRow>()
                 .Where(row => row["_IsValid"] is bool isValid && isValid);
         }
         /// <summary>
@@ -181,13 +189,13 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <returns>Enumerable de filas inválidas</returns>
         public IEnumerable<DataRow> GetInvalidRows()
         {
-            return Data.Rows.Cast<DataRow>()
+            return DataSource.Rows.Cast<DataRow>()
                 .Where(row => !(row["_IsValid"] is bool isValid && isValid));
         }
         /// <summary>
         /// Lee datos del lector con validación previa
         /// </summary>
-        private DataTable ReadDataWithValidation(IDataSourceReader reader)
+        private static DataTable ReadDataWithValidation(IDataSourceReader reader)
         {
             try
             {
@@ -212,19 +220,19 @@ namespace KUtilitiesCore.Data.DataImporter
         /// </summary>
         private void ConfigurarDataTable()
         {
-            Data.Reset();
+            DataSource.Reset();
 
             // Agregamos columnas de negocio (todo string)
             foreach (var field in ColumnDefinitions)
             {
-                DataColumn dc = Data.Columns.Add(field.ColumnName, typeof(string));
+                DataColumn dc = DataSource.Columns.Add(field.ColumnName, typeof(string));
                 dc.Caption = field.SourceColumnName;
                 //dc.AllowDBNull = field.AllowNull;
             }
 
             // Agregamos columnas de control internas (útiles para la UI)
-            Data.Columns.Add("_RowIndex", typeof(int));
-            Data.Columns.Add("_IsValid", typeof(bool));
+            DataSource.Columns.Add("_RowIndex", typeof(int));
+            DataSource.Columns.Add("_IsValid", typeof(bool));
         }
 
         /// <summary>
@@ -243,7 +251,7 @@ namespace KUtilitiesCore.Data.DataImporter
             // Verificar que las columnas requeridas tengan datos
             var emptyRequiredColumns = requiredColumns
                 .Where(colName =>
-                    Data.Rows.Cast<DataRow>()
+                    DataSource.Rows.Cast<DataRow>()
                         .All(row => string.IsNullOrWhiteSpace(row[GetColumnNameBySource(colName)]?.ToString())))
                 .ToList();
 

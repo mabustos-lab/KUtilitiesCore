@@ -1,11 +1,16 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Data.DataImporter.Tests
+namespace KUtilitiesCore.DataTests.DataImporter
 {
-    public static class CsvSourceReaderDatagenerator
+    internal static class CsvSourceReaderDatagenerator
     {
+        /// <summary>
+        /// Clage que genera datos para pruebas
+        /// </summary>
         public static string RootPath { get; set; }
 
         public static string BasicDataPath => Path.Combine(RootPath, "datos_basicos.csv");
