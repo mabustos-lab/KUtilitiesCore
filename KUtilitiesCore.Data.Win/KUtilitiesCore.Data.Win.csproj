@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
   </ItemGroup>
 
