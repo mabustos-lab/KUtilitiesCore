@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace KUtilitiesCore.Data
+namespace KUtilitiesCore.Data.DataExporter
 {
     public static class ExportToCsv
     {

@@ -39,7 +39,7 @@ namespace KUtilitiesCore.Extensions
         }
 
         /// <summary>
-        /// Método auxiliar para imprimir un solo DataTable.
+        /// Método auxiliar para imprimir un DataTable en consola o Debug.
         /// </summary>
         public static void PrintPretty(this DataTable table, bool useDebug = false)
         {

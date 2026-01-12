@@ -37,9 +37,13 @@ namespace KUtilitiesCore.Data.ImportDefinition
             string description = "", Type? fieldType = null, bool allowNull = false)
         {
             ColumnName = fieldName;
+            if (string.IsNullOrEmpty(displayName))
+                displayName = fieldName;
+
             DisplayName = displayName;
             if (string.IsNullOrEmpty(sourceColumnName))
                 sourceColumnName = displayName;
+
             SourceColumnName = sourceColumnName;
             Description = description;
             FieldType = fieldType ?? typeof(string);

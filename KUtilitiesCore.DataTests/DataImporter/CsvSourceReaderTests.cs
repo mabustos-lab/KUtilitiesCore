@@ -1,16 +1,13 @@
 ﻿using KUtilitiesCore.Data.DataImporter;
 using KUtilitiesCore.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Data.DataImporter.Tests
+namespace KUtilitiesCore.DataTests.DataImporter
 {
     [TestClass()]
     public class CsvSourceReaderTests
@@ -36,14 +33,14 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
         [TestMethod()]
         public void CsvSourceReaderBasicDataTest()
         {
-            var reader = new CsvSourceReader(CsvSourceReaderDatagenerator.BasicDataPath);
+            var reader = CsvSourceReaderFactory.Create(CsvSourceReaderDatagenerator.BasicDataPath);
             try
             {
                 DataTable dt = reader.ReadData();
                 dt.PrintPretty(true);
-                Assert.IsTrue(dt!=null && dt.Rows.Count>0);
+                Assert.IsTrue(dt != null && dt.Rows.Count > 0);
             }
-            catch (Exception )
+            catch (Exception)
             {
                 throw;
             }
@@ -51,7 +48,7 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
         [TestMethod()]
         public void CsvSourceReadeDuplicatedDataTest()
         {
-            var reader = new CsvSourceReader(CsvSourceReaderDatagenerator.DuplicatedDataPath);
+            var reader = CsvSourceReaderFactory.Create(CsvSourceReaderDatagenerator.DuplicatedDataPath);
             try
             {
                 DataTable dt = reader.ReadData();
@@ -66,7 +63,7 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
         [TestMethod()]
         public void CsvSourceReadeEmpyDataTest()
         {
-            var reader = new CsvSourceReader(CsvSourceReaderDatagenerator.EmptyDataPath);
+            var reader = CsvSourceReaderFactory.Create(CsvSourceReaderDatagenerator.EmptyDataPath);
             try
             {
                 DataTable dt = reader.ReadData();
@@ -81,8 +78,7 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
         [TestMethod()]
         public void CsvSourceReadeTabSplitDataTest()
         {
-            var reader = new CsvSourceReader(CsvSourceReaderDatagenerator.TabSplitDataPath);
-            reader.SpliterChar = "\t";
+            var reader = CsvSourceReaderFactory.CreateTsvReader(CsvSourceReaderDatagenerator.TabSplitDataPath);
             try
             {
                 DataTable dt = reader.ReadData();

@@ -64,14 +64,16 @@ namespace KUtilitiesCore.Data.Validation
                 if (!validator.IsValid(context, propertyValue))
                 {
                     // Determina qué plantilla de mensaje usar (personalizada o por defecto)
-                    string messageTemplate = customMessageFormat ?? validator.GetErrorMessage(context, propertyValue);
+                    string messageTemplate = customMessageFormat;
+                    if (string.IsNullOrEmpty(customMessageFormat))
+                        messageTemplate=validator.GetErrorMessage(context, propertyValue);
 
                     // Formatea la plantilla reemplazando los placeholders
                     string formattedMessage = FormatMessageTemplate(messageTemplate, validator, context, propertyValue, PropertyName);
 
                     failures.Add(new ValidationFailure(
-                        PropertyName, -1,
-                        formattedMessage,
+                        PropertyName, 
+                        formattedMessage,-1,
                         propertyValue // Valor que causó el fallo
                     ));
 

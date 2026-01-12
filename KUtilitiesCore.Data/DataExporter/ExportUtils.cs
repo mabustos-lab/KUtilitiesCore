@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KUtilitiesCore.Data
+namespace KUtilitiesCore.Data.DataExporter
 {
     /// <summary>
     /// Métodos auxiliares internos para los procesos de exportación.

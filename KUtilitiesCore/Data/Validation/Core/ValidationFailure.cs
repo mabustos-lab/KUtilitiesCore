@@ -7,39 +7,117 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
-    /// Representa un fallo de validación individual.
+    /// Representa un error de validación general que no está atado a una propiedad específica ni a
+    /// un valor intentado. Es una versión ligera de un fallo.
     /// </summary>
-    public class ValidationFailure(string propertyName, int rowIdx, string errorMessage, object? attemptedValue = null)
+    [Serializable]
+    public class GenericFailure : ValidationFailureBase
     {
-        
+        #region Constructors
+
+        public GenericFailure(string errorMessage) : base(errorMessage)
+        {
+        }
+
+        #endregion Constructors
+    }
+
+    /// <summary>
+    /// Representa el fallo de validación de una propiedad específica. Contiene metadatos detallados
+    /// sobre qué falló y por qué.
+    /// </summary>
+    [Serializable]
+    public class ValidationFailure : ValidationFailureBase
+    {
+        #region Constructors
+
+        public ValidationFailure(string propertyName, string error, int idxRow, object? attemptedValue = null)
+                    : base(error)
+        {
+            PropertyName = propertyName;
+            AttemptedValue = attemptedValue ?? string.Empty;
+            IndexRow = idxRow;
+        }
+
+        /// <summary>
+        /// Crea una nueva instancia de ValidationFailure.
+        /// </summary>
+        public ValidationFailure(string propertyName, string error) : this(propertyName, error, -1, null)
+        {
+        }
+
+        #endregion Constructors
+
         #region Properties
 
         /// <summary>
-        /// Valor que causó el fallo (opcional).
+        /// El valor que se intentó asignar y causó el fallo.
         /// </summary>
-        public object? AttemptedValue { get; } = attemptedValue;
+        public object AttemptedValue { get; set; }
 
         /// <summary>
-        /// Mensaje de error descriptivo.
+        /// Estado o severidad personalizada (opcional).
         /// </summary>
-        public string ErrorMessage { get; } = errorMessage;
+        public object CustomState { get; set; }
 
         /// <summary>
-        /// Nombre de la propiedad que falló la validación. Puede ser nulo para validaciones a nivel
-        /// de objeto.
+        /// Código de error personalizado (opcional).
         /// </summary>
-        public string PropertyName { get; } = propertyName;
+        public string ErrorCode { get; set; }
 
         /// <summary>
-        /// Indica la fila donde se encuentra el error.
+        /// Establece el indice dde la fila del error.
         /// </summary>
-        public int RowIndex { get; } = rowIdx;
+        public int IndexRow { get; set; }
+
+        /// <summary>
+        /// El nombre de la propiedad que falló la validación.
+        /// </summary>
+        public string PropertyName { get; set; }
 
         #endregion Properties
 
         #region Methods
 
-        public override string ToString() => $"{(RowIndex>=0?$"Indice: [{RowIndex}] ":string.Empty)}{ErrorMessage}";
+        public override string ToString()
+        {
+            return $"Propiedad: {PropertyName ?? "<Objeto>"}{(IndexRow>=0?$"[Index: {IndexRow}]:" :"")} Error: {ErrorMessage} Valor: '{(AttemptedValue??"<null>")}'";
+        }
+
+        #endregion Methods
+    }
+
+    /// <summary>
+    /// Clase base abstracta para cualquier tipo de fallo de validación. Permite tener una lista
+    /// polimórfica en ValidationResult.
+    /// </summary>
+    [Serializable]
+    public abstract class ValidationFailureBase
+    {
+        #region Constructors
+
+        protected ValidationFailureBase(string errorMessage)
+        {
+            ErrorMessage = errorMessage;
+        }
+
+        #endregion Constructors
+
+        #region Properties
+
+        /// <summary>
+        /// El mensaje de error.
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        #endregion Properties
+
+        #region Methods
+
+        public override string ToString()
+        {
+            return ErrorMessage;
+        }
 
         #endregion Methods
     }
