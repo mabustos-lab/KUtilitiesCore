@@ -16,6 +16,7 @@
             if (disposing && (components != null))
             {
                 components.Dispose();
+                OnDispose();
             }
             base.Dispose(disposing);
         }
@@ -38,19 +39,19 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.dgvMapping = new System.Windows.Forms.DataGridView();
+            this.DestinationField = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SourceColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.tabControlResults = new System.Windows.Forms.TabControl();
             this.tabData = new System.Windows.Forms.TabPage();
+            this.dgvPreview = new System.Windows.Forms.DataGridView();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.tsslCount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.dgvPreview = new System.Windows.Forms.DataGridView();
+            this.tsslWarning = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabErrors = new System.Windows.Forms.TabPage();
             this.dgvErrors = new System.Windows.Forms.DataGridView();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.tsslWarning = new System.Windows.Forms.ToolStripStatusLabel();
-            this.btnImport = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.DestinationField = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SourceColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.btnImport = new System.Windows.Forms.Button();
             this.pnlTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -60,8 +61,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvMapping)).BeginInit();
             this.tabControlResults.SuspendLayout();
             this.tabData.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPreview)).BeginInit();
+            this.statusStrip1.SuspendLayout();
             this.tabErrors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvErrors)).BeginInit();
             this.panel1.SuspendLayout();
@@ -189,6 +190,21 @@
             this.dgvMapping.Size = new System.Drawing.Size(243, 422);
             this.dgvMapping.TabIndex = 0;
             // 
+            // DestinationField
+            // 
+            this.DestinationField.HeaderText = "Campo Destino";
+            this.DestinationField.MinimumWidth = 6;
+            this.DestinationField.Name = "DestinationField";
+            this.DestinationField.ReadOnly = true;
+            this.DestinationField.Width = 120;
+            // 
+            // SourceColumn
+            // 
+            this.SourceColumn.HeaderText = "Columna Origen (Archivo)";
+            this.SourceColumn.MinimumWidth = 6;
+            this.SourceColumn.Name = "SourceColumn";
+            this.SourceColumn.Width = 120;
+            // 
             // tabControlResults
             // 
             this.tabControlResults.Controls.Add(this.tabData);
@@ -212,6 +228,21 @@
             this.tabData.Text = "Datos Importados (Editable)";
             this.tabData.UseVisualStyleBackColor = true;
             // 
+            // dgvPreview
+            // 
+            this.dgvPreview.AllowUserToAddRows = false;
+            this.dgvPreview.BackgroundColor = System.Drawing.Color.WhiteSmoke;
+            this.dgvPreview.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvPreview.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvPreview.Location = new System.Drawing.Point(3, 3);
+            this.dgvPreview.Name = "dgvPreview";
+            this.dgvPreview.RowHeadersVisible = false;
+            this.dgvPreview.RowHeadersWidth = 51;
+            this.dgvPreview.RowTemplate.Height = 24;
+            this.dgvPreview.Size = new System.Drawing.Size(715, 382);
+            this.dgvPreview.TabIndex = 0;
+            // 
             // statusStrip1
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
@@ -232,18 +263,14 @@
             this.tsslCount.Size = new System.Drawing.Size(117, 20);
             this.tsslCount.Text = "Filas cargadas: 0";
             // 
-            // dgvPreview
+            // tsslWarning
             // 
-            this.dgvPreview.BackgroundColor = System.Drawing.Color.WhiteSmoke;
-            this.dgvPreview.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvPreview.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvPreview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvPreview.Location = new System.Drawing.Point(3, 3);
-            this.dgvPreview.Name = "dgvPreview";
-            this.dgvPreview.RowHeadersWidth = 51;
-            this.dgvPreview.RowTemplate.Height = 24;
-            this.dgvPreview.Size = new System.Drawing.Size(715, 382);
-            this.dgvPreview.TabIndex = 0;
+            this.tsslWarning.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tsslWarning.Image = global::KUtilitiesCore.Data.Win.Properties.Resources.Warn16x16;
+            this.tsslWarning.Name = "tsslWarning";
+            this.tsslWarning.Size = new System.Drawing.Size(193, 20);
+            this.tsslWarning.Text = "Se encontraron errores.";
+            this.tsslWarning.Visible = false;
             // 
             // tabErrors
             // 
@@ -251,7 +278,7 @@
             this.tabErrors.Location = new System.Drawing.Point(4, 25);
             this.tabErrors.Name = "tabErrors";
             this.tabErrors.Padding = new System.Windows.Forms.Padding(3);
-            this.tabErrors.Size = new System.Drawing.Size(770, 464);
+            this.tabErrors.Size = new System.Drawing.Size(721, 414);
             this.tabErrors.TabIndex = 1;
             this.tabErrors.Text = "Errores de Validación";
             this.tabErrors.UseVisualStyleBackColor = true;
@@ -266,7 +293,7 @@
             this.dgvErrors.Name = "dgvErrors";
             this.dgvErrors.RowHeadersWidth = 51;
             this.dgvErrors.RowTemplate.Height = 24;
-            this.dgvErrors.Size = new System.Drawing.Size(764, 458);
+            this.dgvErrors.Size = new System.Drawing.Size(715, 408);
             this.dgvErrors.TabIndex = 0;
             // 
             // panel1
@@ -279,14 +306,15 @@
             this.panel1.Size = new System.Drawing.Size(982, 50);
             this.panel1.TabIndex = 3;
             // 
-            // tsslWarning
+            // btnCancel
             // 
-            this.tsslWarning.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tsslWarning.Image = global::KUtilitiesCore.Data.Win.Properties.Resources.Warn16x16;
-            this.tsslWarning.Name = "tsslWarning";
-            this.tsslWarning.Size = new System.Drawing.Size(193, 20);
-            this.tsslWarning.Text = "Se encontraron errores.";
-            this.tsslWarning.Visible = false;
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btnCancel.Location = new System.Drawing.Point(745, 9);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 32);
+            this.btnCancel.TabIndex = 1;
+            this.btnCancel.Text = "Cancelar";
+            this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnImport
             // 
@@ -299,31 +327,6 @@
             this.btnImport.Text = "Aceptar e Importar";
             this.btnImport.UseVisualStyleBackColor = true;
             this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
-            // 
-            // btnCancel
-            // 
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(745, 9);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 32);
-            this.btnCancel.TabIndex = 1;
-            this.btnCancel.Text = "Cancelar";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // DestinationField
-            // 
-            this.DestinationField.HeaderText = "Campo Destino";
-            this.DestinationField.MinimumWidth = 6;
-            this.DestinationField.Name = "DestinationField";
-            this.DestinationField.ReadOnly = true;
-            this.DestinationField.Width = 120;
-            // 
-            // SourceColumn
-            // 
-            this.SourceColumn.HeaderText = "Columna Origen (Archivo)";
-            this.SourceColumn.MinimumWidth = 6;
-            this.SourceColumn.Name = "SourceColumn";
-            this.SourceColumn.Width = 120;
             // 
             // ImportWizardForm
             // 
@@ -348,9 +351,9 @@
             this.tabControlResults.ResumeLayout(false);
             this.tabData.ResumeLayout(false);
             this.tabData.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvPreview)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvPreview)).EndInit();
             this.tabErrors.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvErrors)).EndInit();
             this.panel1.ResumeLayout(false);
@@ -381,7 +384,7 @@
         private Button btnImport;
         private DataGridViewTextBoxColumn DestinationField;
         private DataGridViewComboBoxColumn SourceColumn;
-        internal DataGridView dgvMapping;
-        internal DataGridView dgvPreview;
+        protected DataGridView dgvMapping;
+        protected DataGridView dgvPreview;
     }
 }

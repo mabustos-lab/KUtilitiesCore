@@ -8,19 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="TestData\datos_test.xlsx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="MSTest" Version="4.0.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
+    <PackageReference Include="System.Reflection.Metadata" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
-    <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
+    <ProjectReference Include="..\KUtilitiesCore.Data.Win\KUtilitiesCore.Data.Win.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 
   <ItemGroup>

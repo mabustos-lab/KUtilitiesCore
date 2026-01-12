@@ -34,6 +34,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.DataTests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Data.Win", "KUtilitiesCore.Data.Win\KUtilitiesCore.Data.Win.csproj", "{02F80A07-2721-4691-BE24-297831197A43}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KUtilitiesCore.Data.WinTests", "KUtilitiesCore.Data.WinTests\KUtilitiesCore.Data.WinTests.csproj", "{654EDC8C-0F79-4C4E-9DD0-CCDAF44E9AD9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 		{02F80A07-2721-4691-BE24-297831197A43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02F80A07-2721-4691-BE24-297831197A43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02F80A07-2721-4691-BE24-297831197A43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{654EDC8C-0F79-4C4E-9DD0-CCDAF44E9AD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{654EDC8C-0F79-4C4E-9DD0-CCDAF44E9AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{654EDC8C-0F79-4C4E-9DD0-CCDAF44E9AD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{654EDC8C-0F79-4C4E-9DD0-CCDAF44E9AD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -111,6 +117,7 @@ Global
 		{AD52E299-EA0F-4D3A-8353-61D71D882620} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{8714C780-5072-4091-A5A3-EAF80013ACD1} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{9793BD05-5D5F-44BD-94B3-CC27FA1380EA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{654EDC8C-0F79-4C4E-9DD0-CCDAF44E9AD9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {ABBF050F-7E9C-442B-B90F-35E0EF3EC12D}

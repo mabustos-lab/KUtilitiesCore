@@ -60,17 +60,17 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         private void InitData()
         {
-            cboDelimiter.DataSource = new Dictionary<string, string>
-            { { ",", "," }, { ";", ";" }, { "|", "|" }, { "{Tab}", "\t" } };
-            cboDelimiter.DisplayMember = $"{nameof(Dictionary<string, string>.Keys)}";
-            cboDelimiter.ValueMember = $"{nameof(Dictionary<string, string>.Values)}";
-            cboDelimiter.SelectedIndex = 1;
-            cboEncoding.DataSource = new Dictionary<string, Encoding>
-            { { "UTF-8", Encoding.UTF8}, { "UTF-8 con BOM", new UTF8Encoding(true)},
-            { "UTF-16 LE", Encoding.Unicode}, { "UTF-16 BE", Encoding.BigEndianUnicode}};
-            cboEncoding.DisplayMember = $"{nameof(Dictionary<string, string>.Keys)}";
-            cboEncoding.ValueMember = $"{nameof(Dictionary<string, string>.Values)}";
-            cboEncoding.SelectedIndex = 1;
+            cboDelimiter.DataSource = new List<KeyValuePair <string, string>>()
+            { new( "{comma}", "," ),new( "{dot-comma}", ";" ),new( "{pipe}", "|" ), new("{tab}", "\t")};
+            cboDelimiter.DisplayMember = $"{nameof(KeyValuePair<string, string>.Key)}";
+            cboDelimiter.ValueMember = $"{nameof(KeyValuePair<string, string>.Value)}";
+            cboDelimiter.SelectedIndex = 0;
+            cboEncoding.DataSource = new List<KeyValuePair<string, Encoding>>()
+            { new( "UTF-8", Encoding.UTF8), new ( "UTF-8 con BOM", new UTF8Encoding(true)),
+            new ( "UTF-16 LE", Encoding.Unicode), new("UTF-16 BE", Encoding.BigEndianUnicode)};
+            cboEncoding.DisplayMember = $"{nameof(KeyValuePair<string, Encoding>.Key)}";
+            cboEncoding.ValueMember = $"{nameof(KeyValuePair<string, Encoding>.Value)}";
+            cboEncoding.SelectedIndex = 0;
             cboDelimiter.SelectedIndexChanged += (a, b) => OnOptionsChanged();
             cboEncoding.SelectedIndexChanged += (a, b) => OnOptionsChanged();
             chkHasHeader.CheckedChanged += (a, b) => OnOptionsChanged();
