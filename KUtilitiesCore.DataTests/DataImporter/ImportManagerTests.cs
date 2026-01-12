@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data.ImportDefinition;
+using KUtilitiesCore.Data.Validation.Core;
 using KUtilitiesCore.DataTests.DataImporter;
 using KUtilitiesCore.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -83,12 +84,12 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
             if (!isValid)
             {
                 Debug.WriteLine("--Datos no válidos--");
-                if (manager.ValidationErrors.ErrorMessages.Any())
+                if (manager.ValidationErrors.Errors.Any())
                 {
                     Debug.WriteLine("--Mensajes--");
-                    Debug.WriteLine(string.Join("\n", manager.ValidationErrors.ErrorMessages));
-                    Debug.WriteLine("--Celdas no válidas--");
-                    Debug.WriteLine(string.Join("\n", manager.ValidationErrors.Errors));
+                    Debug.WriteLine(string.Join("\n", manager
+                        .ValidationErrors.Errors.Select(x => x.ToString())));
+                    
                 }
 
             }

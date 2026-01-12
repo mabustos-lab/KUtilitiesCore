@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data.Validation.Core;
+using KUtilitiesCore.Extensions;
 using System.Linq.Expressions;
 
 namespace KUtilitiesCore.Data.Validation
@@ -44,7 +45,7 @@ namespace KUtilitiesCore.Data.Validation
             foreach (var rule in _rules)
             {
                 var failures = rule.Validate(context);
-                result.AddFailures(failures);
+                failures.ForEach(f=> result.AddError(f));
                 // Aquí se podría implementar CascadeMode.StopOnFirstFailure si se desea if
                 // (!result.IsValid && CascadeMode == CascadeMode.StopOnFirstFailure) return result;
             }

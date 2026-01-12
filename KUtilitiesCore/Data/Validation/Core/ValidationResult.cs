@@ -4,74 +4,49 @@ using System.Linq;
 namespace KUtilitiesCore.Data.Validation.Core
 {
     /// <summary>
-    /// Resultado de una operación de validación.
+    /// Contenedor de los resultados de una validación. Soporta tanto errores detallados de propiedades como errores
+    /// genéricos.
     /// </summary>
+    [Serializable]
     public class ValidationResult
     {
-        #region Fields
-
-        private readonly List<string> _errorMessages = new List<string>();
-        private readonly List<ValidationFailure> _errors = new List<ValidationFailure>();
-
-        #endregion Fields
-
-        #region Properties
+        private readonly List<ValidationFailureBase> _errors;
 
         /// <summary>
-        /// Lista de mensajes generales
+        /// Colección polimórfica de errores. Puede contener tanto ValidationFailure como GenericFailure.
         /// </summary>
-        public List<string> ErrorMessages => _errorMessages;
+        public virtual IList<ValidationFailureBase> Errors => _errors;
 
         /// <summary>
-        /// Lista de fallos de validación.
+        /// Indica si la validación fue exitosa (sin errores).
         /// </summary>
-        public IReadOnlyList<ValidationFailure> Errors => _errors;
+        public virtual bool IsValid => _errors.Count == 0;
+
+        public ValidationResult() { _errors = new List<ValidationFailureBase>(); }
+
+        public ValidationResult(IEnumerable<ValidationFailureBase> failures)
+        { _errors = failures.Where(failure => failure != null).ToList(); }
 
         /// <summary>
-        /// Indica si la validación fue exitosa (no hay errores).
+        /// Agrega un error detallado de propiedad.
         /// </summary>
-        public bool IsValid => _errorMessages.Count == 0 && _errors.Count == 0;
-
-        #endregion Properties
-
-        #region Methods
+        public void AddError(ValidationFailure failure) { _errors.Add(failure); }
 
         /// <summary>
-        /// Agrega un mensaje de error generico
+        /// Agrega un error detallado de propiedad (Helper).
         /// </summary>
-        /// <param name="message"></param>
-        public void AddErrorMessage(string message)
-            => _errorMessages.Add(message);
+        public void AddError(string propertyName, string errorMessage, int indexRow = -1, object? attemptedValue = null)
+        { _errors.Add(new ValidationFailure(propertyName, errorMessage, indexRow, attemptedValue)); }
 
         /// <summary>
-        /// Añade un fallo de validación a la lista.
+        /// Agrega un mensaje de error genérico (sin propiedad asociada).
         /// </summary>
-        /// <param name="failure">El fallo a añadir.</param>
-        public void AddFailure(ValidationFailure failure)
-        {
-            if (failure == null) throw new ArgumentNullException(nameof(failure));
-            _errors.Add(failure);
-        }
+        public void AddErrorMessage(string errorMessage) { _errors.Add(new GenericFailure(errorMessage)); }
 
         /// <summary>
-        /// Añade múltiples fallos de validación.
+        /// Obtiene solo los mensajes de error (tanto genéricos como de propiedad) como una lista de strings. Útil para
+        /// mostrar resúmenes simples en UI.
         /// </summary>
-        /// <param name="failures">Los fallos a añadir.</param>
-        public void AddFailures(IEnumerable<ValidationFailure> failures)
-        {
-            if (failures == null) throw new ArgumentNullException(nameof(failures));
-            _errors.AddRange(failures.Where(f => f != null));
-        }
-
-        /// <summary>
-        /// Borra todos los registros de error
-        /// </summary>
-        public void Clear()
-        {
-            _errorMessages.Clear();
-            _errors.Clear();
-        }
-
-        #endregion Methods
+        public IEnumerable<string> GetErrorMessages() { return _errors.Select(x => x.ErrorMessage); }
     }
 }

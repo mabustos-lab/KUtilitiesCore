@@ -22,13 +22,23 @@ namespace KUtilitiesCore.Data.DataImporter
 
             return new ExcelSourceReader(filePath, null, null, null, options);
         }
-
+        /// <summary>
+        /// Obtiene la colección de nombre de las hojas de un libro de Excel
+        /// </summary>
+        public static IReadOnlyList<string> GetSheets(string filePath)
+        {
+            var options = new ExcelParsingOptions();
+            using var xlxs= new ExcelSourceReader(filePath, null, null, null, options);
+            return xlxs.GetSheets();
+        }
         /// <summary>
         /// Crea un lector de Excel con opciones específicas
         /// </summary>
-        public static IExcelSourceReader CreateWithOptions(string filePath, ExcelParsingOptions options)
+        public static IExcelSourceReader CreateWithOptions(string filePath,
+            ExcelParsingOptions options, IExcelWorkbookReaderFactory workbookFactory = null,
+            IDiskFileReader diskFileReader=null, ICellValueConverter cellValueConverter = null)
         {
-            return new ExcelSourceReader(filePath, null, null, null, options);
+            return new ExcelSourceReader(filePath, workbookFactory, diskFileReader, cellValueConverter, options);
         }
 
         /// <summary>

@@ -1,12 +1,14 @@
-﻿using System;
+﻿using KUtilitiesCore.Data.DataImporter.Interfaces;
+using System;
 using System.Linq;
 
 namespace KUtilitiesCore.Data.DataImporter
 {
+
     /// <summary>
     /// Opciones de configuración para lectura de Excel
     /// </summary>
-    public class ExcelParsingOptions: ICloneable
+    public class ExcelParsingOptions: IParsingOptions
     {
         /// <summary>
         /// Indica si la primera fila contiene encabezados (default: true)

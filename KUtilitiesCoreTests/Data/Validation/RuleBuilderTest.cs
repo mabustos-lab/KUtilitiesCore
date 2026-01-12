@@ -71,7 +71,7 @@ namespace KUtilitiesCoreTests.Data.Validation
                 Debug.WriteLine("Resultado: Inválido");
                 foreach (var failure in result.Errors)
                 {
-                    Debug.WriteLine($" - Propiedad: {failure.PropertyName ?? "<Objeto>"}, Error: {failure.ErrorMessage}, Valor: {failure.AttemptedValue ?? "<null>"}");
+                    Debug.WriteLine(failure.ToString());
                 }
             }
             return result.IsValid;
@@ -105,8 +105,8 @@ namespace KUtilitiesCoreTests.Data.Validation
                         {
                             // Añadir fallo específico. No se asocia a una propiedad concreta,
                             // o se puede asociar a una de ellas (ej: FechaFin).
-                            failures.Add(new ValidationFailure(nameof(Periodo.FechaFin),-1,
-                                "La fecha de fin debe ser posterior o igual a la fecha de inicio.",
+                            failures.Add(new ValidationFailure(nameof(Periodo.FechaFin),
+                                "La fecha de fin debe ser posterior o igual a la fecha de inicio.",-1,
                                 periodo.FechaFin.Value));
                         }
                     }

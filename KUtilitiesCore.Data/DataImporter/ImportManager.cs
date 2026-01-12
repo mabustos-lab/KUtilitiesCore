@@ -48,6 +48,46 @@ namespace KUtilitiesCore.Data.DataImporter
         #endregion Properties
 
         #region Methods
+        /// <summary>
+        /// Lee los datos de un datatable con todas las columnas tipo string
+        /// </summary>
+        /// <param name="rawData"></param>
+        public void ReadData(DataTable rawData)
+        {
+            ConfigurarDataTable();
+            DataSource.Clear();
+            int rowIndex = 0;
+            foreach (DataRow rawRow in rawData.Rows)
+            {
+                DataRow newRow = DataSource.NewRow();
+
+                // Mapeo seguro: Si la columna origen existe en el lector, la usamos.
+                foreach (var col in ColumnDefinitions)
+                {
+                    // Busqueda por case-insensitive
+                    DataColumn dtColumn = rawData.Columns
+                        .Cast<DataColumn>()
+                        .FirstOrDefault(
+                            x => string.Equals(
+                                x.ColumnName,
+                                col.SourceColumnName,
+                                StringComparison.OrdinalIgnoreCase));
+                    if (dtColumn != null)
+                    {
+                        newRow[col.ColumnName] = rawRow[dtColumn.ColumnName]?.ToString();
+                    }
+                    else if (!col.AllowNull)
+                    {
+                        // Registrar advertencia para columnas requeridas faltantes
+                        ValidationErrors.AddErrorMessage($"Columna requerida '{col.SourceColumnName}' no encontrada en el origen de datos.");
+                    }
+                }
+
+                newRow["_RowIndex"] = rowIndex++;
+                newRow["_IsValid"] = false; // Se validará explícitamente después
+                DataSource.Rows.Add(newRow);
+            }
+        }
 
         /// <summary>
         /// Carga datos desde una fuente externa (CSV, Excel, etc.)
@@ -75,42 +115,9 @@ namespace KUtilitiesCore.Data.DataImporter
 
             try
             {
-                ConfigurarDataTable();
+
                 var rawData = ReadDataWithValidation(reader);
-                
-                DataSource.Clear();
-                int rowIndex = 0;
-
-                foreach (DataRow rawRow in rawData.Rows)
-                {
-                    DataRow newRow = DataSource.NewRow();
-
-                    // Mapeo seguro: Si la columna origen existe en el lector, la usamos.
-                    foreach (var col in ColumnDefinitions)
-                    {
-                        // Busqueda por case-insensitive
-                        DataColumn dtColumn = rawData.Columns
-                            .Cast<DataColumn>()
-                            .FirstOrDefault(
-                                x => string.Equals(
-                                    x.ColumnName,
-                                    col.SourceColumnName,
-                                    StringComparison.OrdinalIgnoreCase));                        
-                        if (dtColumn!=null)
-                        {
-                            newRow[col.ColumnName] = rawRow[dtColumn.ColumnName]?.ToString();
-                        }
-                        else if (!col.AllowNull)
-                        {
-                            // Registrar advertencia para columnas requeridas faltantes
-                            ValidationErrors.AddErrorMessage($"Columna requerida '{col.SourceColumnName}' no encontrada en el origen de datos.");
-                        }
-                    }
-
-                    newRow["_RowIndex"] = rowIndex++;
-                    newRow["_IsValid"] = false; // Se validará explícitamente después
-                    DataSource.Rows.Add(newRow);
-                }
+                ReadData(rawData);
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
             {
@@ -147,7 +154,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <returns>True si todos los datos son válidos</returns>
         public bool ValidateDataTypes()
         {
-            ValidationErrors.Clear();
+            ValidationErrors.Errors.Clear();
 
             if (DataSource.Rows.Count == 0)
             {
@@ -279,7 +286,7 @@ namespace KUtilitiesCore.Data.DataImporter
                 {
                     string errMsg = $"El campo '{def.DisplayName}' es requerido.";
                     rowValid = false;
-                    ValidationErrors.AddFailure(new ValidationFailure(def.SourceColumnName, rowIndex, errMsg));
+                    ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex));
                     row.SetColumnError(def.ColumnName, errMsg);
                     continue;
                 }
@@ -293,7 +300,7 @@ namespace KUtilitiesCore.Data.DataImporter
                 {
                     string errMsg = $"Se esperaba un valor de tipo [{def.FieldType?.Name ?? "desconocido"}] para el valor '{value}'.";
                     rowValid = false;
-                    ValidationErrors.AddFailure(new ValidationFailure(def.SourceColumnName, rowIndex, errMsg));
+                    ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex, value));
                     row.SetColumnError(def.ColumnName, errMsg);
                 }
             }

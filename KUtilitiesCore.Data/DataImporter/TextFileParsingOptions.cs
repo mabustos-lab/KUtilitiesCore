@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KUtilitiesCore.Data.DataImporter.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ namespace KUtilitiesCore.Data.DataImporter
     /// <summary>
     /// Configuración para el parseo de archivos planos de texto
     /// </summary>
-    public class TextFileParsingOptions:ICloneable
+    public class TextFileParsingOptions: IParsingOptions
     {
         /// <summary>
         /// Separador de columnas (default: ",")
