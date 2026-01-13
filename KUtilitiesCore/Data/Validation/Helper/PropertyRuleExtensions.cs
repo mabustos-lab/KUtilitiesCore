@@ -2,8 +2,9 @@
 
 namespace KUtilitiesCore.Data.Validation.Helper
 {
-    // ---------------------------------------------------------------------- Helper para extraer
-    // nombres de propiedades (usado internamente) ----------------------------------------------------------------------
+    /// <summary>
+    /// Helper para extraer nombres de propiedades (usado internamente)
+    /// </summary>
     internal static class PropertyRuleExtensions
     {
         #region Methods

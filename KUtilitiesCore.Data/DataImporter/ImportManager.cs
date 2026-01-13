@@ -28,7 +28,7 @@ namespace KUtilitiesCore.Data.DataImporter
 
         public ImportManager()
         {
-            ColumnDefinitions = new FielDefinitionCollection();
+            ColumnDefinitions = new FieldDefinitionCollection();
             ValidationErrors = new ValidationResult();
             DataSource = new DataTable();
             _rawDataSource = new DataTable();
@@ -41,7 +41,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <summary>
         /// Configuración de mapeo
         /// </summary>
-        public FielDefinitionCollection ColumnDefinitions { get; private set; }
+        public FieldDefinitionCollection ColumnDefinitions { get; private set; }
 
         /// <summary>
         /// El DataTable mantiene todo como string para permitir edición en UI sin errores de cast inmediatos.
@@ -176,7 +176,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// </summary>
         /// <param name="mapping">Configuración de mapeo</param>
         /// <exception cref="ArgumentNullException">Cuando mapping es null</exception>
-        public void SetMapping(FielDefinitionCollection mapping)
+        public void SetMapping(FieldDefinitionCollection mapping)
         {
             ColumnDefinitions = mapping ?? throw new ArgumentNullException(nameof(mapping), "La configuración de mapeo no puede ser nula.");
 

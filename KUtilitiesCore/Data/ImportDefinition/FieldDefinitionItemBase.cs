@@ -11,7 +11,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <summary>
     /// Define las características de un campo.
     /// </summary>
-    public abstract class FieldDefinitionBase : IFieldDefinition
+    public abstract class FieldDefinitionItemBase : IFieldDefinitionItem
     {
         #region Fields
 
@@ -22,10 +22,10 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         #region Constructors
 
-        public FieldDefinitionBase()
+        public FieldDefinitionItemBase()
         { }
 
-        public FieldDefinitionBase(PropertyInfo fieldProperty)
+        public FieldDefinitionItemBase(PropertyInfo fieldProperty)
         {
             if (fieldProperty == null)
                 throw new ArgumentNullException(nameof(fieldProperty));
@@ -33,7 +33,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
             LoadInfo(fieldProperty);
         }
 
-        public FieldDefinitionBase(string fieldName, string displayName, string sourceColumnName = "",
+        public FieldDefinitionItemBase(string fieldName, string displayName, string sourceColumnName = "",
             string description = "", Type? fieldType = null, bool allowNull = false)
         {
             ColumnName = fieldName;

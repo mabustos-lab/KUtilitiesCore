@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Data;
 
 using System.Windows.Forms;
-using FieldDefinition = KUtilitiesCore.Data.ImportDefinition.FieldDefinition;
+using FieldDefinition = KUtilitiesCore.Data.ImportDefinition.FieldDefinitionItem;
 
 namespace KUtilitiesCore.Data.WinTests
 {
@@ -18,7 +18,7 @@ namespace KUtilitiesCore.Data.WinTests
             public string LastMessageShown { get; private set; }
             public MessageBoxIcon LastMessageIcon { get; private set; }
 
-            public TestableImportWizardForm(FielDefinitionCollection fields)
+            public TestableImportWizardForm(FieldDefinitionCollection fields)
                 : base(fields, new ImportManager()) // Pasamos un ImportManager real o mock
             {
             }
@@ -73,9 +73,9 @@ namespace KUtilitiesCore.Data.WinTests
             }
         }
 
-        private FielDefinitionCollection GetSampleDefinitions()
+        private FieldDefinitionCollection GetSampleDefinitions()
         {
-            var defs = new FielDefinitionCollection();
+            var defs = new FieldDefinitionCollection();
             defs.Add(new FieldDefinition("Name", "Nombre"));
             defs.Add(new FieldDefinition("Age", "Edad",fieldType:typeof(int)));
             return defs;

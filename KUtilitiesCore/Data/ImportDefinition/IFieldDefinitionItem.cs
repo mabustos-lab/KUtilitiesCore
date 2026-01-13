@@ -13,7 +13,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <summary>
     /// Define las características de un campo.
     /// </summary>
-    public interface IFieldDefinition
+    public interface IFieldDefinitionItem
     {
 
         /// <summary>

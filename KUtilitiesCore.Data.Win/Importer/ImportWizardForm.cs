@@ -14,7 +14,7 @@ namespace KUtilitiesCore.Data.Win.Importer
     {
         #region Fields
 
-        private readonly FielDefinitionCollection _fieldDefinitions;
+        private readonly FieldDefinitionCollection _fieldDefinitions;
 
         private readonly ImportManager _importManager;
 
@@ -29,7 +29,7 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         #region Constructors
 
-        public ImportWizardForm(FielDefinitionCollection fieldDefinitions, ImportManager importManager = null)
+        public ImportWizardForm(FieldDefinitionCollection fieldDefinitions, ImportManager importManager = null)
         {
             InitializeComponent();
 
@@ -154,12 +154,12 @@ namespace KUtilitiesCore.Data.Win.Importer
         {
             // 1. Construir colección de definiciones activas con el mapeo actualizado
 
-            var activeDefinitions = new FielDefinitionCollection();
+            var activeDefinitions = new FieldDefinitionCollection();
 
             foreach (DataGridViewRow row in dgvMapping.Rows)
             {
                 // Recuperamos la definición original desde el Tag
-                var originalDef = row.Tag as FieldDefinition;
+                var originalDef = row.Tag as FieldDefinitionItem;
                 string selectedSourceCol = row.Cells[1].Value?.ToString()!;
 
                 if (originalDef != null && selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
@@ -182,9 +182,7 @@ namespace KUtilitiesCore.Data.Win.Importer
             {
                 _importManager.SetMapping(activeDefinitions);
                 _importManager.ReadData(LoadedDataTable);
-                // El ImportManager ahora usará 'SourceColumnName' de cada definición para buscar en
-                // 'loadedDataTable' No es necesario renombrar columnas en el DataTable. var result
-                // = _importManager.LoadData(loadedDataTable, activeDefinitions);
+                
                 ValidateData();
                 OnProcessImportFinished();
             }

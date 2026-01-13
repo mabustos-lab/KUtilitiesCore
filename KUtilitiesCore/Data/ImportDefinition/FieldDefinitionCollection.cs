@@ -12,11 +12,11 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <summary>
     /// Contenedo de Definiciones de campo
     /// </summary>
-    public class FielDefinitionCollection : IReadOnlyList<FieldDefinition>, ICloneable
+    public class FieldDefinitionCollection : IReadOnlyList<FieldDefinitionItem>, ICloneable
     {
         #region Fields
 
-        private readonly List<FieldDefinition> _fields = [];
+        private readonly List<FieldDefinitionItem> _fields = [];
 
         #endregion Fields
 
@@ -31,7 +31,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <summary>
         /// Indexador que permite acceder a un FieldDefinition por nombre de columna
         /// </summary>
-        public FieldDefinition this[string columnName]
+        public FieldDefinitionItem this[string columnName]
         {
             get => _fields.First(x => x.ColumnName == columnName);
             set
@@ -42,17 +42,17 @@ namespace KUtilitiesCore.Data.ImportDefinition
             }
         }
 
-        public FieldDefinition this[int index] => _fields[index];
+        public FieldDefinitionItem this[int index] => _fields[index];
 
         #endregion Indexers
 
         #region Methods
 
         /// <summary>
-        /// Agrega una nueva definicion apartir de <see cref="FieldDefinition"/>
+        /// Agrega una nueva definicion apartir de <see cref="FieldDefinitionItem"/>
         /// </summary>
         /// <param name="fieldDefinition"></param>
-        public void Add(FieldDefinition fieldDefinition)
+        public void Add(FieldDefinitionItem fieldDefinition)
         {
             if (!Contains(fieldDefinition.ColumnName))
                 _fields.Add(fieldDefinition);
@@ -65,7 +65,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         public void Add(PropertyInfo fieldProperty)
         {
             if (!Contains(fieldProperty.Name))
-                _fields.Add(new FieldDefinition(fieldProperty));
+                _fields.Add(new FieldDefinitionItem(fieldProperty));
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
             string description = "", Type? fieldType = null, bool allowNull = false)
         {
             if (!Contains(fieldName))
-                _fields.Add(new FieldDefinition(fieldName, displayName, sourceColumnName, description, fieldType, allowNull));
+                _fields.Add(new FieldDefinitionItem(fieldName, displayName, sourceColumnName, description, fieldType, allowNull));
         }
 
         /// <summary>
@@ -94,10 +94,10 @@ namespace KUtilitiesCore.Data.ImportDefinition
         }
 
         /// <summary>
-        /// Agrega una nueva definicion apartir de <see cref="FieldDefinition"/>
+        /// Agrega una nueva definicion apartir de <see cref="FieldDefinitionItem"/>
         /// </summary>
         /// <param name="fieldDefinition"></param>
-        public void AddRange(IEnumerable<FieldDefinition> fieldDefinitions)
+        public void AddRange(IEnumerable<FieldDefinitionItem> fieldDefinitions)
         {
             foreach (var item in fieldDefinitions)
             {
@@ -122,7 +122,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
             return _fields.Any(x => x.ColumnName == fieldName);
         }
 
-        public IEnumerator<FieldDefinition> GetEnumerator()
+        public IEnumerator<FieldDefinitionItem> GetEnumerator()
         {
             return _fields.GetEnumerator();
         }
@@ -154,15 +154,28 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <param name="columnName">Nombre de la columna</param>
         /// <param name="definition">Definición encontrada (null si no existe)</param>
         /// <returns>True si se encontró, false en caso contrario</returns>
-        public bool TryGetDefinition(string columnName, out FieldDefinition? definition)
+        public bool TryGetDefinition(string columnName, out FieldDefinitionItem? definition)
         {
             definition = this.FirstOrDefault(x => x.ColumnName == columnName);
             return definition != null;
         }
 
-        public FielDefinitionCollection Clone()
+        /// <summary>
+        /// Crea una nueva colección que es una copia profunda de la colección actual y sus definiciones de campo.
+        /// </summary>
+        /// <remarks>
+        /// Cada definición de campo de la colección devuelta es una copia independiente.
+        /// Los cambios realizados en la colección clonada o en sus definiciones de campo no afectan
+        /// a la colección original.
+        /// </remarks>
+        /// <returns>
+        /// Una nueva <see cref="FieldDefinitionCollection"/> que contiene clones de todas las definiciones de campo de la colección actual.
+        /// </returns>
+        public FieldDefinitionCollection Clone()
         {
-
+            FieldDefinitionCollection result = new();
+            result.AddRange(_fields.Select(x => x.Clone()));
+            return result;
         }
         object ICloneable.Clone()
         {

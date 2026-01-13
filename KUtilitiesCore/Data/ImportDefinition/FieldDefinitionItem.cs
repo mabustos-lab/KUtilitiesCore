@@ -11,16 +11,16 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <summary>
     /// Representa la definición de un campo con validación adicional.
     /// </summary>
-    /// <remarks>Esta clase extiende <see cref="FieldDefinitionBase"/>.</remarks>
-    public class FieldDefinition : FieldDefinitionBase, ICloneable
+    /// <remarks>Esta clase extiende <see cref="FieldDefinitionItemBase"/>.</remarks>
+    public class FieldDefinitionItem : FieldDefinitionItemBase, ICloneable
     {
         #region Constructors
 
-        public FieldDefinition(PropertyInfo fieldProperty) : base(fieldProperty)
+        public FieldDefinitionItem(PropertyInfo fieldProperty) : base(fieldProperty)
         {
         }
 
-        public FieldDefinition(string fieldName, string displayName = "", string sourceColumnName = "",
+        public FieldDefinitionItem(string fieldName, string displayName = "", string sourceColumnName = "",
             string description = "", Type? fieldType = null, bool allowNull = false)
             : base(fieldName, displayName, sourceColumnName, description, fieldType, allowNull)
         {
@@ -98,9 +98,9 @@ namespace KUtilitiesCore.Data.ImportDefinition
                 Converter = TypeConverterFactory.Provider.Resolve(FieldType);
             }
         }
-        public FieldDefinition Clone()
+        public FieldDefinitionItem Clone()
         {
-            return new FieldDefinition(
+            return new FieldDefinitionItem(
                 ColumnName,
                 DisplayName,
                 SourceColumnName,
