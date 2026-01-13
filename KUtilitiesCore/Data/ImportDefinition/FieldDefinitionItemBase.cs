@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data.Converter;
+using KUtilitiesCore.Data.ImportDefinition.Validation;
 using KUtilitiesCore.Data.Validation.RuleValues;
 using KUtilitiesCore.Extensions;
 using System;
@@ -36,7 +37,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         public FieldDefinitionItemBase(string fieldName, string displayName, string sourceColumnName = "",
             string description = "", Type? fieldType = null, bool allowNull = false)
         {
-            ColumnName = fieldName;
+            FieldName = fieldName;
             if (string.IsNullOrEmpty(displayName))
                 displayName = fieldName;
 
@@ -46,7 +47,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
             SourceColumnName = sourceColumnName;
             Description = description;
-            FieldType = fieldType ?? typeof(string);
+            TargetType = fieldType ?? typeof(string);
             AllowNull = allowNull;
         }
 
@@ -60,7 +61,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         /// <inheritdoc/>
         [Required]
-        public string ColumnName
+        public string FieldName
         { get; protected set; } = string.Empty;
 
         /// <inheritdoc/>
@@ -80,7 +81,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         }
 
         /// <inheritdoc/>
-        public Type FieldType
+        public Type TargetType
         {
             get => fieldType;
             protected set
@@ -96,6 +97,14 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <inheritdoc/>
         [Required]
         public string SourceColumnName { get; set; }
+        /// <inheritdoc/>
+        public object DefaultValue { get; set; }
+
+        /// <inheritdoc/>
+        public ITypeConverter TypeConverter { get; internal set; }
+        public abstract List<IImportValidationRule> ValidationRules { get; }
+
+        public abstract IFieldDefinitionItem WithRules(Action<ImportRuleBuilder> ruleConfig);
 
         #endregion Properties
 
@@ -106,8 +115,8 @@ namespace KUtilitiesCore.Data.ImportDefinition
             AllowNull = (Nullable.GetUnderlyingType(fieldProperty.PropertyType) != null);
             var underlyingType = Nullable.GetUnderlyingType(fieldProperty.PropertyType);
             var resolvedType = (AllowNull ? underlyingType : fieldProperty.PropertyType) ?? throw new InvalidOperationException($"No se pudo determinar el tipo de campo para la propiedad '{fieldProperty.Name}'.");
-            FieldType = resolvedType;
-            ColumnName = fieldProperty.Name;
+            TargetType = resolvedType;
+            FieldName = fieldProperty.Name;
             DisplayName = fieldProperty.DataAnnotationsDisplayName();
             Description = fieldProperty.DataAnnotationsDescription();
         }
@@ -115,9 +124,9 @@ namespace KUtilitiesCore.Data.ImportDefinition
         internal virtual void OnDisplayNameChanged()
         {
             if (string.IsNullOrEmpty(DisplayName))
-                DisplayName = ColumnName;
+                DisplayName = FieldName;
         }
-
+        /// <inheritdoc/>
         internal abstract void OnFieldTypeChanged();
 
         #endregion Methods

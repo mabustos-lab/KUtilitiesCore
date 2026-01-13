@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Data;
 
 using System.Windows.Forms;
-using FieldDefinition = KUtilitiesCore.Data.ImportDefinition.FieldDefinitionItem;
 
 namespace KUtilitiesCore.Data.WinTests
 {
@@ -73,11 +72,17 @@ namespace KUtilitiesCore.Data.WinTests
             }
         }
 
-        private FieldDefinitionCollection GetSampleDefinitions()
+        private FieldDefinitionCollection GetSampleDefinitions(bool addRule = false)
         {
             var defs = new FieldDefinitionCollection();
-            defs.Add(new FieldDefinition("Name", "Nombre"));
-            defs.Add(new FieldDefinition("Age", "Edad",fieldType:typeof(int)));
+            defs.Add(new FieldDefinitionItem("Name", "Nombre"));
+            defs.Add(new FieldDefinitionItem("Age", "Edad", fieldType: typeof(int)));
+            if (addRule)
+                defs["Age"].WithRules(
+                    rules =>
+                    {
+                        rules.LessThan(30, "El usuario debe tener más de 25 años");
+                    });
             return defs;
         }
         [TestMethod]
@@ -144,6 +149,26 @@ namespace KUtilitiesCore.Data.WinTests
                 form.SimulateImport();
                 // form.ShowDialog();
                 // Assert
+                Assert.AreNotEqual(DialogResult.OK, form.DialogResult, "El formulario NO debería cerrarse si hay errores.");
+                Assert.IsNull(form.ResultData, "ResultData debería ser nulo.");
+                StringAssert.Contains(form.LastMessageShown, "errores de validación");
+                Assert.AreEqual(MessageBoxIcon.Warning, form.LastMessageIcon);
+            }
+        }
+        [TestMethod]
+        public void Import_ShouldShowErrors_WhenDataRuleIsInValid()
+        {
+            // Arrange
+            var defs = GetSampleDefinitions(true);
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                // 1. Simular selección de archivo
+                form.ShowOpenDialogFile();
+
+                // 2. Simular click en Cargar
+                form.LoadData();
+                form.SimulateImport();
                 Assert.AreNotEqual(DialogResult.OK, form.DialogResult, "El formulario NO debería cerrarse si hay errores.");
                 Assert.IsNull(form.ResultData, "ResultData debería ser nulo.");
                 StringAssert.Contains(form.LastMessageShown, "errores de validación");
