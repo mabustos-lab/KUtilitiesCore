@@ -12,7 +12,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <summary>
     /// Contenedo de Definiciones de campo
     /// </summary>
-    public class FielDefinitionCollection : IReadOnlyList<FieldDefinition>
+    public class FielDefinitionCollection : IReadOnlyList<FieldDefinition>, ICloneable
     {
         #region Fields
 
@@ -158,6 +158,15 @@ namespace KUtilitiesCore.Data.ImportDefinition
         {
             definition = this.FirstOrDefault(x => x.ColumnName == columnName);
             return definition != null;
+        }
+
+        public FielDefinitionCollection Clone()
+        {
+
+        }
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         #endregion Methods

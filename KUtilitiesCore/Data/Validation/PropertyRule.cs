@@ -108,7 +108,7 @@ namespace KUtilitiesCore.Data.Validation
                     formatted = formatted.Replace("{ComparisonValue}", gtValidator.ValueToCompare!.ToString());
                     break;
                 case LessThanValidator<T, TProperty> ltValidator:
-                    // Asegúrate de que TProperty es un tipo de valor no anulable antes de usarlo
+                    // Asegúrate de que TProperty es un tipo de valor no nulable antes de usarlo
                     formatted = formatted.Replace("{ComparisonValue}", ltValidator.ValueToCompare!.ToString());
                     break;
                 case AllowedValuesValidator<T, TProperty> avValidator:

@@ -142,7 +142,7 @@ namespace KUtilitiesCore.Data.WinTests
                 // 2. Simular click en Cargar
                 form.SimulateWithErrorLoadData();
                 form.SimulateImport();
-
+                // form.ShowDialog();
                 // Assert
                 Assert.AreNotEqual(DialogResult.OK, form.DialogResult, "El formulario NO debería cerrarse si hay errores.");
                 Assert.IsNull(form.ResultData, "ResultData debería ser nulo.");
