@@ -1,4 +1,6 @@
-﻿using KUtilitiesCore.Data.Validation.RuleValues;
+﻿using KUtilitiesCore.Data.Converter;
+using KUtilitiesCore.Data.ImportDefinition.Validation;
+using KUtilitiesCore.Data.Validation.RuleValues;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -42,16 +44,33 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// Nombre interno o técnico del campo.
         /// </summary>
         [Required]
-        string ColumnName { get; }
+        string FieldName { get; }
 
         /// <summary>
         /// Tipo de dato esperado para el campo.
         /// </summary>
-        Type FieldType { get; }
+        Type TargetType { get; }
 
         /// <summary>
         /// Obtiene un valor que indica si el campo debe ser único.
         /// </summary>
         bool IsUnique { get;  }
+        /// <summary>
+        /// Establece el valor default al importar un valor nulo
+        /// </summary>
+        object DefaultValue { get; set; }
+        /// <summary>
+        /// Obtiene el convertidor de tipo asociado al campo.
+        /// </summary>
+        ITypeConverter TypeConverter { get; }
+        /// <summary>
+        /// Colección de reglas de validación de negocio que se ejecutarán tras la conversión de tipo.
+        /// </summary>
+        List<IImportValidationRule> ValidationRules { get; }
+
+        /// <summary>
+        /// Método fluido para configurar reglas de validación.
+        /// </summary>
+        IFieldDefinitionItem WithRules(Action<ImportRuleBuilder> ruleConfig);
     }
 }

@@ -335,7 +335,7 @@ namespace KUtilitiesCore.Data.Win.Importer
                 var row = dgvMapping.Rows[rowIndex];
 
                 // 1. Configurar etiqueta UI Preferimos DisplayName. Si no existe, usamos ColumnName.
-                string displayLabel = !string.IsNullOrEmpty(field.DisplayName) ? field.DisplayName : field.ColumnName;
+                string displayLabel = !string.IsNullOrEmpty(field.DisplayName) ? field.DisplayName : field.FieldName;
 
                 row.Cells[0].Value = displayLabel;
                 row.Cells[0].ToolTipText = field.Description; // Usamos Description para tooltip
@@ -350,7 +350,7 @@ namespace KUtilitiesCore.Data.Win.Importer
                 if (string.IsNullOrEmpty(expectedSource))
                     expectedSource = field.DisplayName;
                 if (string.IsNullOrEmpty(expectedSource))
-                    expectedSource = field.ColumnName;
+                    expectedSource = field.FieldName;
 
                 // Intentar buscar coincidencia insensible a mayúsculas/minúsculas en las columnas
                 // del archivo

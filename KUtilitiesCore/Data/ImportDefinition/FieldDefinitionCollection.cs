@@ -33,10 +33,10 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// </summary>
         public FieldDefinitionItem this[string columnName]
         {
-            get => _fields.First(x => x.ColumnName == columnName);
+            get => _fields.First(x => x.FieldName == columnName);
             set
             {
-                var index = _fields.FindIndex(e => e.ColumnName == columnName);
+                var index = _fields.FindIndex(e => e.FieldName == columnName);
                 if (index >= 0)
                     _fields[index] = value;
             }
@@ -54,7 +54,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <param name="fieldDefinition"></param>
         public void Add(FieldDefinitionItem fieldDefinition)
         {
-            if (!Contains(fieldDefinition.ColumnName))
+            if (!Contains(fieldDefinition.FieldName))
                 _fields.Add(fieldDefinition);
         }
 
@@ -119,7 +119,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         public bool Contains(string fieldName)
         {
-            return _fields.Any(x => x.ColumnName == fieldName);
+            return _fields.Any(x => x.FieldName == fieldName);
         }
 
         public IEnumerator<FieldDefinitionItem> GetEnumerator()
@@ -139,7 +139,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <returns>True si se eliminó, false si no se encontró</returns>
         public bool Remove(string columnName)
         {
-            var index = _fields.FindIndex(e => e.ColumnName == columnName);
+            var index = _fields.FindIndex(e => e.FieldName == columnName);
             if (index >= 0)
             {
                 _fields.RemoveAt(index);
@@ -156,7 +156,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <returns>True si se encontró, false en caso contrario</returns>
         public bool TryGetDefinition(string columnName, out FieldDefinitionItem? definition)
         {
-            definition = this.FirstOrDefault(x => x.ColumnName == columnName);
+            definition = this.FirstOrDefault(x => x.FieldName == columnName);
             return definition != null;
         }
 
