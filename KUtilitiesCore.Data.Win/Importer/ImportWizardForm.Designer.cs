@@ -33,7 +33,6 @@
             this.lblType = new System.Windows.Forms.Label();
             this.btnLoadData = new System.Windows.Forms.Button();
             this.btnBrowse = new System.Windows.Forms.Button();
-            this.cboSourceType = new System.Windows.Forms.ComboBox();
             this.txtFilePath = new System.Windows.Forms.TextBox();
             this.pnlConfig = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -52,6 +51,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnImport = new System.Windows.Forms.Button();
+            this.cbFilterHasError = new System.Windows.Forms.CheckBox();
             this.pnlTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -73,7 +73,6 @@
             this.pnlTop.Controls.Add(this.lblType);
             this.pnlTop.Controls.Add(this.btnLoadData);
             this.pnlTop.Controls.Add(this.btnBrowse);
-            this.pnlTop.Controls.Add(this.cboSourceType);
             this.pnlTop.Controls.Add(this.txtFilePath);
             this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlTop.Location = new System.Drawing.Point(0, 0);
@@ -87,9 +86,9 @@
             this.lblType.AutoSize = true;
             this.lblType.Location = new System.Drawing.Point(12, 4);
             this.lblType.Name = "lblType";
-            this.lblType.Size = new System.Drawing.Size(38, 16);
+            this.lblType.Size = new System.Drawing.Size(55, 16);
             this.lblType.TabIndex = 1;
-            this.lblType.Text = "Tipo:";
+            this.lblType.Text = "Archivo:";
             // 
             // btnLoadData
             // 
@@ -112,26 +111,13 @@
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
-            // cboSourceType
-            // 
-            this.cboSourceType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboSourceType.FormattingEnabled = true;
-            this.cboSourceType.Items.AddRange(new object[] {
-            "Excel",
-            "CSV"});
-            this.cboSourceType.Location = new System.Drawing.Point(11, 23);
-            this.cboSourceType.Name = "cboSourceType";
-            this.cboSourceType.Size = new System.Drawing.Size(100, 24);
-            this.cboSourceType.TabIndex = 1;
-            this.cboSourceType.SelectedIndexChanged += new System.EventHandler(this.cboSourceType_SelectedIndexChanged);
-            // 
             // txtFilePath
             // 
             this.txtFilePath.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.txtFilePath.Location = new System.Drawing.Point(117, 25);
+            this.txtFilePath.Location = new System.Drawing.Point(15, 25);
             this.txtFilePath.Name = "txtFilePath";
             this.txtFilePath.ReadOnly = true;
-            this.txtFilePath.Size = new System.Drawing.Size(500, 22);
+            this.txtFilePath.Size = new System.Drawing.Size(602, 22);
             this.txtFilePath.TabIndex = 1;
             // 
             // pnlConfig
@@ -242,6 +228,7 @@
             this.dgvPreview.RowTemplate.Height = 24;
             this.dgvPreview.Size = new System.Drawing.Size(715, 382);
             this.dgvPreview.TabIndex = 0;
+            this.dgvPreview.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvPreview_CellEndEdit);
             // 
             // statusStrip1
             // 
@@ -298,6 +285,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.cbFilterHasError);
             this.panel1.Controls.Add(this.btnCancel);
             this.panel1.Controls.Add(this.btnImport);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -309,9 +297,9 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(745, 9);
+            this.btnCancel.Location = new System.Drawing.Point(711, 9);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 32);
+            this.btnCancel.Size = new System.Drawing.Size(97, 32);
             this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancelar";
             this.btnCancel.UseVisualStyleBackColor = true;
@@ -320,13 +308,24 @@
             // 
             this.btnImport.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnImport.Enabled = false;
-            this.btnImport.Location = new System.Drawing.Point(826, 9);
+            this.btnImport.Location = new System.Drawing.Point(814, 9);
             this.btnImport.Name = "btnImport";
-            this.btnImport.Size = new System.Drawing.Size(144, 32);
+            this.btnImport.Size = new System.Drawing.Size(156, 32);
             this.btnImport.TabIndex = 0;
             this.btnImport.Text = "Aceptar e Importar";
             this.btnImport.UseVisualStyleBackColor = true;
             this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
+            // 
+            // cbFilterHasError
+            // 
+            this.cbFilterHasError.AutoSize = true;
+            this.cbFilterHasError.Location = new System.Drawing.Point(11, 16);
+            this.cbFilterHasError.Name = "cbFilterHasError";
+            this.cbFilterHasError.Size = new System.Drawing.Size(204, 20);
+            this.cbFilterHasError.TabIndex = 2;
+            this.cbFilterHasError.Text = "Mostrar solo filas con errores.";
+            this.cbFilterHasError.UseVisualStyleBackColor = true;
+            this.cbFilterHasError.CheckedChanged += new System.EventHandler(this.cbFilterHasError_CheckedChanged);
             // 
             // ImportWizardForm
             // 
@@ -357,6 +356,7 @@
             this.tabErrors.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvErrors)).EndInit();
             this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -364,7 +364,6 @@
         #endregion
 
         private Panel pnlTop;
-        private ComboBox cboSourceType;
         private TextBox txtFilePath;
         private Button btnBrowse;
         private Button btnLoadData;
@@ -386,5 +385,6 @@
         private DataGridViewComboBoxColumn SourceColumn;
         protected DataGridView dgvMapping;
         protected DataGridView dgvPreview;
+        private CheckBox cbFilterHasError;
     }
 }

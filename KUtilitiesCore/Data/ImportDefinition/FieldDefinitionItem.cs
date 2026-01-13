@@ -11,16 +11,16 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <summary>
     /// Representa la definición de un campo con validación adicional.
     /// </summary>
-    /// <remarks>Esta clase extiende <see cref="FieldDefinitionBase"/>.</remarks>
-    public class FieldDefinition : FieldDefinitionBase
+    /// <remarks>Esta clase extiende <see cref="FieldDefinitionItemBase"/>.</remarks>
+    public class FieldDefinitionItem : FieldDefinitionItemBase, ICloneable
     {
         #region Constructors
 
-        public FieldDefinition(PropertyInfo fieldProperty) : base(fieldProperty)
+        public FieldDefinitionItem(PropertyInfo fieldProperty) : base(fieldProperty)
         {
         }
 
-        public FieldDefinition(string fieldName, string displayName = "", string sourceColumnName = "",
+        public FieldDefinitionItem(string fieldName, string displayName = "", string sourceColumnName = "",
             string description = "", Type? fieldType = null, bool allowNull = false)
             : base(fieldName, displayName, sourceColumnName, description, fieldType, allowNull)
         {
@@ -36,7 +36,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         public ITypeConverter? Converter { get; private set; }
 
         /// <summary>
-        /// Delegado para validarel tipo de dato personalizado
+        /// Delegado para validar el tipo de dato complejo.
         /// </summary>
         public Func<object, bool>? IsValidCustom { get; set; }
 
@@ -97,6 +97,23 @@ namespace KUtilitiesCore.Data.ImportDefinition
                 // Resuelve el convertidor de tipo para el tipo de campo actual.
                 Converter = TypeConverterFactory.Provider.Resolve(FieldType);
             }
+        }
+        public FieldDefinitionItem Clone()
+        {
+            return new FieldDefinitionItem(
+                ColumnName,
+                DisplayName,
+                SourceColumnName,
+                Description,
+                FieldType,
+                AllowNull)
+            {
+                IsValidCustom = IsValidCustom
+            };
+        }
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         #endregion Methods

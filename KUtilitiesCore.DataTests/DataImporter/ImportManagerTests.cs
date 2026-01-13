@@ -99,17 +99,17 @@ namespace KUtilitiesCore.Data.DataImporter.Tests
             return isValid;
         }
 
-        private static FielDefinitionCollection GetBasicMapping()
+        private static FieldDefinitionCollection GetBasicMapping()
         {
-            FielDefinitionCollection result = new FielDefinitionCollection();
+            FieldDefinitionCollection result = new FieldDefinitionCollection();
             result.AddRange(
-                new FieldDefinition[]
+                new FieldDefinitionItem[]
                 {
-                    new FieldDefinition("Name", "Nombre"),
-                    new FieldDefinition("SecondName", "Apellido"),
-                    new FieldDefinition("Edad", "Edad", fieldType: typeof(int)),
-                    new FieldDefinition("City", "Ciudad"),
-                    new FieldDefinition("Profession", "Profesion")
+                    new FieldDefinitionItem("Name", "Nombre"),
+                    new FieldDefinitionItem("SecondName", "Apellido"),
+                    new FieldDefinitionItem("Edad", "Edad", fieldType: typeof(int)),
+                    new FieldDefinitionItem("City", "Ciudad"),
+                    new FieldDefinitionItem("Profession", "Profesion")
                 });
             return result;
         }

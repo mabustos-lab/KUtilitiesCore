@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Data.Validation
 {
 
-    // Interfaz inicial del builder (para asegurar que RuleFor sea el inicio)
+    /// <summary>
+    /// Interfaz inicial del builder (para asegurar que RuleFor sea el inicio)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TProperty"></typeparam>
     public interface IRuleBuilderInitial<T, TProperty> : IRuleBuilder<T, TProperty> { }
 }

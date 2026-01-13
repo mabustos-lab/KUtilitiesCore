@@ -15,16 +15,23 @@ namespace KUtilitiesCore.Data.DataImporter
     /// Clase principal (Independiente de UI). Gestiona el DataTable, la configuración de columnas y
     /// la orquestación.
     /// </summary>
-    public class ImportManager:IDisposable
+    public class ImportManager : IDisposable
     {
+        #region Fields
+
+        private DataTable _rawDataSource;
         private bool disposedValue;
+
+        #endregion Fields
+
         #region Constructors
 
         public ImportManager()
         {
-            ColumnDefinitions = new FielDefinitionCollection();
+            ColumnDefinitions = new FieldDefinitionCollection();
             ValidationErrors = new ValidationResult();
             DataSource = new DataTable();
+            _rawDataSource = new DataTable();
         }
 
         #endregion Constructors
@@ -34,7 +41,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <summary>
         /// Configuración de mapeo
         /// </summary>
-        public FielDefinitionCollection ColumnDefinitions { get; private set; }
+        public FieldDefinitionCollection ColumnDefinitions { get; private set; }
 
         /// <summary>
         /// El DataTable mantiene todo como string para permitir edición en UI sin errores de cast inmediatos.
@@ -49,16 +56,90 @@ namespace KUtilitiesCore.Data.DataImporter
         #endregion Properties
 
         #region Methods
+
+        public void Dispose()
+        {
+            // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Obtiene las filas inválidas del DataTable
+        /// </summary>
+        /// <returns>Enumerable de filas inválidas</returns>
+        public IEnumerable<DataRow> GetInvalidRows()
+        {
+            return DataSource.Rows.Cast<DataRow>()
+                .Where(row => !(row["_IsValid"] is bool isValid && isValid));
+        }
+
+        /// <summary>
+        /// Obtiene las filas válidas del DataTable
+        /// </summary>
+        /// <returns>Enumerable de filas válidas</returns>
+        public IEnumerable<DataRow> GetValidRows()
+        {
+            return DataSource.Rows.Cast<DataRow>()
+                .Where(row => row["_IsValid"] is bool isValid && isValid);
+        }
+
+        /// <summary>
+        /// Carga datos desde una fuente externa (CSV, Excel, etc.)
+        /// </summary>
+        /// <param name="reader">Lector de datos</param>
+        /// <exception cref="ArgumentNullException">Cuando reader es null</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Cuando no hay definiciones de columnas configuradas
+        /// </exception>
+        /// <exception cref="ArgumentException">Cuando el lector no está configurado correctamente</exception>
+        public void LoadData(IDataSourceReader reader)
+        {
+            if (reader == null)
+            {
+                throw new ArgumentNullException(nameof(reader), "El lector de datos no puede ser nulo.");
+            }
+
+            if (ColumnDefinitions.Count == 0)
+            {
+                throw new InvalidOperationException("No se encuentra configurado las definiciones de columnas.");
+            }
+
+            if (!reader.CanRead)
+            {
+                throw new ArgumentException("No se encuentra configurado IDataSourceReader para importar datos.", nameof(reader));
+            }
+
+            try
+            {
+                var rawData = ReadDataWithValidation(reader);
+                ReadData(rawData);
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                // Re-lanzar excepciones conocidas
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new DataLoadException("Error al cargar los datos desde la fuente.", ex);
+            }
+        }
+
         /// <summary>
         /// Lee los datos de un datatable con todas las columnas tipo string
         /// </summary>
         /// <param name="rawData"></param>
         public void ReadData(DataTable rawData)
         {
+            _rawDataSource.Reset();
+            _rawDataSource = rawData.Clone();
+            foreach (DataRow row in rawData.Rows)
+                _rawDataSource.ImportRow(row);
             ConfigurarDataTable();
             DataSource.Clear();
             int rowIndex = 0;
-            foreach (DataRow rawRow in rawData.Rows)
+            foreach (DataRow rawRow in _rawDataSource.Rows)
             {
                 DataRow newRow = DataSource.NewRow();
 
@@ -66,7 +147,7 @@ namespace KUtilitiesCore.Data.DataImporter
                 foreach (var col in ColumnDefinitions)
                 {
                     // Busqueda por case-insensitive
-                    DataColumn dtColumn = rawData.Columns
+                    DataColumn dtColumn = _rawDataSource.Columns
                         .Cast<DataColumn>()
                         .FirstOrDefault(
                             x => string.Equals(
@@ -91,52 +172,11 @@ namespace KUtilitiesCore.Data.DataImporter
         }
 
         /// <summary>
-        /// Carga datos desde una fuente externa (CSV, Excel, etc.)
-        /// </summary>
-        /// <param name="reader">Lector de datos</param>
-        /// <exception cref="ArgumentNullException">Cuando reader es null</exception>
-        /// <exception cref="InvalidOperationException">Cuando no hay definiciones de columnas configuradas</exception>
-        /// <exception cref="ArgumentException">Cuando el lector no está configurado correctamente</exception>
-        public void LoadData(IDataSourceReader reader)
-        {
-            if (reader == null)
-            {
-                throw new ArgumentNullException(nameof(reader), "El lector de datos no puede ser nulo.");
-            }
-
-            if (ColumnDefinitions.Count == 0)
-            {
-                throw new InvalidOperationException("No se encuentra configurado las definiciones de columnas.");
-            }
-
-            if (!reader.CanRead)
-            {
-                throw new ArgumentException("No se encuentra configurado IDataSourceReader para importar datos.", nameof(reader));
-            }
-
-            try
-            {
-
-                var rawData = ReadDataWithValidation(reader);
-                ReadData(rawData);
-            }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
-            {
-                // Re-lanzar excepciones conocidas
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new DataLoadException("Error al cargar los datos desde la fuente.", ex);
-            }
-        }
-
-        /// <summary>
         /// Establece la definición de las columnas
         /// </summary>
         /// <param name="mapping">Configuración de mapeo</param>
         /// <exception cref="ArgumentNullException">Cuando mapping es null</exception>
-        public void SetMapping(FielDefinitionCollection mapping)
+        public void SetMapping(FieldDefinitionCollection mapping)
         {
             ColumnDefinitions = mapping ?? throw new ArgumentNullException(nameof(mapping), "La configuración de mapeo no puede ser nula.");
 
@@ -182,24 +222,23 @@ namespace KUtilitiesCore.Data.DataImporter
 
             return allRowsValid && ValidationErrors.IsValid;
         }
-        /// <summary>
-        /// Obtiene las filas válidas del DataTable
-        /// </summary>
-        /// <returns>Enumerable de filas válidas</returns>
-        public IEnumerable<DataRow> GetValidRows()
+
+        protected virtual void Dispose(bool disposing)
         {
-            return DataSource.Rows.Cast<DataRow>()
-                .Where(row => row["_IsValid"] is bool isValid && isValid);
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    DataSource.Dispose();
+                    _rawDataSource.Dispose();
+                }
+
+                // TODO: liberar los recursos no administrados (objetos no administrados) y reemplazar el finalizador
+                // TODO: establecer los campos grandes como NULL
+                disposedValue = true;
+            }
         }
-        /// <summary>
-        /// Obtiene las filas inválidas del DataTable
-        /// </summary>
-        /// <returns>Enumerable de filas inválidas</returns>
-        public IEnumerable<DataRow> GetInvalidRows()
-        {
-            return DataSource.Rows.Cast<DataRow>()
-                .Where(row => !(row["_IsValid"] is bool isValid && isValid));
-        }
+
         /// <summary>
         /// Lee datos del lector con validación previa
         /// </summary>
@@ -244,6 +283,16 @@ namespace KUtilitiesCore.Data.DataImporter
         }
 
         /// <summary>
+        /// Obtiene el nombre de columna interno por el nombre de columna fuente
+        /// </summary>
+        private string GetColumnNameBySource(string sourceColumnName)
+        {
+            return ColumnDefinitions
+                .FirstOrDefault(x => x.SourceColumnName == sourceColumnName)?
+                .ColumnName ?? sourceColumnName;
+        }
+
+        /// <summary>
         /// Valida las columnas requeridas
         /// </summary>
         private void ValidateRequiredColumns()
@@ -277,10 +326,15 @@ namespace KUtilitiesCore.Data.DataImporter
             bool rowValid = true;
             int rowIndex = (int)row["_RowIndex"];
             row.ClearErrors();
+            _rawDataSource.Rows[rowIndex].ClearErrors();
 
             foreach (var def in ColumnDefinitions)
             {
                 string value = row[def.ColumnName]?.ToString() ?? string.Empty;
+                DataColumn dcSource = _rawDataSource.Columns
+                    .Cast<DataColumn>()
+                    .FirstOrDefault(
+                        x => x.ColumnName.Equals(def.SourceColumnName, StringComparison.InvariantCultureIgnoreCase));
 
                 // Validar campo requerido
                 if (!def.AllowNull && string.IsNullOrWhiteSpace(value))
@@ -288,6 +342,9 @@ namespace KUtilitiesCore.Data.DataImporter
                     string errMsg = $"El campo '{def.DisplayName}' es requerido.";
                     rowValid = false;
                     ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex));
+                    // validamos si existe esa columna en el DataSource
+                    if (dcSource != null)
+                        _rawDataSource.Rows[rowIndex].SetColumnError(def.SourceColumnName, errMsg);
                     row.SetColumnError(def.ColumnName, errMsg);
                     continue;
                 }
@@ -302,6 +359,8 @@ namespace KUtilitiesCore.Data.DataImporter
                     string errMsg = $"Se esperaba un valor de tipo [{def.FieldType?.Name ?? "desconocido"}] para el valor '{value}'.";
                     rowValid = false;
                     ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex, value));
+                    if (dcSource != null)
+                        _rawDataSource.Rows[rowIndex].SetColumnError(def.SourceColumnName, errMsg);
                     row.SetColumnError(def.ColumnName, errMsg);
                 }
             }
@@ -309,45 +368,11 @@ namespace KUtilitiesCore.Data.DataImporter
             return rowValid;
         }
 
-        /// <summary>
-        /// Obtiene el nombre de columna interno por el nombre de columna fuente
-        /// </summary>
-        private string GetColumnNameBySource(string sourceColumnName)
-        {
-            return ColumnDefinitions
-                .FirstOrDefault(x => x.SourceColumnName == sourceColumnName)?
-                .ColumnName ?? sourceColumnName;
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    DataSource.Dispose();
-                }
-
-                // TODO: liberar los recursos no administrados (objetos no administrados) y reemplazar el finalizador
-                // TODO: establecer los campos grandes como NULL
-                disposedValue = true;
-            }
-        }
-
-        // // TODO: reemplazar el finalizador solo si "Dispose(bool disposing)" tiene código para liberar los recursos no administrados
-        // ~ImportManager()
-        // {
-        //     // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
-        //     Dispose(disposing: false);
-        // }
-
-        public void Dispose()
-        {
-            // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
         #endregion Methods
+
+        // // TODO: reemplazar el finalizador solo si "Dispose(bool disposing)" tiene código para
+        // liberar los recursos no administrados ~ImportManager() { // No cambie este código.
+        // Coloque el código de limpieza en el método "Dispose(bool disposing)". Dispose(disposing:
+        // false); }
     }
 }

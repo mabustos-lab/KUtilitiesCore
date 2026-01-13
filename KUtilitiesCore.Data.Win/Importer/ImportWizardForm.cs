@@ -14,18 +14,22 @@ namespace KUtilitiesCore.Data.Win.Importer
     {
         #region Fields
 
-        private readonly FielDefinitionCollection _fieldDefinitions;
+        private readonly FieldDefinitionCollection _fieldDefinitions;
 
         private readonly ImportManager _importManager;
 
         // Estado Lógico
         private IImportConfigControl currentConfigControl;
 
+        private string currentExtFile;
+
+        private System.Data.DataTable loadedDataTable;
+
         #endregion Fields
 
         #region Constructors
 
-        public ImportWizardForm(FielDefinitionCollection fieldDefinitions, ImportManager importManager = null)
+        public ImportWizardForm(FieldDefinitionCollection fieldDefinitions, ImportManager importManager = null)
         {
             InitializeComponent();
 
@@ -40,6 +44,14 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         #region Properties
 
+        /// <summary>
+        /// Establece si la ventana se cerrara cuando la importación esta completada y validada correctamente.
+        /// </summary>
+        public bool AutoCloseOnSuccess { get; set; } = true;
+
+        /// <summary>
+        /// Establece el nombre del archivo que se desea importar.
+        /// </summary>
         public string FileName
         {
             get => txtFilePath.Text; set
@@ -50,7 +62,6 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
         }
 
-        System.Data.DataTable loadedDataTable;
         /// <summary>
         /// Datos cargados de la fuente de datos.
         /// </summary>
@@ -64,8 +75,6 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
         }
 
-
-
         /// <summary>
         /// Datos requeridos para la importación
         /// </summary>
@@ -74,19 +83,83 @@ namespace KUtilitiesCore.Data.Win.Importer
         #endregion Properties
 
         #region Methods
+
+        /// <summary>
+        /// Iniicializa el proceso para la carga de información
+        /// </summary>
+        public virtual void LoadData()
+        {
+            tsslWarning.Visible = false;
+            tsslCount.Text = "Filas cargadas: 0";
+            if (string.IsNullOrEmpty(txtFilePath.Text))
+            {
+                ShowMessage("Seleccione un archivo primero.", "Aviso", MessageBoxIcon.Warning);
+                return;
+            }
+            try
+            {
+                Cursor.Current = Cursors.WaitCursor;
+                IDataSourceReader reader = null;
+                var options = currentConfigControl.GetParsingOptions();
+
+                if (currentExtFile == ".xlsx" || currentExtFile == ".xls")
+                {
+                    reader = ExcelSourceReaderFactory.CreateWithOptions(
+                        txtFilePath.Text,
+                        (ExcelParsingOptions)options,
+                        new ClosedXmlWorkbookReaderFactory());
+                }
+                else
+                {
+                    reader = CsvSourceReaderFactory.CreateWithOptions(txtFilePath.Text, (TextFileParsingOptions)options);
+                }
+
+                LoadedDataTable = reader.ReadData();
+
+                Cursor.Current = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                Cursor.Current = Cursors.Default;
+                tsslWarning.Text = "Error al leer el archivo.";
+                tsslWarning.Visible = true;
+                ShowMessage(
+                    $"Error al leer el archivo: {ex.Message}",
+                    "Error",
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Muestra un cuado de dialogo para selecionar el Arcivo de fuente de datos.
+        /// </summary>
+        public virtual void ShowOpenDialogFile()
+        {
+            using (var ofd = new OpenFileDialog())
+            {
+                // Filtro unificado que acepta todos los formatos soportados
+                ofd.Filter = "Todos los archivos soportados|*.csv;*.tsv;*.psv;*.txt;*.xlsx;*.xls|Archivos de Texto (*.csv, *.tsv, *.psv, *.txt)|*.csv;*.tsv;*.psv;*.txt|Excel (*.xlsx, *.xls)|*.xlsx;*.xls";
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    FileName = ofd.FileName;
+                }
+            }
+        }
+
         /// <summary>
         /// Importamos el los datos cargados al DataTable final
         /// </summary>
         protected virtual void ImportData()
         {
             // 1. Construir colección de definiciones activas con el mapeo actualizado
-            
-            var activeDefinitions = new FielDefinitionCollection();
+
+            var activeDefinitions = new FieldDefinitionCollection();
 
             foreach (DataGridViewRow row in dgvMapping.Rows)
             {
                 // Recuperamos la definición original desde el Tag
-                var originalDef = row.Tag as FieldDefinition;
+                var originalDef = row.Tag as FieldDefinitionItem;
                 string selectedSourceCol = row.Cells[1].Value?.ToString()!;
 
                 if (originalDef != null && selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
@@ -109,9 +182,7 @@ namespace KUtilitiesCore.Data.Win.Importer
             {
                 _importManager.SetMapping(activeDefinitions);
                 _importManager.ReadData(LoadedDataTable);
-                // El ImportManager ahora usará 'SourceColumnName' de cada definición para buscar en
-                // 'loadedDataTable' No es necesario renombrar columnas en el DataTable. var result
-                // = _importManager.LoadData(loadedDataTable, activeDefinitions);
+                
                 ValidateData();
                 OnProcessImportFinished();
             }
@@ -122,6 +193,32 @@ namespace KUtilitiesCore.Data.Win.Importer
                 this.DialogResult = DialogResult.None;
             }
         }
+
+        /// <summary>
+        /// Ocurre cuando el archivo es cargado y asignado al DataSource
+        /// </summary>
+        protected virtual void OnLoadedDataSource()
+        {
+            dgvPreview.DataSource = LoadedDataTable;
+            ResultData = null;
+
+            PopulateMappingGrid();
+            btnImport.Enabled = true;
+            tsslCount.Text = $"Filas cargadas: {LoadedDataTable.Rows.Count:N0}";
+        }
+
+        /// <summary>
+        /// Ocurre cuando finaliza el proceso de importación de datos
+        /// </summary>
+        protected virtual void OnProcessImportFinished()
+        {
+            if (_importManager != null && _importManager.ValidationErrors.Errors.Count > 0)
+            {
+                tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
+                tsslWarning.Visible = true;
+            }
+        }
+
         protected virtual void ShowMessage(string message, string caption, MessageBoxIcon msgIcon)
         {
             MessageBox.Show(
@@ -130,106 +227,7 @@ namespace KUtilitiesCore.Data.Win.Importer
                    MessageBoxButtons.OK,
                    msgIcon);
         }
-        /// <summary>
-        /// Iniicializa el proceso para la carga de información
-        /// </summary>
-        public virtual void LoadData()
-        {
-            tsslWarning.Visible = false;
-            tsslCount.Text = "Filas cargadas: 0";
-            if (string.IsNullOrEmpty(txtFilePath.Text))
-            {
-                ShowMessage("Seleccione un archivo primero.", "Aviso", MessageBoxIcon.Warning);
-                return;
-            }
-            try
-            {
-                Cursor.Current = Cursors.WaitCursor;
-                IDataSourceReader reader = null;
-                var options = currentConfigControl.GetParsingOptions();
 
-                if (cboSourceType.SelectedItem.ToString() == "CSV")
-                {
-                    // Nota: Asumiendo que DefaultDiskFileReader existe e implementa IDiskFileReader
-                    reader = CsvSourceReaderFactory.CreateWithOptions(txtFilePath.Text, (TextFileParsingOptions)options);
-                }
-                else
-                {
-                    // Nota: Asumiendo que ClosedXmlWorkbookReaderFactory existe
-                    reader = ExcelSourceReaderFactory.CreateWithOptions(
-                        txtFilePath.Text,
-                        (ExcelParsingOptions)options,
-                        new ClosedXmlWorkbookReaderFactory());
-                }
-
-                LoadedDataTable = reader.ReadData();
-
-                Cursor.Current = Cursors.Default;
-            }
-            catch (Exception ex)
-            {
-                Cursor.Current = Cursors.Default;
-                tsslWarning.Text = "Error al leer el archivo.";
-                tsslWarning.Visible = true;
-                ShowMessage(
-                    $"Error al leer el archivo: {ex.Message}",
-                    "Error",
-                    MessageBoxIcon.Error);
-            }
-        }
-        /// <summary>
-        /// Ocurre cuando el archivo es cargado y asignado al DataSource
-        /// </summary>
-        protected virtual void OnLoadedDataSource()
-        {
-            dgvPreview.Rows.Clear();
-            dgvPreview.Columns.Clear();
-            dgvPreview.DataSource = LoadedDataTable;
-            ResultData = null;
-
-            PopulateMappingGrid();
-            btnImport.Enabled = true;
-            tsslCount.Text = $"Filas cargadas: {LoadedDataTable.Rows.Count:N0}";
-        }
-        /// <summary>
-        /// Muestra un cuado de dialogo para selecionar el Arcivo de fuente de datos.
-        /// </summary>
-        public virtual void ShowOpenDialogFile()
-        {
-            using (var ofd = new OpenFileDialog())
-            {
-                // Filtro unificado que acepta todos los formatos soportados
-                ofd.Filter = "Todos los archivos soportados|*.csv;*.tsv;*.psv;*.txt;*.xlsx;*.xls|Archivos de Texto (*.csv, *.tsv, *.psv, *.txt)|*.csv;*.tsv;*.psv;*.txt|Excel (*.xlsx, *.xls)|*.xlsx;*.xls";
-
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    FileName = ofd.FileName;
-                }
-            }
-        }
-        private void OnSelectedFile()
-        {
-            // Lógica para detectar el tipo de archivo y cambiar el modo automáticamente
-            string ext = Path.GetExtension(txtFilePath.Text).ToLower();
-
-            if (ext == ".xlsx" || ext == ".xls")
-            {
-                cboSourceType.SelectedItem = "Excel";
-            }
-            else
-            {
-                // Asumimos CSV/Texto para .csv, .tsv, .psv, .txt
-                cboSourceType.SelectedItem = "CSV";
-            }
-
-            // Forzamos actualización de UI para asegurar que el control se ha creado
-            Application.DoEvents();
-
-            // Ahora inicializamos el control con la ruta del archivo (esto puede
-            // preconfigurar delimitadores)
-            currentConfigControl.Initialize(txtFilePath.Text);
-            btnLoadData.Enabled = true;
-        }
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             ShowOpenDialogFile();
@@ -241,8 +239,47 @@ namespace KUtilitiesCore.Data.Win.Importer
         private void btnLoadData_Click(object sender, EventArgs e)
         { LoadData(); }
 
-        private void cboSourceType_SelectedIndexChanged(object sender, EventArgs e)
-        { SourceTypeUpdate(); }
+        private void cbFilterHasError_CheckedChanged(object sender, EventArgs e)
+        {
+            FilterHasErrors(LoadedDataTable, dgvPreview, cbFilterHasError.Checked);
+        }
+
+        private void dgvPreview_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            ImportData();
+        }
+
+        private void FilterHasErrors(DataTable dt, DataGridView dgv, bool showErrorOnly)
+        {
+            if (showErrorOnly)
+            {
+                // Seleccionamos solo las filas con error
+                var rowsConError = dt.Rows.Cast<DataRow>()
+                                          .Where(r => r.HasErrors);
+
+                if (rowsConError.Any())
+                {
+                    // Creamos una vista temporal con esas filas
+                    DataTable dtErrores = dt.Clone(); // misma estructura
+                    foreach (var row in rowsConError)
+                        dtErrores.ImportRow(row);
+
+                    // ImportRow mantiene la referencia a la fila original, así que las ediciones se
+                    // reflejan en el DataTable base
+                    dgv.DataSource = dtErrores;
+                }
+                else
+                {
+                    // Si no hay errores, mostramos tabla vacía con misma estructura
+                    dgv.DataSource = dt.Clone();
+                }
+            }
+            else
+            {
+                // Restauramos la vista completa
+                dgv.DataSource = dt;
+            }
+        }
 
         private void OnDispose()
         {
@@ -250,6 +287,29 @@ namespace KUtilitiesCore.Data.Win.Importer
             ResultData.Dispose();
             if (_importManager != null)
                 _importManager.Dispose();
+        }
+
+        private void OnSelectedFile()
+        {
+            // Lógica para detectar el tipo de archivo y cambiar el modo automáticamente
+            currentExtFile = Path.GetExtension(txtFilePath.Text).ToLower();
+
+            if (currentExtFile == ".xlsx" || currentExtFile == ".xls")
+            {
+                SourceTypeUpdate("Excel");
+            }
+            else
+            {
+                // Asumimos CSV/Texto para .csv, .tsv, .psv, .txt
+                SourceTypeUpdate("CSV");
+            }
+
+            // Forzamos actualización de UI para asegurar que el control se ha creado
+            Application.DoEvents();
+
+            // Ahora inicializamos el control con la ruta del archivo (esto puede preconfigurar delimitadores)
+            currentConfigControl.Initialize(txtFilePath.Text);
+            btnLoadData.Enabled = true;
         }
 
         private void PopulateMappingGrid()
@@ -302,10 +362,12 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
         }
 
-        private void SourceTypeUpdate()
+        private void SourceTypeUpdate(string sourceTypeTagSelected)
         {
+            if (string.IsNullOrEmpty(sourceTypeTagSelected))
+                throw new ArgumentNullException(nameof(sourceTypeTagSelected));
             pnlConfig.Controls.Clear();
-            if (cboSourceType.SelectedItem?.ToString() == "CSV")
+            if (sourceTypeTagSelected.Equals("csv", StringComparison.InvariantCultureIgnoreCase))
             {
                 currentConfigControl = new CsvConfigControl();
             }
@@ -330,8 +392,11 @@ namespace KUtilitiesCore.Data.Win.Importer
                     "Importación completada y validada correctamente.",
                     "Éxito",
                     MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (AutoCloseOnSuccess)
+                {
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
             }
             else
             {
@@ -365,19 +430,6 @@ namespace KUtilitiesCore.Data.Win.Importer
                 // No cerramos el form para permitir correcciones
                 this.DialogResult = DialogResult.None;
             }
-
-        }
-        /// <summary>
-        /// Ocurre cuando finaliza el proceso de importación de datos
-        /// </summary>
-        protected virtual void OnProcessImportFinished()
-        {
-            if (_importManager != null && _importManager.ValidationErrors.Errors.Count > 0)
-            {
-                tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
-                tsslWarning.Visible = true;
-            }
-
         }
 
         #endregion Methods
