@@ -156,7 +156,7 @@ namespace KUtilitiesCore.Data.DataImporter
                                 StringComparison.OrdinalIgnoreCase));
                     if (dtColumn != null)
                     {
-                        newRow[col.ColumnName] = rawRow[dtColumn.ColumnName]?.ToString();
+                        newRow[col.FieldName] = rawRow[dtColumn.ColumnName]?.ToString();
                     }
                     else if (!col.AllowNull)
                     {
@@ -272,7 +272,7 @@ namespace KUtilitiesCore.Data.DataImporter
             // Agregamos columnas de negocio (todo string)
             foreach (var field in ColumnDefinitions)
             {
-                DataColumn dc = DataSource.Columns.Add(field.ColumnName, typeof(string));
+                DataColumn dc = DataSource.Columns.Add(field.FieldName, typeof(string));
                 dc.Caption = field.SourceColumnName;
                 //dc.AllowDBNull = field.AllowNull;
             }
@@ -289,7 +289,7 @@ namespace KUtilitiesCore.Data.DataImporter
         {
             return ColumnDefinitions
                 .FirstOrDefault(x => x.SourceColumnName == sourceColumnName)?
-                .ColumnName ?? sourceColumnName;
+                .FieldName ?? sourceColumnName;
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace KUtilitiesCore.Data.DataImporter
 
             foreach (var def in ColumnDefinitions)
             {
-                string value = row[def.ColumnName]?.ToString() ?? string.Empty;
+                string value = row[def.FieldName]?.ToString() ?? string.Empty;
                 DataColumn dcSource = _rawDataSource.Columns
                     .Cast<DataColumn>()
                     .FirstOrDefault(
@@ -339,40 +339,70 @@ namespace KUtilitiesCore.Data.DataImporter
                 // Validar campo requerido
                 if (!def.AllowNull && string.IsNullOrWhiteSpace(value))
                 {
+                    if (def.DefaultValue != null)
+                    {
+                        row[def.FieldName] = def.DefaultValue.ToString();
+                        if (dcSource != null)
+                            _rawDataSource.Rows[rowIndex][def.SourceColumnName] = def.DefaultValue.ToString();
+                        continue;
+                    }
+
                     string errMsg = $"El campo '{def.DisplayName}' es requerido.";
                     rowValid = false;
                     ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex));
                     // validamos si existe esa columna en el DataSource
                     if (dcSource != null)
                         _rawDataSource.Rows[rowIndex].SetColumnError(def.SourceColumnName, errMsg);
-                    row.SetColumnError(def.ColumnName, errMsg);
+                    row.SetColumnError(def.FieldName, errMsg);
                     continue;
                 }
 
                 // Si está vacío y permite nulos, no validar tipo
-                if (string.IsNullOrWhiteSpace(value) && def.AllowNull)
+                if(string.IsNullOrWhiteSpace(value) && def.AllowNull)
+                {
+                    if (def.DefaultValue != null)
+                        row[def.FieldName]=def.DefaultValue.ToString();
                     continue;
+                }
 
                 // Validar tipo de dato
                 if (!def.IsValidValueType(value))
                 {
-                    string errMsg = $"Se esperaba un valor de tipo [{def.FieldType?.Name ?? "desconocido"}] para el valor '{value}'.";
+                    string errMsg = $"Se esperaba un valor de tipo [{def.TargetType?.Name ?? "desconocido"}] para el valor '{value}'.";
                     rowValid = false;
                     ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex, value));
                     if (dcSource != null)
                         _rawDataSource.Rows[rowIndex].SetColumnError(def.SourceColumnName, errMsg);
-                    row.SetColumnError(def.ColumnName, errMsg);
+                    row.SetColumnError(def.FieldName, errMsg);
+                }
+                else
+                {
+                    RunBusinessRules(def, def.TypeConverter.TryConvert(value),rowIndex);
                 }
             }
 
             return rowValid;
         }
 
-        #endregion Methods
+        private void RunBusinessRules(IFieldDefinitionItem definition, object convertedValue, int currentRowIndex)
+        {
+            if (definition.ValidationRules != null && definition.ValidationRules.Count > 0)
+            {
+                foreach (var rule in definition.ValidationRules)
+                {
+                    var ruleFailures = rule.Validate(convertedValue, definition.FieldName);
+                    if (ruleFailures != null)
+                    {
+                        foreach (var item in ruleFailures)
+                        {
+                            item.IndexRow = currentRowIndex;
+                            ValidationErrors.Errors.Add(item);
+                        }
+                    }
+                }
+            }
+        }
 
-        // // TODO: reemplazar el finalizador solo si "Dispose(bool disposing)" tiene código para
-        // liberar los recursos no administrados ~ImportManager() { // No cambie este código.
-        // Coloque el código de limpieza en el método "Dispose(bool disposing)". Dispose(disposing:
-        // false); }
+        #endregion Methods
     }
 }

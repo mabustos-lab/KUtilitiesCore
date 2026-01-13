@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data.Converter;
+using KUtilitiesCore.Data.ImportDefinition.Validation;
 using KUtilitiesCore.Data.Validation.RuleValues;
 using KUtilitiesCore.Extensions;
 using System;
@@ -14,6 +15,12 @@ namespace KUtilitiesCore.Data.ImportDefinition
     /// <remarks>Esta clase extiende <see cref="FieldDefinitionItemBase"/>.</remarks>
     public class FieldDefinitionItem : FieldDefinitionItemBase, ICloneable
     {
+        #region Fields
+
+        private readonly List<IImportValidationRule> validationRules = [];
+
+        #endregion Fields
+
         #region Constructors
 
         public FieldDefinitionItem(PropertyInfo fieldProperty) : base(fieldProperty)
@@ -31,18 +38,32 @@ namespace KUtilitiesCore.Data.ImportDefinition
         #region Properties
 
         /// <summary>
-        /// Obtiene el convertidor de tipo asociado al campo.
-        /// </summary>
-        public ITypeConverter? Converter { get; private set; }
-
-        /// <summary>
         /// Delegado para validar el tipo de dato complejo.
         /// </summary>
         public Func<object, bool>? IsValidCustom { get; set; }
 
+        /// <inheritdoc/>
+        public override List<IImportValidationRule> ValidationRules => validationRules;
+
         #endregion Properties
 
         #region Methods
+
+        public FieldDefinitionItem Clone()
+        {
+            var clone = new FieldDefinitionItem(FieldName, DisplayName, SourceColumnName, Description, TargetType, AllowNull)
+            {
+                IsValidCustom = IsValidCustom,
+                DefaultValue = DefaultValue
+            };
+            clone.ValidationRules.AddRange(validationRules);
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
 
         /// <summary>
         /// Valida el dato de la fuente
@@ -53,8 +74,9 @@ namespace KUtilitiesCore.Data.ImportDefinition
         {
             if (IsValidCustom != null)
                 return IsValidCustom(value);
-            return Converter?.CanConvert(value) ?? false;
+            return TypeConverter?.CanConvert(value) ?? false;
         }
+       
 
         /// <summary>
         /// Carga la información del campo a partir de la propiedad proporcionada.
@@ -92,30 +114,27 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// </summary>
         internal override void OnFieldTypeChanged()
         {
-            if (FieldType != null)
+            if (TargetType != null)
             {
                 // Resuelve el convertidor de tipo para el tipo de campo actual.
-                Converter = TypeConverterFactory.Provider.Resolve(FieldType);
+                TypeConverter = TypeConverterFactory.Provider.Resolve(TargetType);
             }
         }
-        public FieldDefinitionItem Clone()
+        /// <inheritdoc/>
+        public override IFieldDefinitionItem WithRules(Action<ImportRuleBuilder> ruleConfig)
         {
-            return new FieldDefinitionItem(
-                ColumnName,
-                DisplayName,
-                SourceColumnName,
-                Description,
-                FieldType,
-                AllowNull)
-            {
-                IsValidCustom = IsValidCustom
-            };
-        }
-        object ICloneable.Clone()
-        {
-            return Clone();
-        }
+            if (ruleConfig == null) throw new ArgumentNullException(nameof(ruleConfig));
 
+            var builder = new ImportRuleBuilder(this);
+            ruleConfig(builder);
+
+            return this;
+        }
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"{FieldName} ({TargetType.Name})";
+        }
         #endregion Methods
     }
 }
