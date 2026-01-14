@@ -7,7 +7,8 @@
 		<Nullable>disable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<Title>KUtilitiesCore.Data</Title>
-		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
