@@ -1,4 +1,12 @@
-﻿namespace KUtilitiesCore.Dal.BulkInsert
+﻿#if NET48
+
+using SqlClient = System.Data.SqlClient;
+
+#else
+using SqlClient = Microsoft.Data.SqlClient;
+#endif
+
+namespace KUtilitiesCore.Dal.BulkInsert
 {
     /// <summary>
     /// Configuración para el proceso de inserción masiva de datos.
@@ -30,6 +38,11 @@
         /// este tiempo, se cancelará.
         /// </summary>
         public int BulkCopyTimeout { get; set; } = 600;
+
+        /// <summary>
+        /// Define el comportamiento de la carga masiva de datos en SQL Server.
+        /// </summary>
+        public SqlClient.SqlBulkCopyOptions Options { get; set; } = SqlClient.SqlBulkCopyOptions.Default;
 
         /// <summary>
         /// Diccionario para mapear columnas del DataTable de origen a columnas de la tabla destino.

@@ -32,40 +32,77 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// </summary>
         /// <param name="dataTable">El DataTable que contiene los datos a insertar.</param>
         /// <param name="context">Contexto de conexión a la base de datos</param>
+        /// <param name="externalTransaction">Transacción asociada a la operación, si no se asigna internamente se crea una transacción</param>
         /// <exception cref="ArgumentException">Se lanza si el DataTable es nulo o está vacío.</exception>
-        public void BulkCopy<TContext>(DataTable dataTable, TContext context)
+        public void BulkCopy<TContext>(DataTable dataTable, TContext context, ITransaction externalTransaction = null)
             where TContext : ISqlExecutorContext
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
                 throw new ArgumentException("El DataTable no puede estar vacío.");
 
+            bool isLocalTransaction = (externalTransaction == null);
+
+
             if (context.ProviderName is "System.Data.SqlClient" or "Microsoft.Data.SqlClient")
             {
-                using (ITransaction transaction = context.BeginTransaction())
+                ITransaction transaction = externalTransaction ?? context.BeginTransaction();
+                try
                 {
-                    try
+                    // SqlBulkCopy solo se ejecuta si el proveedor es SQL Server
+                    using var bulkCopy = new SqlClient.SqlBulkCopy((SqlClient.SqlConnection)context.Connection, _config.Options,
+                        (SqlClient.SqlTransaction)((TransactionBase)transaction).GetTransactionObject());
+
+                    bulkCopy.DestinationTableName = _config.DestinationTableName;
+                    bulkCopy.BatchSize = _config.BatchSize;
+                    bulkCopy.BulkCopyTimeout = _config.BulkCopyTimeout;
+
+                    // Configuración de Mapeo de Columnas
+                    // Si el diccionario tiene datos, usamos el mapeo explícito.
+                    // Si está vacío, asume que los nombres de columnas son idénticos.
+                    if (_config.ColumnMappings.Count > 0)
                     {
-                        // SqlBulkCopy solo se ejecuta si el proveedor es SQL Server
-                        using var bulkCopy = new SqlClient.SqlBulkCopy((SqlClient.SqlConnection)context.Connection);
-                        bulkCopy.DestinationTableName = _config.DestinationTableName;
-                        bulkCopy.BatchSize = _config.BatchSize;
-                        bulkCopy.BulkCopyTimeout = _config.BulkCopyTimeout;
-
                         // Configuración de mapeo de columnas
-                        foreach (var mapping in _config.ColumnMappings)
+                        foreach(var mapping in _config.ColumnMappings)
                             bulkCopy.ColumnMappings.Add(mapping.Key, mapping.Value);
+                    }
+                    else
+                    {
+                        // Mapeo automático simple (opcional, por seguridad se recomienda mapeo explícito)
+                        foreach (DataColumn col in dataTable.Columns)
+                        {
+                            bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                        }
+                    }
 
-                        // Inserta los datos en la tabla destino
-                        bulkCopy.WriteToServer(dataTable);
+                    // Inserta los datos en la tabla destino
+                    bulkCopy.WriteToServer(dataTable);
+                    // Si la transacción fue creada localmente, hacemos Commit
+                    if (isLocalTransaction)
+                    {
                         transaction.Commit();
                     }
-                    catch (Exception)
+                }
+                catch (Exception)
+                {
+                    // Si falla y la transacción es local, hacemos Rollback
+                    if (isLocalTransaction)
                     {
                         transaction.Rollback();
-                        throw; // Relanza la excepción para el manejo externo
+                    }
+                    throw; // Relanza la excepción para el manejo externo
+                }
+                finally
+                {
+                    // Nota: No cerramos la conexión aquí porque fue inyectada (conn).
+                    // El que llama al método es responsable de la conexión,
+                    // pero sí limpiamos la transacción local si fue creada.
+                    if (isLocalTransaction && transaction != null)
+                    {
+                        transaction.Dispose();
                     }
                 }
             }
+
             else
             {
                 // Estrategia genérica para otros proveedores (ejemplo: INSERT con múltiples valores)
@@ -73,7 +110,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
             }
         }
 
-    
+
         /// <summary>
         /// Realiza una inserción masiva genérica para proveedores que no soportan SqlBulkCopy.
         /// </summary>

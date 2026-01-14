@@ -11,7 +11,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// <summary>
         /// Inserta un DataTable en la base de datos utilizando la estrategia óptima según el proveedor.
         /// </summary>
-        void BulkCopy<TContext>(DataTable dataTable, TContext context)
+        void BulkCopy<TContext>(DataTable dataTable, TContext context, ITransaction externalTransaction = null)
             where TContext: ISqlExecutorContext;
 
     }
