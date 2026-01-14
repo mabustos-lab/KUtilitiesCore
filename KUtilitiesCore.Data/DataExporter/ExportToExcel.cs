@@ -137,7 +137,7 @@ namespace KUtilitiesCore.Data.DataExporter
 
         private static void ApplyCellFormatting(IXLCell cell, DataColumn column, object value)
         {
-            string format = column.GetDisplayFormat();
+            string format = column.GetXLDisplayFormat();
             if (!string.IsNullOrEmpty(format))
             {
                 cell.Style.NumberFormat.Format = format;
@@ -161,7 +161,7 @@ namespace KUtilitiesCore.Data.DataExporter
 
         private static void ApplyColumnWidth(IXLColumn excelColumn, DataColumn column)
         {
-            double customWidth = column.GetColumnWidth();
+            double customWidth = column.GetXLColumnWidth();
             if (customWidth > 0)
             {
                 excelColumn.Width = customWidth;

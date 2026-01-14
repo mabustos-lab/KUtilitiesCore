@@ -94,7 +94,7 @@ namespace KUtilitiesCore.Data.DataExporter
 
         private static string GetFormattedValue(object value, DataColumn column)
         {
-            string format = column.GetDisplayFormat();
+            string format = column.GetXLDisplayFormat();
 
             if (!string.IsNullOrEmpty(format) && value is IFormattable formattable)
             {

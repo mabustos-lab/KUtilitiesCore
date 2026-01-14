@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -19,6 +20,11 @@ namespace KUtilitiesCore.Data
         private const string ColumnDescriptionKey = "ColumnDescription";
 
         /// <summary>
+        /// Clave usada para almacenar el ancho de columna preferido en Excel.
+        /// </summary>
+        private const string ColumnWidthKey = "ColumnWidth";
+
+        /// <summary>
         /// Clave usada para establecer el Formato definir formatos (ej. "C2" para moneda o
         /// "yyyy-MM-dd" para fechas) en el DataTable y se aplicarán automáticamente en el Excel.
         /// </summary>
@@ -28,41 +34,7 @@ namespace KUtilitiesCore.Data
         /// Clave usada para marcar columnas que deben excluirse en ciertos procesos.
         /// </summary>
         private const string ExcludeColumnKey = "ExcludeColumn";
-        /// <summary>
-        /// Clave usada para almacenar el ancho de columna preferido en Excel.
-        /// </summary>
-        private const string ColumnWidthKey = "ColumnWidth";
-        /// <summary>
-        /// Establece el ancho preferido para una columna en Excel.
-        /// </summary>
-        /// <param name="column">Columna a configurar.</param>
-        /// <param name="width">Ancho en unidades de Excel (0 para autoajuste).</param>
-        public static void SetColumnWidth(this DataColumn column, double width)
-        {
-            if (column == null || width < 0)
-                return;
 
-            column.ExtendedProperties[ColumnWidthKey] = width;
-        }
-
-        /// <summary>
-        /// Obtiene el ancho configurado para una columna en Excel.
-        /// </summary>
-        /// <param name="column">Columna a consultar.</param>
-        /// <returns>Ancho configurado o 0 si no está configurado.</returns>
-        public static double GetColumnWidth(this DataColumn column)
-        {
-            if (column == null)
-                return 0;
-
-            if (column.ExtendedProperties.ContainsKey(ColumnWidthKey))
-            {
-                if (column.ExtendedProperties[ColumnWidthKey] is double width)
-                    return width;
-            }
-
-            return 0;
-        }
         /// <summary>
         /// Agrega una nueva columna al <see cref="DataTable"/> con el tipo especificado.
         /// </summary>
@@ -134,7 +106,7 @@ namespace KUtilitiesCore.Data
                 dataColumn.SetDescription(description);
 
             if (!string.IsNullOrEmpty(displayFormat))
-                dataColumn.SetDisplayFormat(displayFormat);
+                dataColumn.SetXLDisplayFormat(displayFormat);
 
             return dataColumn;
         }
@@ -182,9 +154,41 @@ namespace KUtilitiesCore.Data
         }
 
         /// <summary>
+        /// Obtiene el ancho configurado para una columna en Excel.
+        /// </summary>
+        /// <param name="column">Columna a consultar.</param>
+        /// <returns>Ancho configurado o 0 si no está configurado.</returns>
+        public static double GetXLColumnWidth(this DataColumn column)
+        {
+            if (column == null)
+                return 0;
+
+            if (column.ExtendedProperties.ContainsKey(ColumnWidthKey))
+            {
+                if (column.ExtendedProperties[ColumnWidthKey] is double width)
+                    return width;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Obtiene el ancho configurado para una columna en Excel.
+        /// </summary>
+        /// <param name="dt">Tabla origen con la columna a consltar</param>
+        /// <param name="columnName">Nombre de la columna a consultar.</param>
+        /// <returns>Ancho configurado o 0 si no está configurado.</returns>
+        public static double GetXLColumnWidth(this DataTable dt, string columnName)
+        {
+            if (dt == null || !dt.Columns.Contains(columnName))
+                return 0;
+            return dt.Columns[columnName].GetXLColumnWidth();
+        }
+
+        /// <summary>
         /// Obtiene el texto que etablece el formato para Excel
         /// </summary>
-        public static string GetDisplayFormat(this DataColumn column)
+        public static string GetXLDisplayFormat(this DataColumn column)
         {
             return column.ExtendedProperties.ContainsKey(DisplayFormatKey)
                 ? column.ExtendedProperties[DisplayFormatKey]?.ToString() ?? string.Empty
@@ -203,6 +207,16 @@ namespace KUtilitiesCore.Data
                    excludeFlag;
         }
         /// <summary>
+        /// Obtiene el valor que indica si la columna tiene la bandera de excluido para ser exportado.
+        /// </summary>
+        public static bool IsExcluded(this DataTable dt, string columnName)
+        {
+            if(dt == null || !dt.Columns.Contains(columnName))
+                return false;
+            return dt.Columns[columnName].IsExcluded();
+        }
+
+        /// <summary>
         /// Agrega o elimina una descripción para una columna existente.
         /// </summary>
         public static void SetDescription(this DataColumn column, string description)
@@ -219,19 +233,6 @@ namespace KUtilitiesCore.Data
         }
 
         /// <summary>
-        /// Formato de Visualización (Excel)
-        /// </summary>
-        /// <param name="column">Columna a la cul se establece el formato</param>
-        /// <param name="format">
-        /// Establece el formato (ej. "C2" para moneda o "yyyy-MM-dd" para fechas) se aplicarán
-        /// automáticamente en el Excel.
-        /// </param>
-        public static void SetDisplayFormat(this DataColumn column, string format)
-        {
-            column.ExtendedProperties[DisplayFormatKey] = format;
-        }
-
-        /// <summary>
         /// Establece una bandera que esa columna no va a ser exportada
         /// </summary>
         public static void SetExcluded(this DataColumn column, bool exclude)
@@ -242,6 +243,53 @@ namespace KUtilitiesCore.Data
                 column.ExtendedProperties[ExcludeColumnKey] = true;
             else if (column.ExtendedProperties.ContainsKey(ExcludeColumnKey))
                 column.ExtendedProperties.Remove(ExcludeColumnKey);
+        }
+        /// <summary>
+        /// Establece una bandera que esa columna no va a ser exportada
+        /// </summary>
+        public static void SetExcluded(this DataTable dt,string columnName, bool exclude)
+        {
+            if(dt == null || !dt.Columns.Contains(columnName))
+                return;
+            dt.Columns[columnName].SetExcluded(exclude);
+        }
+        /// <summary>
+        /// Establece el ancho preferido para una columna en Excel.
+        /// </summary>
+        /// <param name="column">Columna a configurar.</param>
+        /// <param name="width">Ancho en unidades de Excel (0 para autoajuste).</param>
+        public static void SetXLColumnWidth(this DataColumn column, double width)
+        {
+            if (column == null || width < 0)
+                return;
+
+            column.ExtendedProperties[ColumnWidthKey] = width;
+        }
+
+        /// <summary>
+        /// Establece el ancho preferido para una columna en Excel.
+        /// </summary>
+        /// <param name="dt">Tabla origen con la columna a configurar</param>
+        /// <param name="columnName">Nombre de la columna a configurar.</param>
+        /// <param name="width">Ancho en unidades de Excel (0 para autoajuste).</param>
+        public static void SetXLColumnWidth(this DataTable dt, string columnName, double width)
+        {
+            if (!dt.Columns.Contains(columnName) || width < 0)
+                return;
+            dt.Columns[columnName].SetXLColumnWidth(width);
+        }
+
+        /// <summary>
+        /// Formato de Visualización (Excel)
+        /// </summary>
+        /// <param name="column">Columna a la cul se establece el formato</param>
+        /// <param name="format">
+        /// Establece el formato (ej. "C2" para moneda o "yyyy-MM-dd" para fechas) se aplicarán
+        /// automáticamente en el Excel.
+        /// </param>
+        public static void SetXLDisplayFormat(this DataColumn column, string format)
+        {
+            column.ExtendedProperties[DisplayFormatKey] = format;
         }
 
     }
