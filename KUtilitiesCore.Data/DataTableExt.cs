@@ -26,7 +26,7 @@ namespace KUtilitiesCore.Data
 
         /// <summary>
         /// Clave usada para establecer el Formato definir formatos (ej. "C2" para moneda o
-        /// "yyyy-MM-dd" para fechas) en el DataTable y se aplicarán automáticamente en el Excel.
+        /// "yyyy-MM-dd" para fechas) en el DataTable aplicados en archivos de texto plano.
         /// </summary>
         private const string DisplayFormatKey = "DisplayFormat";
 
@@ -34,6 +34,12 @@ namespace KUtilitiesCore.Data
         /// Clave usada para marcar columnas que deben excluirse en ciertos procesos.
         /// </summary>
         private const string ExcludeColumnKey = "ExcludeColumn";
+
+        /// <summary>
+        /// Clave usada para establecer el Formato definir formatos en el DataTable y se aplicarán
+        /// automáticamente en el Excel.
+        /// </summary>
+        private const string XLDisplayFormatKey = "XLDisplayFormat";
 
         /// <summary>
         /// Agrega una nueva columna al <see cref="DataTable"/> con el tipo especificado.
@@ -154,6 +160,28 @@ namespace KUtilitiesCore.Data
         }
 
         /// <summary>
+        /// Obtiene el texto que etablece el formato para Archivos de texto plano
+        /// </summary>
+        /// <remarks>El código del formato es diferente para Excel que para un archivo de texto.</remarks>
+        public static string GetDisplayFormat(this DataColumn column)
+        {
+            return column.ExtendedProperties.ContainsKey(XLDisplayFormatKey)
+                ? column.ExtendedProperties[DisplayFormatKey]?.ToString() ?? string.Empty
+                : string.Empty;
+        }
+
+        /// <summary>
+        /// Obtiene el texto que etablece el formato para Archivos de texto plano
+        /// </summary>
+        /// <remarks>El código del formato es diferente para Excel que para un archivo de texto.</remarks>
+        public static string GetDisplayFormat(this DataTable dt, string columnName)
+        {
+            if (dt == null || !dt.Columns.Contains(columnName))
+                return string.Empty;
+            return dt.Columns[columnName].GetDisplayFormat();
+        }
+
+        /// <summary>
         /// Obtiene el ancho configurado para una columna en Excel.
         /// </summary>
         /// <param name="column">Columna a consultar.</param>
@@ -188,11 +216,23 @@ namespace KUtilitiesCore.Data
         /// <summary>
         /// Obtiene el texto que etablece el formato para Excel
         /// </summary>
+        /// <remarks>El código del formato es diferente para Excel y para un archivo de texto.</remarks>
         public static string GetXLDisplayFormat(this DataColumn column)
         {
-            return column.ExtendedProperties.ContainsKey(DisplayFormatKey)
-                ? column.ExtendedProperties[DisplayFormatKey]?.ToString() ?? string.Empty
+            return column.ExtendedProperties.ContainsKey(XLDisplayFormatKey)
+                ? column.ExtendedProperties[XLDisplayFormatKey]?.ToString() ?? string.Empty
                 : string.Empty;
+        }
+
+        /// <summary>
+        /// Obtiene el texto que etablece el formato para Excel
+        /// </summary>
+        /// <remarks>El código del formato es diferente para Excel y para un archivo de texto.</remarks>
+        public static string GetXLDisplayFormat(this DataTable dt, string columnName)
+        {
+            if (dt == null || !dt.Columns.Contains(columnName))
+                return string.Empty;
+            return dt.Columns[columnName].GetXLDisplayFormat();
         }
 
         /// <summary>
@@ -206,12 +246,13 @@ namespace KUtilitiesCore.Data
                    column.ExtendedProperties[ExcludeColumnKey] is bool excludeFlag &&
                    excludeFlag;
         }
+
         /// <summary>
         /// Obtiene el valor que indica si la columna tiene la bandera de excluido para ser exportado.
         /// </summary>
         public static bool IsExcluded(this DataTable dt, string columnName)
         {
-            if(dt == null || !dt.Columns.Contains(columnName))
+            if (dt == null || !dt.Columns.Contains(columnName))
                 return false;
             return dt.Columns[columnName].IsExcluded();
         }
@@ -233,6 +274,35 @@ namespace KUtilitiesCore.Data
         }
 
         /// <summary>
+        /// Formato de Visualización (texto plano)
+        /// </summary>
+        /// <param name="column">Columna a la cul se establece el formato</param>
+        /// <param name="format">
+        /// Establece el formato (ej. "C2" para moneda o "yyyy-MM-dd" para fechas) se aplicarán
+        /// automáticamente en el archivo de texto plano.
+        /// </param>
+        public static void SetDisplayFormat(this DataColumn column, string format)
+        {
+            column.ExtendedProperties[DisplayFormatKey] = format;
+        }
+
+        /// <summary>
+        /// Formato de Visualización (texto plano)
+        /// </summary>
+        /// <param name="dt">Tabla origen con la columna a configurar</param>
+        /// <param name="columnName">Columna a la cul se establece el formato</param>
+        /// <param name="format">
+        /// Establece el formato (ej. "C2" para moneda o "yyyy-MM-dd" para fechas) se aplicarán
+        /// automáticamente en el archivo de texto plano.
+        /// </param>
+        public static void SetDisplayFormat(this DataTable dt, string columnName, string format)
+        {
+            if (dt == null || !dt.Columns.Contains(columnName))
+                return;
+            dt.Columns[columnName].SetDisplayFormat(format);
+        }
+
+        /// <summary>
         /// Establece una bandera que esa columna no va a ser exportada
         /// </summary>
         public static void SetExcluded(this DataColumn column, bool exclude)
@@ -244,15 +314,17 @@ namespace KUtilitiesCore.Data
             else if (column.ExtendedProperties.ContainsKey(ExcludeColumnKey))
                 column.ExtendedProperties.Remove(ExcludeColumnKey);
         }
+
         /// <summary>
         /// Establece una bandera que esa columna no va a ser exportada
         /// </summary>
-        public static void SetExcluded(this DataTable dt,string columnName, bool exclude)
+        public static void SetExcluded(this DataTable dt, string columnName, bool exclude)
         {
-            if(dt == null || !dt.Columns.Contains(columnName))
+            if (dt == null || !dt.Columns.Contains(columnName))
                 return;
             dt.Columns[columnName].SetExcluded(exclude);
         }
+
         /// <summary>
         /// Establece el ancho preferido para una columna en Excel.
         /// </summary>
@@ -274,7 +346,7 @@ namespace KUtilitiesCore.Data
         /// <param name="width">Ancho en unidades de Excel (0 para autoajuste).</param>
         public static void SetXLColumnWidth(this DataTable dt, string columnName, double width)
         {
-            if (!dt.Columns.Contains(columnName) || width < 0)
+            if (dt == null || !dt.Columns.Contains(columnName) || width < 0)
                 return;
             dt.Columns[columnName].SetXLColumnWidth(width);
         }
@@ -282,14 +354,79 @@ namespace KUtilitiesCore.Data
         /// <summary>
         /// Formato de Visualización (Excel)
         /// </summary>
+        /// <remarks>
+        /// <para>El código del formato es para Excel.</para>
+        /// <para><b>Formatos comunes</b></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <description>Texto puro: <c>"@"</c> (trata cualquier contenido como texto).</description>
+        /// </item>
+        /// <item>
+        /// <description>Números enteros: <c>"0"</c> o <c>"#,##0"</c> (con separador de miles).</description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// Decimales: <c>"0.00"</c> (2 decimales fijos) o <c>"#,##0.00"</c> (con miles y 2 decimales).
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>Porcentaje: <c>"0%"</c> o <c>"0.00%"</c>.</description>
+        /// </item>
+        /// <item>
+        /// <description>Moneda: <c>"$ #,##0.00"</c> o formatos más específicos como <c>"[$$-409]#,##0"</c>.</description>
+        /// </item>
+        /// <item>
+        /// <description>Científico: <c>"0.00E+00"</c>.</description>
+        /// </item>
+        /// </list>
+        /// </remarks>
         /// <param name="column">Columna a la cul se establece el formato</param>
+        /// <param name="format">Establece el formato se aplicarán automáticamente en el Excel.</param>
+        public static void SetXLDisplayFormat(this DataColumn column, string format)
+        {
+            column.ExtendedProperties[XLDisplayFormatKey] = format;
+        }
+
+        /// <summary>
+        /// Formato de Visualización (Excel)
+        /// </summary>
+        /// <remarks>
+        /// <para>El código del formato es diferente para Excel y para un archivo de texto.</para>
+        /// <para><b>Formatos comunes</b></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <description>Texto puro: <c>"@"</c> (trata cualquier contenido como texto).</description>
+        /// </item>
+        /// <item>
+        /// <description>Números enteros: <c>"0"</c> o <c>"#,##0"</c> (con separador de miles).</description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// Decimales: <c>"0.00"</c> (2 decimales fijos) o <c>"#,##0.00"</c> (con miles y 2 decimales).
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>Porcentaje: <c>"0%"</c> o <c>"0.00%"</c>.</description>
+        /// </item>
+        /// <item>
+        /// <description>Moneda: <c>"$ #,##0.00"</c> o formatos más específicos como <c>"[$$-409]#,##0"</c>.</description>
+        /// </item>
+        /// <item>
+        /// <description>Científico: <c>"0.00E+00"</c>.</description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        /// <param name="dt">Tabla origen con la columna a configurar</param>
+        /// <param name="columnName">Columna a la cul se establece el formato</param>
         /// <param name="format">
         /// Establece el formato (ej. "C2" para moneda o "yyyy-MM-dd" para fechas) se aplicarán
         /// automáticamente en el Excel.
         /// </param>
-        public static void SetXLDisplayFormat(this DataColumn column, string format)
+        public static void SetXLDisplayFormat(this DataTable dt, string columnName, string format)
         {
-            column.ExtendedProperties[DisplayFormatKey] = format;
+            if (dt == null || !dt.Columns.Contains(columnName))
+                return;
+            dt.Columns[columnName].SetXLDisplayFormat(format);
         }
 
     }
