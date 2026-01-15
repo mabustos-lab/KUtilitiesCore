@@ -133,6 +133,7 @@ namespace KUtilitiesCore.Data.DataImporter
         public void ReadData(DataTable rawData)
         {
             _rawDataSource.Reset();
+            
             _rawDataSource = rawData.Clone();
             foreach (DataRow row in rawData.Rows)
                 _rawDataSource.ImportRow(row);
@@ -158,11 +159,11 @@ namespace KUtilitiesCore.Data.DataImporter
                     {
                         newRow[col.FieldName] = rawRow[dtColumn.ColumnName]?.ToString();
                     }
-                    else if (!col.AllowNull)
-                    {
-                        // Registrar advertencia para columnas requeridas faltantes
-                        ValidationErrors.AddErrorMessage($"Columna requerida '{col.SourceColumnName}' no encontrada en el origen de datos.");
-                    }
+                    //else if (!col.AllowNull)
+                    //{
+                    //    // Registrar advertencia para columnas requeridas faltantes
+                    //    ValidationErrors.AddErrorMessage($"Columna requerida '{col.SourceColumnName}' no encontrada en el origen de datos.");
+                    //}
                 }
 
                 newRow["_RowIndex"] = rowIndex++;
