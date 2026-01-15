@@ -13,6 +13,8 @@ namespace KUtilitiesCore.Data.WinTests
     {
         public class TestableImportWizardForm : ImportWizardForm
         {
+            private FieldDefinitionCollection _testFields;
+
             public DataTable MockDataTableToReturn { get; set; }
             public string LastMessageShown { get; private set; }
             public MessageBoxIcon LastMessageIcon { get; private set; }
@@ -20,6 +22,7 @@ namespace KUtilitiesCore.Data.WinTests
             public TestableImportWizardForm(FieldDefinitionCollection fields)
                 : base(fields, new ImportManager()) // Pasamos un ImportManager real o mock
             {
+                _testFields = fields.Clone();
             }
             public override void ShowOpenDialogFile()
             {
@@ -36,7 +39,7 @@ namespace KUtilitiesCore.Data.WinTests
                 return dt;
             }
 
-            private DataTable GetSampleWithErrorDataTable()
+            private DataTable GetSampleWithErrorValueDataTable()
             {
                 var dt = new DataTable();
                 dt.Columns.Add("Nombre", typeof(string));
@@ -45,15 +48,32 @@ namespace KUtilitiesCore.Data.WinTests
                 dt.Rows.Add("Ana Gomez", "25x");
                 return dt;
             }
+            private DataTable GetSampleWithErrorColumnDataTable()
+            {
+                var dt = new DataTable();
+                dt.Columns.Add("Nombre", typeof(string));
+                dt.Columns.Add("Columna1", typeof(string)); // En CSV todo suele llegar como string al inicio
+                dt.Rows.Add("Juan Perez", "30");
+                dt.Rows.Add("Ana Gomez", "25");
+                return dt;
+            }
             public void SimulateWithErrorLoadData()
             {
-                LoadedDataTable = GetSampleWithErrorDataTable();
+                LoadedDataTable = GetSampleWithErrorValueDataTable();
+            }
+            public void SimulateWithErrorColumnNameLoadData()
+            {
+                LoadedDataTable = GetSampleWithErrorColumnDataTable();
             }
             public DataGridView GetGridPreview => this.dgvPreview;
             public DataGridView GetGridMapping => this.dgvMapping;
             public override void LoadData()
             {
                 LoadedDataTable = GetSampleDataTable();
+            }
+            public void SimulateCorrectingMapping()
+            {
+                dgvMapping.Rows[1].Cells[1].Value = "Columna1";
             }
             public void SimulateImport()
             {
@@ -88,6 +108,7 @@ namespace KUtilitiesCore.Data.WinTests
         [TestMethod]
         public void LoadData_ShouldPopulateGrid_WhenFileIsSimulated()
         {
+            
             var defs = GetSampleDefinitions();
             using (var form = new TestableImportWizardForm(defs))
             {
@@ -153,6 +174,52 @@ namespace KUtilitiesCore.Data.WinTests
                 Assert.IsNull(form.ResultData, "ResultData debería ser nulo.");
                 StringAssert.Contains(form.LastMessageShown, "errores de validación");
                 Assert.AreEqual(MessageBoxIcon.Warning, form.LastMessageIcon);
+            }
+        }
+        [TestMethod]
+        public void Import_ShouldShowErrorsColumName_WhenDataIsInvalid()
+        {
+            // Arrange
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                // 1. Simular selección de archivo
+                form.ShowOpenDialogFile();
+
+                // 2. Simular click en Cargar
+                form.SimulateWithErrorColumnNameLoadData();
+                form.SimulateImport();
+                
+                // Assert
+                Assert.AreNotEqual(DialogResult.OK, form.DialogResult, "El formulario NO debería cerrarse si hay errores.");
+                Assert.IsNull(form.ResultData, "ResultData debería ser nulo.");
+                StringAssert.Contains(form.LastMessageShown, "errores de validación");
+                Assert.AreEqual(MessageBoxIcon.Warning, form.LastMessageIcon);
+            }
+        }
+        [TestMethod]
+        public void Import_ShouldSucceed_WhenCorrectMapping()
+        {
+            // Arrange
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                // 1. Simular selección de archivo
+                form.ShowOpenDialogFile();
+
+                // 2. Simular click en Cargar
+                form.SimulateWithErrorColumnNameLoadData();
+                form.SimulateCorrectingMapping();
+                form.SimulateImport();
+                Assert.AreEqual(DialogResult.OK, form.DialogResult, "El formulario debería cerrarse con OK si la importación es exitosa.");
+                Assert.IsNotNull(form.ResultData, "ResultData no debería ser nulo.");
+                Assert.HasCount(2, form.ResultData.Rows, "Deberían haberse importado 2 objetos.");
+
+                // Verificar mensaje de éxito
+                StringAssert.Contains("Importación completada y validada correctamente.", form.LastMessageShown);
+                Assert.AreEqual(MessageBoxIcon.Information, form.LastMessageIcon);
             }
         }
         [TestMethod]

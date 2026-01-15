@@ -45,7 +45,7 @@ namespace KUtilitiesCore.Data.Win
                                        "Archivos de Excel 97-2003 (*.xls)|*.xls";
                 saveFileDialog.Title = titleDialog;
                 saveFileDialog.FileName = defaulFilename;
-                saveFileDialog.DefaultExt = ".csv"; // Extensión por defecto
+                saveFileDialog.DefaultExt = ".xlsx"; // Extensión por defecto
                 saveFileDialog.AddExtension = true; // Añadir extensión automáticamente
 
                 // Mostrar diálogo y validar selección
