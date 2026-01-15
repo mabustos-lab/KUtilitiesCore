@@ -139,7 +139,8 @@ namespace KUtilitiesCore.Data.Win.Importer
             {
                 // Filtro unificado que acepta todos los formatos soportados
                 ofd.Filter = "Todos los archivos soportados|*.csv;*.tsv;*.psv;*.txt;*.xlsx;*.xls|Archivos de Texto (*.csv, *.tsv, *.psv, *.txt)|*.csv;*.tsv;*.psv;*.txt|Excel (*.xlsx, *.xls)|*.xlsx;*.xls";
-
+                ofd.DefaultExt = ".xlsx";
+                ofd.AddExtension = true;
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     FileName = ofd.FileName;
@@ -162,19 +163,36 @@ namespace KUtilitiesCore.Data.Win.Importer
                 var originalDef = row.Tag as FieldDefinitionItem;
                 string selectedSourceCol = row.Cells[1].Value?.ToString()!;
 
-                if (originalDef != null && selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
+                if (originalDef != null)
                 {
-                    // Actualizamos la propiedad SourceColumnName del objeto definición. Esto le
-                    // indica al ImportManager exactamente qué columna del DataTable debe leer para
-                    // este campo.
-                    // NOTA: Esto modifica la instancia en memoria. Si se desea preservar la
-                    // configuración original intacta para reutilización futura sin estos cambios,
-                    // se debería clonar el objeto aquí. Dado el contexto de UI, modificar la
-                    // instancia para alinearla con la selección del usuario es el comportamiento esperado.
-                    originalDef.SourceColumnName = selectedSourceCol;
-
+                    if (selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
+                    {
+                        originalDef.SourceColumnName = selectedSourceCol;
+                    }
+                    else
+                    {
+                        // Si se ignora, asignamos un nombre ficticio para que el ImportManager no encuentre
+                        // la columna en el DataTable y el valor extraído sea null.
+                        // (Asumiendo que ImportManager maneja columnas faltantes retornando null/default)
+                        originalDef.SourceColumnName = originalDef.DisplayName;
+                    }
                     activeDefinitions.Add(originalDef);
                 }
+
+                //    if (originalDef != null && selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
+                //{
+                //    // Actualizamos la propiedad SourceColumnName del objeto definición. Esto le
+                //    // indica al ImportManager exactamente qué columna del DataTable debe leer para
+                //    // este campo.
+                //    // NOTA: Esto modifica la instancia en memoria. Si se desea preservar la
+                //    // configuración original intacta para reutilización futura sin estos cambios,
+                //    // se debería clonar el objeto aquí. Dado el contexto de UI, modificar la
+                //    // instancia para alinearla con la selección del usuario es el comportamiento esperado.
+                //    originalDef.SourceColumnName = selectedSourceCol;
+
+                //    activeDefinitions.Add(originalDef);
+                //}
+                //originalDef.AllowNull
             }
 
             // 2. Ejecutar ImportManager
@@ -293,7 +311,7 @@ namespace KUtilitiesCore.Data.Win.Importer
         {
             // Lógica para detectar el tipo de archivo y cambiar el modo automáticamente
             currentExtFile = Path.GetExtension(txtFilePath.Text).ToLower();
-
+            btnLoadData.Enabled = false;
             if (currentExtFile == ".xlsx" || currentExtFile == ".xls")
             {
                 SourceTypeUpdate("Excel");

@@ -14,5 +14,17 @@ namespace KUtilitiesCore.Dal.BulkInsert
         void BulkCopy<TContext>(DataTable dataTable, TContext context, ITransaction externalTransaction = null)
             where TContext: ISqlExecutorContext;
 
+        /// <summary>
+        /// Inserta un IDataReader en la base de datos utilizando la estrategia óptima según el proveedor.
+        /// </summary>
+        void BulkCopy<TContext>(IDataReader reader, TContext context, ITransaction externalTransaction = null)
+            where TContext : ISqlExecutorContext;
+
+        /// <summary>
+        /// Inserta un Listas/IEnumerable (Streaming) en la base de datos utilizando la estrategia óptima según el proveedor.
+        /// </summary>
+        void BulkInsert<T, TContext>(IEnumerable<T> items, TContext context, ITransaction externalTransaction = null)
+            where TContext : ISqlExecutorContext;
+
     }
 }
