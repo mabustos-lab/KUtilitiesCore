@@ -35,19 +35,24 @@ namespace KUtilitiesCore.Data.Win.Importer
             };
         }
 
+        /// <inheritdoc/>
         public async void Initialize(string fileName)
         {
             try
             {
                 cboSheet.Items.Clear();
                 var sheets = await Task.Run(() => ExcelSourceReaderFactory.GetSheets(fileName));
-                cboSheet.Items.AddRange([.. sheets]);
-                cboSheet.SelectedIndex = 1;
-            } catch
+                if(sheets != null && sheets.Count > 0)
+                {
+                    cboSheet.Items.AddRange([.. sheets]);
+                    cboSheet.SelectedIndex = 0;
+                }
+            }
+            catch
             {
                 //excepción silenciosa
             }
-            
+
         }
     }
 }

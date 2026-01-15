@@ -311,7 +311,7 @@ namespace KUtilitiesCore.Data.Win.Importer
         {
             // Lógica para detectar el tipo de archivo y cambiar el modo automáticamente
             currentExtFile = Path.GetExtension(txtFilePath.Text).ToLower();
-
+            btnLoadData.Enabled = false;
             if (currentExtFile == ".xlsx" || currentExtFile == ".xls")
             {
                 SourceTypeUpdate("Excel");

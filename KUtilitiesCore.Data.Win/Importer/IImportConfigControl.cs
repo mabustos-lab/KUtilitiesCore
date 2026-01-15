@@ -9,6 +9,9 @@ namespace KUtilitiesCore.Data.Win.Importer
 {
     public interface IImportConfigControl
     {
+        /// <summary>
+        /// Inicializa el contron a partir de la información del archivo.
+        /// </summary>
         void Initialize(string fileName);
         IParsingOptions GetParsingOptions();
         event EventHandler OptionsChanged;
