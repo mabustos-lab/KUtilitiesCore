@@ -8,16 +8,17 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Dal.BulkInsert
 {
-    /// <summary> Convierte una secuencia IEnumerable<T> en un IDataReader. Esto permite hacer
-    /// "Streaming" de datos a SqlBulkCopy sin cargar todo en memoria (DataTable). </summary>
+    /// <summary>
+    /// Convierte una secuencia IEnumerable<T> en un IDataReader.
+    /// Esto permite hacer "Streaming" de datos a SqlBulkCopy sin cargar todo en memoria (DataTable).
+    /// </summary>
     /// <typeparam name="T">El tipo de objeto a leer.</typeparam>
     public class ObjectDataReader<T> : IDataReader
     {
-
-        private readonly Dictionary<string, int> _nameToIndex;
-        private readonly PropertyInfo[] _properties;
-        private T _current;
         private IEnumerator<T> _enumerator;
+        private readonly PropertyInfo[] _properties;
+        private readonly Dictionary<string, int> _nameToIndex;
+        private T _current;
         private bool _isClosed = false;
 
         public ObjectDataReader(IEnumerable<T> data)
@@ -39,51 +40,11 @@ namespace KUtilitiesCore.Dal.BulkInsert
             }
         }
 
-        /// <inheritdoc/>
-        public int FieldCount => _properties.Length;
-        /// <inheritdoc/>
-        public object this[int i] => GetValue(i);
-        /// <inheritdoc/>
-        public object this[string name] => GetValue(GetOrdinal(name));
-        /// <inheritdoc/>
-        public void Close()
-        {
-            Dispose();
-        }
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            if (!_isClosed)
-            {
-                if (_enumerator != null)
-                {
-                    _enumerator.Dispose();
-                    _enumerator = null;
-                }
-                _isClosed = true;
-            }
-        }
-        /// <inheritdoc/>
-        public string GetName(int i) => _properties[i].Name;
-        /// <inheritdoc/>
-        public int GetOrdinal(string name)
-        {
-            if (_nameToIndex.TryGetValue(name, out int index))
-            {
-                return index;
-            }
-            throw new IndexOutOfRangeException($"La columna '{name}' no se encontró en el objeto '{typeof(T).Name}'.");
-        }
-        /// <inheritdoc/>
-        public object GetValue(int i)
-        {
-            if (_current == null) throw new InvalidOperationException("No hay datos para leer. Llame a Read() primero.");
-
-            var value = _properties[i].GetValue(_current);
-            return value ?? DBNull.Value;
-        }
-
         // IDataReader Implementation
+
+        // Implementación de IsClosed requerida por la interfaz
+        /// <inheritdoc/>
+        public bool IsClosed => _isClosed;
         /// <inheritdoc/>
         public bool Read()
         {
@@ -100,12 +61,132 @@ namespace KUtilitiesCore.Dal.BulkInsert
             }
             return hasMore;
         }
+        /// <inheritdoc/>
+        public object GetValue(int i)
+        {
+            if (_current == null) throw new InvalidOperationException("No hay datos para leer. Llame a Read() primero.");
+
+            var value = _properties[i].GetValue(_current);
+            return value ?? DBNull.Value;
+        }
+
+        // Implementación de GetValues requerida por IDataRecord
+        /// <inheritdoc/>
+        public int GetValues(object[] values)
+        {
+            if (values == null) throw new ArgumentNullException(nameof(values));
+
+            int count = Math.Min(values.Length, _properties.Length);
+            for (int i = 0; i < count; i++)
+            {
+                values[i] = GetValue(i);
+            }
+            return count;
+        }
+
+        // Implementación de NextResult requerida por IDataReader (Solo soportamos un result set)
+        /// <inheritdoc/>
+        public bool NextResult()
+        {
+            return false;
+        }
+
+        // Implementación de GetSchemaTable requerida por IDataReader
+        /// <inheritdoc/>
+        public DataTable GetSchemaTable()
+        {
+            var table = new DataTable("SchemaTable");
+            table.Locale = System.Globalization.CultureInfo.InvariantCulture;
+
+            // Columnas estándar requeridas por SqlBulkCopy y ADO.NET
+            table.Columns.Add("ColumnName", typeof(string));
+            table.Columns.Add("ColumnOrdinal", typeof(int));
+            table.Columns.Add("ColumnSize", typeof(int));
+            table.Columns.Add("NumericPrecision", typeof(short));
+            table.Columns.Add("NumericScale", typeof(short));
+            table.Columns.Add("DataType", typeof(Type));
+            table.Columns.Add("ProviderType", typeof(int));
+            table.Columns.Add("IsLong", typeof(bool));
+            table.Columns.Add("AllowDBNull", typeof(bool));
+            table.Columns.Add("IsReadOnly", typeof(bool));
+            table.Columns.Add("IsRowVersion", typeof(bool));
+            table.Columns.Add("IsUnique", typeof(bool));
+            table.Columns.Add("IsKey", typeof(bool));
+            table.Columns.Add("IsAutoIncrement", typeof(bool));
+            table.Columns.Add("BaseSchemaName", typeof(string));
+            table.Columns.Add("BaseCatalogName", typeof(string));
+            table.Columns.Add("BaseTableName", typeof(string));
+            table.Columns.Add("BaseColumnName", typeof(string));
+
+            for (int i = 0; i < _properties.Length; i++)
+            {
+                var prop = _properties[i];
+                var row = table.NewRow();
+
+                row["ColumnName"] = prop.Name;
+                row["ColumnOrdinal"] = i;
+                row["DataType"] = prop.PropertyType;
+                row["AllowDBNull"] = !prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null;
+                row["IsReadOnly"] = !prop.CanWrite;
+
+                // Valores por defecto para el resto
+                row["IsUnique"] = false;
+                row["IsKey"] = false;
+                row["IsAutoIncrement"] = false;
+                row["BaseColumnName"] = prop.Name;
+
+                table.Rows.Add(row);
+            }
+
+            return table;
+        }
+
+        /// <inheritdoc/>
+        public int FieldCount => _properties.Length;
+
+        /// <inheritdoc/>
+        public string GetName(int i) => _properties[i].Name;
+
+        /// <inheritdoc/>
+        public int GetOrdinal(string name)
+        {
+            if (_nameToIndex.TryGetValue(name, out int index))
+            {
+                return index;
+            }
+            throw new IndexOutOfRangeException($"La columna '{name}' no se encontró en el objeto '{typeof(T).Name}'.");
+        }
+
+        /// <inheritdoc/>
+        public object this[int i] => GetValue(i);
+        /// <inheritdoc/>
+        public object this[string name] => GetValue(GetOrdinal(name));
+
+        /// <inheritdoc/>
+        public void Close()
+        {
+            Dispose();
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            if (!_isClosed)
+            {
+                if (_enumerator != null)
+                {
+                    _enumerator.Dispose();
+                    _enumerator = null;
+                }
+                _isClosed = true;
+            }
+        }
 
         // Métodos de IDataRecord (Implementación básica delegando a GetValue)
-        // La mayoría de estos no son estrictamente necesarios para SqlBulkCopy si GetValue funciona bien,
-        // pero se implementan para cumplir el contrato.
+
         /// <inheritdoc/>
         public bool IsDBNull(int i) => GetValue(i) == DBNull.Value;
+
         /// <inheritdoc/>
         public string GetString(int i) => (string)GetValue(i);
         /// <inheritdoc/>
