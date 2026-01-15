@@ -1,6 +1,14 @@
 ﻿using System.Data.Common;
 using System.Diagnostics;
 
+#if NET48
+
+using SqlClient = System.Data.SqlClient;
+
+#else
+using SqlClient = Microsoft.Data.SqlClient;
+#endif
+
 namespace KUtilitiesCore.Dal
 {
     /// <summary>

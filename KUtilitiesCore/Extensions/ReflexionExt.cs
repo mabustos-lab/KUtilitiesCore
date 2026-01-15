@@ -19,15 +19,17 @@ namespace KUtilitiesCore.Extensions
         /// <param name="type">El tipo del cual se obtenerán las propiedades.</param>
         /// <param name="onlySupportedTypes">Indica si solo se incluirán tipos soportados.</param>
         /// <param name="filter">Un predicado para filtrar las propiedades.</param>
+        /// <param name="bindingFlags">Especifica la forma en que se realiza la búsuqda.</param>
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         public static IEnumerable<PropertyInfo> GetPropertiesInfo(this Type type,
             bool onlySupportedTypes = true,
-            Func<PropertyInfo, bool>? filter = null)
+            Func<PropertyInfo, bool>? filter = null,
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            var properties = type.GetProperties();
+            var properties = type.GetProperties(bindingFlags);
 
             return ApplyPropertyFilters(properties, onlySupportedTypes, filter);
         }
@@ -40,12 +42,14 @@ namespace KUtilitiesCore.Extensions
         /// <param name="obj">La instancia del objeto.</param>
         /// <param name="onlySupportedTypes">Indica si solo se incluirán tipos soportados.</param>
         /// <param name="filter">Un predicado para filtrar las propiedades.</param>
+        /// <param name="bindingFlags">Especifica la forma en que se realiza la búsuqda.</param>
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         public static IEnumerable<PropertyInfo> GetPropertiesInfo<T>(this T obj,
             bool onlySupportedTypes = true,
-            Func<PropertyInfo, bool>? filter = null)
+            Func<PropertyInfo, bool>? filter = null,
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
-            return GetPropertiesInfo(typeof(T), onlySupportedTypes, filter);
+            return GetPropertiesInfo(typeof(T), onlySupportedTypes, filter, bindingFlags);
         }
 
         /// <summary>
@@ -55,12 +59,14 @@ namespace KUtilitiesCore.Extensions
         /// <param name="type">El tipo del cual se obtenerán las propiedades.</param>
         /// <param name="onlySupportedTypes">Indica si solo se incluirán tipos soportados.</param>
         /// <param name="nameFilter">Un predicado para filtrar las propiedades por su nombre.</param>
+        /// <param name="bindingFlags">Especifica la forma en que se realiza la búsuqda.</param>
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         public static IEnumerable<PropertyInfo> GetPropertiesInfoFilteredByName(this Type type,
             bool onlySupportedTypes = true,
-            Func<string, bool>? nameFilter = null)
+            Func<string, bool>? nameFilter = null,
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
-            return GetPropertiesInfoCore(type, onlySupportedTypes, nameFilter);
+            return GetPropertiesInfoCore(type, onlySupportedTypes, nameFilter, bindingFlags);
         }
 
         /// <summary>
@@ -69,12 +75,14 @@ namespace KUtilitiesCore.Extensions
         /// <param name="type">El tipo del cual se obtenerán las propiedades.</param>
         /// <param name="onlySupportedTypes">Indica si solo se incluirán tipos soportados.</param>
         /// <param name="nameFilter">Un predicado para filtrar las propiedades por su nombre.</param>
+        /// <param name="bindingFlags">Especifica la forma en que se realiza la búsuqda.</param>
         /// <returns>Una colección de <see cref="PropertyInfo"/>.</returns>
         internal static IEnumerable<PropertyInfo> GetPropertiesInfoCore(Type type,
             bool onlySupportedTypes,
-            Func<string, bool>? nameFilter = null)
+            Func<string, bool>? nameFilter = null,
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
-            var properties = type.GetProperties();
+            var properties = type.GetProperties(bindingFlags);
 
             if (nameFilter != null)
             {
