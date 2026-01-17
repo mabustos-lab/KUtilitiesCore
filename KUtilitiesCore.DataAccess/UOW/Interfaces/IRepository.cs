@@ -17,11 +17,11 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <summary>
         /// Obtiene una única entidad que cumpla con la especificación.
         /// </summary>
-        T? GetFirstOrDefault(ISpecification<T> spec) ;
+        T GetFirstOrDefault(ISpecification<T> spec) ;
         /// <summary>
         /// Obtiene una única entidad asíncronamente basada en la especificación.
         /// </summary>
-        Task<T?> GetFirstOrDefaultAsync(ISpecification<T> spec) ;
+        Task<T> GetFirstOrDefaultAsync(ISpecification<T> spec) ;
         /// <summary>
         /// Obtiene una lista de entidades basada en la especificación.
         /// </summary>

@@ -11,6 +11,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Paging\**" />
+	  <EmbeddedResource Remove="Paging\**" />
+	  <None Remove="Paging\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Compile Remove="Exceptions\RepositoryException.cs" />
 	</ItemGroup>
 	<ItemGroup>
@@ -19,9 +25,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj" />
 	  <ProjectReference Include="..\KUtilities.Logger\KUtilitiesCore.Logger.csproj" />
+	  <ProjectReference Include="..\KUtilitiesCore.DataAccess\KUtilitiesCore.DataAccess.csproj" />
 	  <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Paging\" />
 	</ItemGroup>
 </Project>
