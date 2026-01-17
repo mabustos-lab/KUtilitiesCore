@@ -18,10 +18,10 @@ namespace KUtilitiesCore.Dal.UOW
         // Propiedad para definir el nombre de la tabla o SP base si fuera necesario
         internal string TableName { get; }
 
-        internal readonly IDaoContext _context;
-        protected DaoRepositoryReadOnly(IDaoContext context)
+        internal readonly IDaoUowContext _uowContext;
+        protected DaoRepositoryReadOnly(IDaoUowContext context)
         {
-            _context = context;
+            _uowContext = context;
             TableName = typeof(T).Name;
         }
 
@@ -47,7 +47,7 @@ namespace KUtilitiesCore.Dal.UOW
         /// </summary>
         protected IDaoParameterCollection MapParameters(IDictionary<string, object> specParams)
         {
-            var collection = _context.CreateParameterCollection();
+            var collection = _uowContext.Context.CreateParameterCollection();
             if (specParams != null)
             {                
                 foreach (var param in specParams)
@@ -65,7 +65,7 @@ namespace KUtilitiesCore.Dal.UOW
     public abstract class DaoRepository<T>:DaoRepositoryReadOnly<T> , IRepository<T>
         where T : class, new ()
     {
-        protected DaoRepository(IDaoContext context) : base(context)
+        protected DaoRepository(IDaoUowContext context) : base(context)
         {}
 
         /// <inheritdoc/>
