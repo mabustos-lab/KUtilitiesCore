@@ -1,39 +1,66 @@
-﻿namespace KUtilitiesCore.DataAccess.UOW.Interfaces
+﻿using KUtilitiesCore.DataAccess.UOW.Specifications;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
     /// <summary>
-    /// Interfaz genérica para un repositorio de datos completo (lectura/escritura). Ya no necesita TPrimaryKey.
+    /// Interfaz genérica de solo lectura de repositorio.
     /// </summary>
-    /// <typeparam name="TEntity">El tipo de la entidad gestionada por el repositorio.</typeparam>
-    public interface IRepository<TEntity> : IReadOnlyDbRepository<TEntity>
-        where TEntity : class
+    /// <typeparam name="T">Tipo de entidad (clase).</typeparam>
+    public interface IRepositoryReadOnly<T> 
+        where T : class
     {
-        #region Methods
-
         /// <summary>
-        /// Añade una nueva entidad al repositorio de forma asíncrona.
+        /// Obtiene una única entidad que cumpla con la especificación.
         /// </summary>
-        Task<TEntity> AddAsync(TEntity entity);
-
+        T? GetFirstOrDefault(ISpecification<T> spec) ;
         /// <summary>
-        /// Añade una colección de nuevas entidades al repositorio de forma asíncrona.
+        /// Obtiene una única entidad asíncronamente basada en la especificación.
         /// </summary>
-        Task AddRangeAsync(IEnumerable<TEntity> entities);
-
+        Task<T?> GetFirstOrDefaultAsync(ISpecification<T> spec) ;
         /// <summary>
-        /// Marca una entidad existente para ser eliminada del repositorio. La entidad debe ser
-        /// obtenida primero (ej. usando FindOneAsync).
+        /// Obtiene una lista de entidades basada en la especificación.
         /// </summary>
-        Task DeleteAsync(TEntity entity);
-
+        IEnumerable<T> GetEntities(ISpecification<T> spec) ;
         /// <summary>
-        /// Marca una entidad existente como modificada en el repositorio.
+        /// Obtiene una lista asíncrona.
         /// </summary>
-        Task UpdateAsync(TEntity entity);
+        Task<IEnumerable<T>> GetEntitiesAsync(ISpecification<T> spec) ;
+        /// <summary>
+        /// Obtiene el número de registros de la tabla
+        /// </summary>
+        int Count(ISpecification<T> spec);
+        /// <summary>
+        /// Obtiene el número de registros de la tabla, de manera asyncrona.
+        /// </summary>
+        Task<int> CountAsync(ISpecification<T> spec);
+    }
 
-        #endregion Methods
-
-        // Se eliminó DeleteAsync(TPrimaryKey id). Para eliminar por ID (simple o compuesto) se debe
-        // usar una especificación para encontrarlo y luego llamar a DeleteAsync(entity), o usar
-        // ExecuteDeleteAsync de IEfCoreRepository si está disponible.
+    /// <summary>
+    /// Interfaz genérica de repositorio.
+    /// </summary>
+    /// <typeparam name="T">Tipo de entidad (clase).</typeparam>ram>
+    public interface IRepository<T> : IRepositoryReadOnly<T>
+        where T : class
+    {
+        /// <summary>
+        /// Agrega una nueva entidad al repositorio.
+        /// </summary>
+        void AddEntity(T entity);
+       
+        /// <summary>
+        /// Actualiza una entidad existente en el repositorio.
+        /// </summary>
+        void UpdateEntity(T entity);
+        
+        /// <summary>
+        /// Elimina una entidad existente en el repositorio.
+        /// </summary>
+        void DeleteEntity(T entity);
+        
     }
 }

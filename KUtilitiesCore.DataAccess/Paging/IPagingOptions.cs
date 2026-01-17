@@ -5,7 +5,6 @@
     /// </summary>
     public interface IPagingOptions
     {
-        #region Properties
 
         /// <summary>
         /// El valor del último elemento de la página anterior, usado para PagingStrategy.Keyset. El
@@ -36,8 +35,6 @@
         /// Estrategia de paginación a utilizar. Por defecto es Offset.
         /// </summary>
         PagingStrategy Strategy { get; }
-
-        #endregion Properties
 
         // Opcional: Podría añadirse KeysetPropertyName si la inferencia desde
         //           ISpecification.OrderBy no es suficiente string KeysetPropertyName { get; }
