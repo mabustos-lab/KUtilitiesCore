@@ -3,32 +3,35 @@
     /// <summary>
     /// Representa el resultado de una consulta paginada.
     /// </summary>
-    /// <typeparam name="TEntity">El tipo de entidad en la colección.</typeparam>
-    public interface IPagedResult<out TEntity>
+    public interface IPagedResult
     {
-        #region Properties
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Obtiene un valor que indica si hay una página siguiente de resultados disponible.
+        /// </summary>
         bool HasNextPage { get; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Obtiene un valor que indica si hay una página anterior de resultados disponible.
+        /// </summary>
         bool HasPreviousPage { get; }
 
-        /// <inheritdoc/>
-        IReadOnlyList<TEntity> Items { get; }
-
-        // Para Keyset, la paginación hacia atrás es más compleja y no se aborda aquí.
         /// <summary>
         /// El valor de la propiedad de ordenación del último elemento en <see cref="Items"/>. Se
         /// utiliza para solicitar la siguiente página cuando se usa PagingStrategy.Keyset. Es null
         /// si Items está vacío o si la estrategia no es Keyset.
         /// </summary>
+        /// <remarks>Para Keyset, la paginación hacia atrás es más compleja y no se aborda aquí.</remarks>
         object LastKeyValue { get; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Obtiene el número de página actual de este resultado.
+        /// </summary>
         int PageNumber { get; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Obtiene el número de elementos por página
+        /// </summary>
         int PageSize { get; }
 
         /// <summary>
@@ -44,6 +47,19 @@
         /// </summary>
         int TotalPages { get; }
 
-        #endregion Properties
+    }
+
+    /// <summary>
+    /// Representa el resultado de una consulta paginada.
+    /// </summary>
+    /// <typeparam name="TEntity">El tipo de entidad en la colección.</typeparam>
+    public interface IPagedResult<out TEntity> : IPagedResult
+    {
+
+        /// <summary>
+        /// Colleción de resultados de la página actual
+        /// </summary>
+        IReadOnlyList<TEntity> Items { get; }
+
     }
 }
