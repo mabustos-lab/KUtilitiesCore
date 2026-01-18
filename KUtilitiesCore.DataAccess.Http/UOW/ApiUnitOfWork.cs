@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic; // Agregado para Dictionary
 using System.Net.Http;
 using System.Threading.Tasks;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
@@ -14,6 +15,9 @@ namespace KUtilitiesCore.DataAccess.Http.UOW
         private Hashtable _repositories;
         private bool _disposed;
 
+        // Diccionario para registrar repositorios personalizados
+        private readonly Dictionary<Type, Type> _customRepositories = new Dictionary<Type, Type>();
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -23,6 +27,17 @@ namespace KUtilitiesCore.DataAccess.Http.UOW
         {
             _httpClientFactory = httpClientFactory;
             _clientName = clientName;
+        }
+
+        /// <summary>
+        /// Permite registrar un repositorio específico para una entidad.
+        /// Útil cuando se requiere lógica personalizada para una entidad (ej. endpoints no estándar).
+        /// </summary>
+        public void RegisterCustomRepository<TEntity, TRepository>()
+            where TEntity : class
+            where TRepository : IRepository<TEntity>
+        {
+            _customRepositories[typeof(TEntity)] = typeof(TRepository);
         }
 
         public IRepository<T> Repository<T>() where T : class
@@ -37,8 +52,23 @@ namespace KUtilitiesCore.DataAccess.Http.UOW
                 // Creamos un cliente fresco para este repositorio
                 var client = _httpClientFactory.CreateClient(_clientName);
 
-                var repositoryType = typeof(ApiRepository<>);
-                var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), client);
+                object repositoryInstance;
+
+                // 1. Verificamos si hay un repositorio personalizado registrado
+                if (_customRepositories.ContainsKey(typeof(T)))
+                {
+                    var customRepoType = _customRepositories[typeof(T)];
+
+                    // Asumimos que el repositorio personalizado tiene un constructor que acepta HttpClient.
+                    // Ejemplo: public ProductRepository(HttpClient client) : base(client) { }
+                    repositoryInstance = Activator.CreateInstance(customRepoType, client);
+                }
+                else
+                {
+                    // 2. Fallback al repositorio genérico
+                    var repositoryType = typeof(ApiRepository<>);
+                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), client);
+                }
 
                 _repositories.Add(type, repositoryInstance);
             }
