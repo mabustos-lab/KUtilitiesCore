@@ -7,32 +7,56 @@ using KUtilitiesCore.Dal;
 namespace KUtilitiesCore.Dal.UOW
 {
     /// <summary>
-    /// Implementación de Unit of Work para KUtilitiesCore.Dal.
-    /// Gestiona transacciones SQL nativas a través de IDAOContext.
+    /// Implementación de Unit of Work para KUtilitiesCore.Dal. Gestiona transacciones SQL nativas a
+    /// través de IDAOContext.
     /// </summary>
     public class DaoUnitOfWork : IUnitOfWork
     {
-        private readonly IDaoContext _context;
-        private Hashtable _repositories;
-        private bool _disposed;
-        private ITransaction _currentTransaction;
-
         /// <summary>
-        /// Inicia una transacción explícita. 
-        /// Las operaciones subsiguientes de los repositorios deben usar este contexto transaccional.
+        /// Contexto transaccional proporcionado por el Unit of Work.
         /// </summary>
-        protected ITransaction Transaction
-        {
-            get
-            {
-                _currentTransaction = _currentTransaction ?? _context.BeginTransaction();
-                return _currentTransaction;
-            }
-        }
+        protected readonly IDaoUowContext UowContext;
+
+        // Registro opcional de tipos personalizados: <TipoEntidad, TipoRepositorio>
+        private readonly Dictionary<Type, Type> _customRepositories = new Dictionary<Type, Type>();
+
+        private bool _disposed;
+        private Hashtable _repositories;
 
         public DaoUnitOfWork(IDaoContext context)
         {
-            _context = context;
+            UowContext = new DaoUowContext(context);
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Permite registrar un repositorio específico para una entidad.
+        /// Realiza validación temprana del constructor.
+        /// </summary>
+        public void RegisterCustomRepository<TEntity, TRepository>()
+            where TEntity : class
+            where TRepository : IRepository<TEntity>
+        {
+            var repoType = typeof(TRepository);
+
+            // Validación Temprana: Verificamos si existe un constructor que acepte IDaoUowContext
+            var constructor = repoType.GetConstructor(new[] { typeof(IDaoUowContext) });
+
+            if (constructor == null)
+            {
+                throw new ArgumentException(
+                    $"El repositorio '{repoType.Name}' no tiene un constructor público que acepte un parámetro de tipo '{nameof(IDaoUowContext)}'. " +
+                    $"Esto es necesario para funcionar con DaoUnitOfWork.",
+                   repoType.Name);
+            }
+
+            _customRepositories[typeof(TEntity)] = repoType;
         }
 
         /// <inheritdoc/>
@@ -45,19 +69,64 @@ namespace KUtilitiesCore.Dal.UOW
 
             if (!_repositories.ContainsKey(type))
             {
-                // Aquí creamos una instancia de DaoRepository (o un derivado registrado).
-                // Nota: Si usas repositorios específicos (ej. ProductRepository : DaoRepository<Product>),
-                // necesitarías un mecanismo de Factory o DI más complejo aquí.
-                // Por defecto, usamos el genérico.
+                object repositoryInstance;
 
-                var repositoryType = typeof(DaoRepository<>);
-                var repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), GetUowContext());
+                // 1. Intentamos ver si hay un repositorio específico registrado
+                if (_customRepositories.ContainsKey(typeof(T)))
+                {
+                    var customRepoType = _customRepositories[typeof(T)];
+                    // Instanciamos usando el constructor validado previamente
+                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
+                }
+                else
+                {
+                    // 2. Fallback al genérico (DefaultDaoRepository)
+                    var repositoryType = typeof(DefaultDaoRepository<>);
+                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext);
+                }
 
                 _repositories.Add(type, repositoryInstance);
             }
 
             return (IRepository<T>)_repositories[type];
         }
+        
+        /// <inheritdoc/>
+        public int SaveChanges()
+        {
+            try
+            {
+                if (UowContext.Transaction != null)
+                {
+                    UowContext.Transaction.Commit();
+
+                    // Importante: No ponemos a null inmediatamente la transacción aquí si queremos permitir 
+                    // múltiples SaveChanges en el mismo scope, pero en patrón UOW clásico, 
+                    // SaveChanges suele marcar el fin.
+                    // Reiniciamos para evitar re-commit de lo mismo.
+                    DisposeTransaction();
+                    return 1;
+                }
+                return 0;
+            }
+            catch
+            {
+                Rollback();
+                throw;
+            }
+        }
+        /// <summary>
+        /// Revierte todos los cambios realizados en la UOW actual.
+        /// </summary>
+        public void Rollback()
+        {
+            if (UowContext.Transaction != null)
+            {
+                UowContext.Transaction.Rollback();
+                DisposeTransaction();
+            }
+        }
+
         /// <summary>
         /// En el contexto de ADO.NET/Dal, SaveChanges generalmente confirma la transacción abierta.
         /// Si no hay transacción explícita y las operaciones fueron atómicas, no hace nada.
@@ -67,44 +136,17 @@ namespace KUtilitiesCore.Dal.UOW
             // Simulación asíncrona ya que IDAOContext suele ser síncrono en commits
             return await Task.Run(() => SaveChanges());
         }
-        /// <inheritdoc/>
-        public int SaveChanges()
+
+        private void DisposeTransaction()
         {
-            try
+            if (UowContext.Transaction != null)
             {
-                if (_currentTransaction!=null)
-                {
-                    Transaction.Commit();
-                    _currentTransaction = null; // Limpiamos tras commit
-                    return 1; // Éxito
-                }
-                return 0; // Nada que confirmar
-            }
-            catch
-            {
-                Rollback();
-                throw;
+                ((DaoUowContext)UowContext).DisposeTransaction();
+                // Limpiamos repositorios para que futuras llamadas obtengan un contexto limpio
+                _repositories?.Clear();
             }
         }
 
-
-        private IDaoUowContext GetUowContext() => new DaoUowContext(() => _context, () => Transaction);
-
-        void Rollback()
-        {
-            if (_currentTransaction != null)
-            {
-                _currentTransaction.Rollback();
-                _currentTransaction = null;
-            }
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
         /// <inheritdoc/>
         protected virtual void Dispose(bool disposing)
         {
@@ -112,19 +154,12 @@ namespace KUtilitiesCore.Dal.UOW
             {
                 if (disposing)
                 {
-                    // Liberamos la transacción si quedó pendiente
-                    if (_currentTransaction != null)
-                    {
-                        _currentTransaction.Rollback();
-                        _currentTransaction.Dispose();
-                    }
-
-                    // Nota: No disponemos _context aquí si fue inyectado (DI), 
-                    // a menos que UOW sea el dueño absoluto de su ciclo de vida.
-                    _context.Dispose(); 
+                    
+                    ((DaoUowContext)UowContext).Dispose();
                 }
             }
             _disposed = true;
         }
+
     }
 }

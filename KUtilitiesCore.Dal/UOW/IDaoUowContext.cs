@@ -7,34 +7,117 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Dal.UOW
 {
     /// <summary>
-    /// Contexto de conexión usado por los repositorios del tipo DAO
+    /// Contrato que agrupa el contexto de acceso a datos y la transacción activa. Garantiza que los
+    /// repositorios operen dentro del mismo ámbito transaccional.
     /// </summary>
     public interface IDaoUowContext
     {
+        #region Properties
+
         /// <summary>
-        /// Interfaz desacoplada de la base de datos para el acceso a datos.
+        /// El contexto de acceso a datos (ejecutor de comandos).
         /// </summary>
         IDaoContext Context { get; }
+
         /// <summary>
-        /// Interfaz desacoplada de la base de datos para las transacciones de datos unidicada por el UOW.
+        /// La transacción activa actual. Puede ser null si no se ha iniciado una transacción explícita.
         /// </summary>
         ITransaction Transaction { get; }
+
+        #endregion Properties
+
+        #region Methods
+
+        void Rollback();
+
+        #endregion Methods
     }
 
-    public class DaoUowContext : IDaoUowContext
+    public class DaoUowContext : IDaoUowContext, IDisposable
     {
-        private readonly Func<IDaoContext> _contexDelegate;
-        private readonly Func<ITransaction> _transactionDelegate;
+        #region Fields
 
-        public DaoUowContext(Func<IDaoContext> contexDelegate, Func<ITransaction> transactionDelegate)
+        private readonly IDaoContext _context;
+        private ITransaction _transaction;
+        private bool disposedValue;
+        private bool isTransactionCreated;
+
+        #endregion Fields
+
+        #region Constructors
+
+        public DaoUowContext(IDaoContext context)
         {
-            _contexDelegate = contexDelegate;
-            _transactionDelegate = transactionDelegate;
+            _context = context;
         }
-        /// <inheritdoc/>
-        public IDaoContext Context => _contexDelegate?.Invoke();
+
+        #endregion Constructors
+
+        #region Properties
 
         /// <inheritdoc/>
-        public ITransaction Transaction => _transactionDelegate?.Invoke();
+        public IDaoContext Context => _context;
+
+        /// <inheritdoc/>
+        public ITransaction Transaction
+        {
+            get
+            {
+                if (isTransactionCreated)
+                {
+                    _transaction = _context.BeginTransaction();
+                    isTransactionCreated = true;
+                }
+                return _transaction;
+            }
+        }
+
+        #endregion Properties
+
+        #region Methods
+
+        public void Dispose()
+        {
+            // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+       
+        public void Rollback()
+        {
+            if (Transaction != null)
+            {
+                Transaction.Rollback();
+                DisposeTransaction();
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _transaction.Dispose();
+                    _context.Dispose();
+                }
+
+                _transaction = null;
+                disposedValue = true;
+            }
+        }
+
+        internal void DisposeTransaction()
+        {
+            if(_transaction != null)
+            {
+                _transaction.Dispose();
+                _transaction = null;
+            }
+            isTransactionCreated = true;
+        }
+
+        #endregion Methods
     }
 }
