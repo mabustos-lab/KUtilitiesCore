@@ -8,9 +8,9 @@
   </PropertyGroup>
 
 <PropertyGroup>
-   <LangVersion>latest</LangVersion>
    <Title>KUtilitiesCore</Title>
    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	<LangVersion>latest</LangVersion>
    <GenerateDocumentationFile>True</GenerateDocumentationFile>
  </PropertyGroup>
 

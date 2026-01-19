@@ -1,28 +1,35 @@
 ﻿namespace KUtilitiesCore.DataAccess.UOW.Interfaces
 {
     /// <summary>
-    /// Interfaz para la Unidad de Trabajo (Unit of Work).
+    /// Contrato para el patrón Unit of Work.
+    /// Encargado de mantener una lista de repositorios y coordinar la escritura de cambios.
     /// </summary>
     public interface IUnitOfWork : IDisposable
     {
-        #region Methods
+        /// <summary>
+        /// Obtiene una instancia del repositorio genérico para la entidad especificada.
+        /// </summary>
+        /// <typeparam name="T">Tipo de la entidad.</typeparam>
+        /// <returns>Instancia de IRepository con soporte para Specifications.</returns>
+        IRepository<T> Repository<T>() where T : class;
 
         /// <summary>
-        /// Obtiene una instancia de un repositorio con capacidades de EF Core (operaciones masivas)
-        /// si la implementación lo soporta. Devuelve null o lanza excepción si no.
+        /// Guarda todos los cambios realizados en el contexto actual de manera asíncrona.
+        /// <para>
+        /// Nota: En implementaciones de Base de Datos (EF/SQL), esto confirma la transacción (Commit).
+        /// En implementaciones de API, puede simplemente validar el estado.
+        /// </para>
         /// </summary>
-        IEfCoreRepository<TEntity> GetEfCoreRepository<TEntity>() where TEntity : class;
-
-        /// <summary>
-        /// Obtiene una instancia de un repositorio genérico para un tipo de entidad específico.
-        /// </summary>
-        IRepository<TEntity> GetRepository<TEntity>() where TEntity : class;
-
-        /// <summary>
-        /// Guarda todos los cambios pendientes en la base de datos.
-        /// </summary>
+        /// <returns>Número de registros afectados o indicador de éxito.</returns>
         Task<int> SaveChangesAsync();
 
-        #endregion Methods
+        /// <summary>
+        /// Guarda todos los cambios realizados de manera síncrona.
+        /// <para>
+        /// Nota: En implementaciones de Base de Datos (EF/SQL), esto confirma la transacción (Commit).
+        /// </para>
+        /// </summary>
+        /// <returns>Número de registros afectados o indicador de éxito.</returns>
+        int SaveChanges();
     }
 }

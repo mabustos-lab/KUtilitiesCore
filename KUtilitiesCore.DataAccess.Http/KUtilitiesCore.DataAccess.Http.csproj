@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<!-- O net6.0 / net8.0 según tu solución -->
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<PackAsTool>False</PackAsTool>
+		<IncludeSymbols>False</IncludeSymbols>
+	</PropertyGroup>
+	<ItemGroup>
+		<!-- 1. Extensiones para HttpClientFactory (Inyección de dependencias robusta) -->
+		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+		<!-- 2. Políticas de Resiliencia (Reintentos, Circuit Breaker) -->
+		<PackageReference Include="Microsoft.Extensions.Http.Polly" Version="6.0.0" />
+		<!-- 3. Utilidades Web (Para construir QueryStrings limpiamente sin System.Web) -->
+		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
+		<!-- 4. Serialización JSON (Nativo y de alto rendimiento) -->
+		<!-- En .NET 5+ viene incluido, pero en Standard 2.1 se requiere -->
+		<PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<!-- Referencia al Core (Interfaces) -->
+		<ProjectReference Include="..\KUtilitiesCore.DataAccess\KUtilitiesCore.DataAccess.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.ComponentModel.DataAnnotations">
+			<HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.ComponentModel.DataAnnotations.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>
