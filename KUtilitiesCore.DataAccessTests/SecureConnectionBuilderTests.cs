@@ -68,16 +68,16 @@ namespace KUtilitiesCore.DataAccess.Tests
 
         private bool LoadChanges_1()
         {
-            IConnectionBuilder builder = new SecureConnectionBuilder();
+            ISecureConnectionBuilder builder = new SecureConnectionBuilder();
             builder.Load();
             return builder.ApplicationName == "Test" + idCode;
         }
 
         private void SaveChanges_1()
         {
-            IConnectionBuilder builder = new SecureConnectionBuilder
+            ISecureConnectionBuilder builder = new SecureConnectionBuilder
             {
-                InitialCatalog = "SiomaxDB",
+                InitialCatalog = "master",
                 ApplicationName = "Test" + idCode
             };
             builder.SaveChanges();
@@ -97,7 +97,7 @@ namespace KUtilitiesCore.DataAccess.Tests
             }
             SecureConnectionBuilder builder = new SecureConnectionBuilder
             {
-                InitialCatalog = "SiomaxDB"
+                InitialCatalog = "master"
             };
             builder.SaveChanges();
         }
@@ -116,7 +116,7 @@ namespace KUtilitiesCore.DataAccess.Tests
             }
             SecureConnectionBuilder builder = new SecureConnectionBuilder
             {
-                InitialCatalog = "SiomaxDB",
+                InitialCatalog = "master",
                 ServerName = "localhost",
                 Encrypt = true,
                 TrustServerCertificate = true,
@@ -142,7 +142,7 @@ namespace KUtilitiesCore.DataAccess.Tests
             }
             SecureConnectionBuilder builder = new SecureConnectionBuilder
             {
-                InitialCatalog = "SiomaxDB",
+                InitialCatalog = "master",
                 ServerName = "localhost",
                 Encrypt = true,
                 TrustServerCertificate = true,

@@ -96,19 +96,11 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         DataTable ListDatabases();
 
         /// <summary>
-        /// Carga los valores almacenados en el objeto.
-        /// </summary>
-        void Load();
-
-        /// <summary>
         /// Restaura la cadena de conexión a su valor predeterminado.
         /// </summary>
         void Reset();
 
-        /// <summary>
-        /// Almacena los cambios realizados en el objeto.
-        /// </summary>
-        void SaveChanges();
+      
 
         /// <summary>
         /// Realiza una prueba de conexión a la base de datos y devuelve un resultado.
@@ -119,4 +111,10 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         TestConnectionResult TestConnection();
 
     }
+    /// <summary>
+    /// Interfaz para la construcción de cadenas de conexión independiente de la infraestructura de datos
+    /// con funcionalidad de persistencia encriptada.
+    /// </summary>
+    public interface ISecureConnectionBuilder: IConnectionBuilder, IConnectionBuilderPersist
+    { }
 }
