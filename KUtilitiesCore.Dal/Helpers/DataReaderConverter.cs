@@ -159,11 +159,11 @@ namespace KUtilitiesCore.Dal.Helpers
 
                 do
                 {
-                    IEnumerable resultSet;
+                    object resultSet;
                     if (_useDefaultDataTable || resultSetIndex >= _resultSets.Count)
                     {
                         // Comportamiento por defecto: convertir a DataTable
-                        resultSet = (IEnumerable)ConvertToDataTable(reader);
+                        resultSet = ConvertToDataTable(reader);
                     }
                     else
                     {
@@ -191,7 +191,18 @@ namespace KUtilitiesCore.Dal.Helpers
         private static DataTable ConvertToDataTable(IDataReader reader)
         {
             var dataTable = new DataTable();
-            dataTable.Load(reader);
+
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                dataTable.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
+            }
+
+            object[] values = new object[reader.FieldCount];
+            while (reader.Read())
+            {
+                reader.GetValues(values);
+                dataTable.Rows.Add(values);
+            }
             return dataTable;
         }
 
