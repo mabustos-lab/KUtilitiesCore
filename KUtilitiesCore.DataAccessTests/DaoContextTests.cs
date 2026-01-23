@@ -82,7 +82,29 @@ namespace KUtilitiesCore.Dal.Tests
             var result= dao.ExecuteReader("Select * From ActiveType", converter, commandType: CommandType.Text);
             Assert.IsTrue(result.HasResultsets);
             var l = result.GetResult<ActiveTypeModel>().ToList();
-            Assert.IsGreaterThan(0, l.Count());
+            Assert.IsGreaterThan(0, l.Count);
+        }
+
+        [TestMethod()]
+        public void ExecuteReader_WithDataTable_Test()
+        {
+            // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
+            {
+                Assert.Inconclusive("Esta prueba se omite en GitHub Actions.");
+            }
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
+            }
+
+            using DaoContext dao = new(builder, metrics: new Telemetry.LoggerMetrics());
+            var converter = Helpers.DataReaderConverter.Create().WithDefaultDataTable()
+                .SetStrictMapping(true);
+            var result = dao.ExecuteReader("Select * From ActiveType", converter, commandType: CommandType.Text);
+            Assert.IsTrue(result.HasResultsets);
+            var l = result.GetResult<ActiveTypeModel>().ToList();
+            Assert.IsGreaterThan(0, l.Count);
         }
 
         //[TestMethod()]

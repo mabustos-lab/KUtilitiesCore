@@ -232,6 +232,11 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
             InitialCatalog = "master";
             IntegratedSecurity = false;
             Password = string.Empty;
+#if NET48
+            ProviderName = "System.Data.SqlClient";
+#else
+            ProviderName = "Microsoft.Data.SqlClient";
+#endif
             ProviderName = "System.Data.SqlClient";
             ServerName = "Localhost";
             UserName = string.Empty;
