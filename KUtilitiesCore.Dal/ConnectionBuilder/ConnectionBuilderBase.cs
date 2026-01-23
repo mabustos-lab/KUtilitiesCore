@@ -308,64 +308,126 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
 
             return res;
         }
-
-        internal void SetCnnStringProperties(string connectionString)
+        /// <summary>
+        /// Establece los paramentros a partir de una cadena de conexión.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        public void SetCnnStringProperties(string connectionString)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentException("La cadena de conexión no puede estar vacía.", nameof(connectionString));
+
             try
             {
-                DbConnectionStringBuilder dbcsb = new DbConnectionStringBuilder();
-                dbcsb.ConnectionString = connectionString;
-
-                ApplicationName = dbcsb.TryGetValue("Application Name", out object appName) ? appName.ToString() : "MyApp";
-                InitialCatalog = dbcsb.TryGetValue("Initial Catalog", out object initialCat) ? initialCat.ToString() : "master";
-                ServerName = dbcsb.TryGetValue("Data Source", out object dataSource) ? dataSource.ToString() : "Localhost";
-
-                if (dbcsb.TryGetValue("Integrated Security", out object integratedSec))
+                var dbcsb = new DbConnectionStringBuilder
                 {
-                    IntegratedSecurity = Convert.ToBoolean(integratedSec);
+                    ConnectionString = connectionString
+                };
+
+                // 1. Application Name
+                if (TryGetAnyValue(dbcsb, out var appName, "Application Name", "ApplicationName", "App"))
+                    ApplicationName = appName?.ToString();
+                else
+                    ApplicationName = "MyApp"; // Default
+
+                // 2. Server / Data Source
+                if (TryGetAnyValue(dbcsb, out var server, "Data Source", "Server", "Server Name", "Address", "Addr", "Network Address"))
+                    ServerName = server?.ToString();
+                else
+                    ServerName = "Localhost"; // Default
+
+                // 3. Database / Initial Catalog
+                if (TryGetAnyValue(dbcsb, out var database, "Initial Catalog", "InitialCatalog", "Database", "Database Name", "DatabaseName", "DB"))
+                    InitialCatalog = database?.ToString();
+                else
+                    InitialCatalog = "master"; // Default
+
+                // 4. Seguridad Integrada
+                // Nota: Algunos proveedores usan "Trusted_Connection=yes" o "Integrated Security=SSPI"
+                if (TryGetAnyValue(dbcsb, out var integratedSec, "Integrated Security", "IntegratedSecurity", "Trusted Connection", "Trusted_Connection"))
+                {
+                    // Manejo especial para "SSPI" que es común en SQL Server pero falla en Convert.ToBoolean
+                    string secVal = integratedSec?.ToString() ?? "false";
+                    IntegratedSecurity = secVal.Equals("SSPI", StringComparison.OrdinalIgnoreCase) ||
+                                         ParseBooleanSafe(secVal);
                 }
                 else
                 {
                     IntegratedSecurity = false;
                 }
 
-                UserName = dbcsb.TryGetValue("User ID", out object userId) ? userId.ToString() : string.Empty;
-                Password = dbcsb.TryGetValue("Password", out object passwordVal) ? passwordVal.ToString() : string.Empty;
+                // 5. Credenciales
+                if (TryGetAnyValue(dbcsb, out var user, "User ID", "UserID", "UID", "User", "User Name", "UserName"))
+                    UserName = user?.ToString();
+                else
+                    UserName = string.Empty;
 
-                if (dbcsb.TryGetValue("Encrypt", out object encryptVal))
+                if (TryGetAnyValue(dbcsb, out var pwd, "Password", "Pwd", "Secret"))
+                    Password = pwd?.ToString();
+                else
+                    Password = string.Empty;
+
+                // 6. Configuración adicional (Encrypt, Trust, Timeout)
+                if (TryGetAnyValue(dbcsb, out var encryptVal, "Encrypt", "Encryption"))
+                    Encrypt = ParseBooleanSafe(encryptVal);
+                else
+                    Encrypt = true;
+
+                if (TryGetAnyValue(dbcsb, out var trustVal, "TrustServerCertificate", "Trust Server Certificate", "TrustServerCert"))
+                    TrustServerCertificate = ParseBooleanSafe(trustVal);
+                else
+                    TrustServerCertificate = true;
+
+                if (TryGetAnyValue(dbcsb, out var timeoutVal, "Connection Timeout", "Connect Timeout", "ConnectionTimeout", "ConnectTimeout", "Timeout"))
                 {
-                    Encrypt = Convert.ToBoolean(encryptVal);
+                    if (int.TryParse(timeoutVal?.ToString(), out int timeout))
+                        ConnectionTimeout = timeout;
+                    else
+                        ConnectionTimeout = 30;
                 }
                 else
                 {
-                    Encrypt = true; // Default value if not specified
-                }
-
-                if (dbcsb.TryGetValue("TrustServerCertificate", out object trustServerCert))
-                {
-                    TrustServerCertificate = Convert.ToBoolean(trustServerCert);
-                }
-                else
-                {
-                    TrustServerCertificate = true; // Default value if not specified
-                }
-
-                if (dbcsb.TryGetValue("Connection Timeout", out object connTimeout))
-                {
-                    ConnectionTimeout = Convert.ToInt32(connTimeout);
-                }
-                else
-                {
-                    ConnectionTimeout = 30; // Default value if not specified
+                    ConnectionTimeout = 30;
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error al establecer propiedades de la cadena de conexión: {ex.Message}");
-                throw new ArgumentException("La cadena de conexión proporcionada no es válida.", nameof(connectionString), ex);
+                Debug.WriteLine($"Error al parsear cadena de conexión: {ex.Message}");
+                throw new ArgumentException("La estructura de la cadena de conexión no es válida.", nameof(connectionString), ex);
             }
         }
 
+        /// <summary>
+        /// Intenta obtener un valor del builder buscando por múltiples claves (sinónimos).
+        /// </summary>
+        private bool TryGetAnyValue(DbConnectionStringBuilder builder, out object value, params string[] keys)
+        {
+            value = null;
+            foreach (var key in keys)
+            {
+                if (builder.TryGetValue(key, out value))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Convierte valores string a boolean de forma segura (ej. "yes", "true", "1").
+        /// </summary>
+        private bool ParseBooleanSafe(object value)
+        {
+            if (value == null) return false;
+            string valStr = value.ToString();
+
+            if (bool.TryParse(valStr, out bool result)) return result;
+
+            // Soporte para "yes"/"no" o "1"/"0" que a veces aparecen en cadenas legacy
+            if (valStr.Equals("yes", StringComparison.OrdinalIgnoreCase) || valStr == "1") return true;
+
+            return false;
+        }
 
 #if NET8_0_OR_GREATER
         /// <summary>
