@@ -9,7 +9,7 @@ namespace KUtilitiesCore.Dal.Helpers
     /// <summary>
     /// Opciones de configuración para el mapeo
     /// </summary>
-    internal class TranslateOptions
+    public class TranslateOptions
     {
         /// <summary>
         /// Si es true, lanza excepción cuando no se pueden mapear todas las propiedades requeridas

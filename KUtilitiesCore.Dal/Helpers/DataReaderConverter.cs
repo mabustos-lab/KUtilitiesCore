@@ -51,17 +51,30 @@ namespace KUtilitiesCore.Dal.Helpers
         #region Methods
 
         public static IDataReaderConverter Create()
+
         {
             return new DataReaderConverter();
         }
 
+        public static IDataReaderConverter GetDefault()
+
+        {
+            var converter = new DataReaderConverter();
+
+            converter.WithDefaultDataTable();
+
+            return converter;
+        }
+
         /// <inheritdoc/>
+
         public DataTable[] GetAllDataTables()
         {
             return _readerResultSet.GetAllDataTables();
         }
 
         /// <inheritdoc/>
+
         public DataTable GetDataTable(int index = 0)
         {
             return _readerResultSet.GetDataTable(index);
@@ -79,58 +92,51 @@ namespace KUtilitiesCore.Dal.Helpers
         }
 
         /// <inheritdoc/>
+
         public IDataReaderConverter SetColumnPrefixesToRemove(params string[] args)
         {
             _translateOptions.ColumnPrefixesToRemove = args;
+
             return this;
         }
 
         /// <inheritdoc/>
-        public IDataReaderConverter SetIgnoreMissingColumns(bool value)
-        {
-            _translateOptions.IgnoreMissingColumns = value;
-            return this;
-        }
 
-        /// <inheritdoc/>
         public IDataReaderConverter SetStrictMapping(bool value)
         {
             _translateOptions.StrictMapping = value;
+
             return this;
         }
 
         /// <inheritdoc/>
+
         public IDataReaderConverter WithDefaultDataTable()
         {
             _useDefaultDataTable = true;
+
             return this;
         }
 
         /// <inheritdoc/>
+
         public IDataReaderConverter WithResult<TResult>() where TResult : class, new()
         {
             _useDefaultDataTable = false;
-
-            // Pre-compilar las propiedades requeridas para StrictMapping
-            string[] requiredProperties = Array.Empty<string>();
-            if (_translateOptions.StrictMapping)
-            {
-                requiredProperties = IDataReaderExt.GetPropertiesRequired<TResult>();
-            }
-
             _resultSets.Add(reader =>
             {
                 try
                 {
-                    _translateOptions.RequiredProperties = requiredProperties;
                     return reader.Translate<TResult>(_translateOptions).ToList();
                 }
                 catch (Exception ex)
                 {
                     ex.Data.Add("TResultType", typeof(TResult).FullName);
+
                     throw;
                 }
             });
+
             return this;
         }
 
@@ -150,10 +156,10 @@ namespace KUtilitiesCore.Dal.Helpers
             try
             {
                 int resultSetIndex = 0;
+
                 do
                 {
                     IEnumerable resultSet;
-
                     if (_useDefaultDataTable || resultSetIndex >= _resultSets.Count)
                     {
                         // Comportamiento por defecto: convertir a DataTable
@@ -168,8 +174,8 @@ namespace KUtilitiesCore.Dal.Helpers
                     _readerResultSet.AddResult(resultSet);
                     resultSetIndex++;
                 }
-                while (reader.NextResult());
 
+                while (reader.NextResult());
                 return this;
             }
             catch (InvalidOperationException)

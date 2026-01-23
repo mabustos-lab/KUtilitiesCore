@@ -331,7 +331,7 @@ namespace KUtilitiesCore.Dal
             {
                 if (translate == null)
                 {
-                    translate = DataReaderConverter.Create().WithDefaultDataTable();
+                    translate = DataReaderConverter.GetDefault();
                 }
                 IReaderResultSet result;
                 using (DbCommand command = CreateCommand(sql, parameters, commandType))
@@ -374,7 +374,7 @@ namespace KUtilitiesCore.Dal
             {
                 if (translate == null)
                 {
-                    translate = DataReaderConverter.Create().WithDefaultDataTable();
+                    translate = DataReaderConverter.GetDefault();
                 }
                 IReaderResultSet result;
                 using(DbCommand command = CreateCommand(sql, parameters, commandType))

@@ -17,11 +17,6 @@
         IDataReaderConverter SetColumnPrefixesToRemove(params string[] args);
 
         /// <summary>
-        /// Si es true, ignora propiedades que no existen en el resultado del reader
-        /// </summary>
-        IDataReaderConverter SetIgnoreMissingColumns(bool value);
-
-        /// <summary>
         /// Si es true, lanza excepción cuando no se pueden mapear todas las propiedades requeridas
         /// </summary>
         IDataReaderConverter SetStrictMapping(bool value);
