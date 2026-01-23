@@ -29,6 +29,11 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
 
         #region Constructors
 
+        public SecureConnectionBuilder(string connectionString) : this(null, string.Empty)
+        {
+            SetCnnStringProperties(connectionString);
+        }
+
         /// <summary>
         /// Constructor vacio para la Deserialización de la clase
         /// </summary>

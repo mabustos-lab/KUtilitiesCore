@@ -49,7 +49,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         public event PropertyChangedEventHandler PropertyChanged;
 
         #endregion Events
-
+        
         #region Properties
 
         /// <inheritdoc/>
@@ -274,7 +274,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// Construye la cadena de conexión a partir de las propiedades actuales.
         /// </summary>
         /// <returns>Cadena de conexión resultante.</returns>
-        internal virtual string GetCnnString()
+        internal string GetCnnString()
         {
             string res;
             try
@@ -307,6 +307,63 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
             }
 
             return res;
+        }
+
+        internal void SetCnnStringProperties(string connectionString)
+        {
+            try
+            {
+                DbConnectionStringBuilder dbcsb = new DbConnectionStringBuilder();
+                dbcsb.ConnectionString = connectionString;
+
+                ApplicationName = dbcsb.TryGetValue("Application Name", out object appName) ? appName.ToString() : "MyApp";
+                InitialCatalog = dbcsb.TryGetValue("Initial Catalog", out object initialCat) ? initialCat.ToString() : "master";
+                ServerName = dbcsb.TryGetValue("Data Source", out object dataSource) ? dataSource.ToString() : "Localhost";
+
+                if (dbcsb.TryGetValue("Integrated Security", out object integratedSec))
+                {
+                    IntegratedSecurity = Convert.ToBoolean(integratedSec);
+                }
+                else
+                {
+                    IntegratedSecurity = false;
+                }
+
+                UserName = dbcsb.TryGetValue("User ID", out object userId) ? userId.ToString() : string.Empty;
+                Password = dbcsb.TryGetValue("Password", out object passwordVal) ? passwordVal.ToString() : string.Empty;
+
+                if (dbcsb.TryGetValue("Encrypt", out object encryptVal))
+                {
+                    Encrypt = Convert.ToBoolean(encryptVal);
+                }
+                else
+                {
+                    Encrypt = true; // Default value if not specified
+                }
+
+                if (dbcsb.TryGetValue("TrustServerCertificate", out object trustServerCert))
+                {
+                    TrustServerCertificate = Convert.ToBoolean(trustServerCert);
+                }
+                else
+                {
+                    TrustServerCertificate = true; // Default value if not specified
+                }
+
+                if (dbcsb.TryGetValue("Connection Timeout", out object connTimeout))
+                {
+                    ConnectionTimeout = Convert.ToInt32(connTimeout);
+                }
+                else
+                {
+                    ConnectionTimeout = 30; // Default value if not specified
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error al establecer propiedades de la cadena de conexión: {ex.Message}");
+                throw new ArgumentException("La cadena de conexión proporcionada no es válida.", nameof(connectionString), ex);
+            }
         }
 
 

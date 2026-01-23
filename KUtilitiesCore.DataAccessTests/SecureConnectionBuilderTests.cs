@@ -47,7 +47,6 @@ namespace KUtilitiesCore.DataAccess.Tests
             SecureConnectionBuilder builder = new SecureConnectionBuilder();
             builder.InitialCatalog = string.Empty;
             Assert.IsFalse(builder.IsValid());
-
         }
 
         [TestMethod()]
