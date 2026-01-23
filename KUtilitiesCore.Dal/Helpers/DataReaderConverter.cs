@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using KUtilitiesCore.Extensions;
+using System.Collections;
 using System.Data;
 
 namespace KUtilitiesCore.Dal.Helpers
@@ -8,10 +9,17 @@ namespace KUtilitiesCore.Dal.Helpers
     /// </summary>
     public sealed class DataReaderConverter : IDataReaderConverter, IReaderResultSet
     {
-        private readonly List<Func<IDataReader, IEnumerable>> _resultSets;
+        #region Fields
+
+        private readonly Dictionary<string, object> _paramsUsed;
         private readonly ReaderResultSet _readerResultSet;
-        private bool _useDefaultDataTable;
+        private readonly List<Func<IDataReader, IEnumerable>> _resultSets;
         private readonly TranslateOptions _translateOptions;
+        private bool _useDefaultDataTable;
+
+        #endregion Fields
+
+        #region Constructors
 
         private DataReaderConverter()
         {
@@ -19,18 +27,85 @@ namespace KUtilitiesCore.Dal.Helpers
             _readerResultSet = new ReaderResultSet();
             _useDefaultDataTable = false;
             _translateOptions = new TranslateOptions();
+            _paramsUsed = [];
         }
+
+        #endregion Constructors
+
+        #region Properties
+
         /// <inheritdoc/>
         public bool HasResultsets => _readerResultSet.HasResultsets;
+
         /// <inheritdoc/>
-        public int ResultSetCount => _readerResultSet.ResultSetCount;
+        public IReadOnlyDictionary<string, object> ParamsUsed => _paramsUsed;
+
         /// <inheritdoc/>
         public bool RequiredConvert => _resultSets.Count > 0 || _useDefaultDataTable;
+
+        /// <inheritdoc/>
+        public int ResultSetCount => _readerResultSet.ResultSetCount;
+
+        #endregion Properties
+
+        #region Methods
 
         public static IDataReaderConverter Create()
         {
             return new DataReaderConverter();
         }
+
+        /// <inheritdoc/>
+        public DataTable[] GetAllDataTables()
+        {
+            return _readerResultSet.GetAllDataTables();
+        }
+
+        /// <inheritdoc/>
+        public DataTable GetDataTable(int index = 0)
+        {
+            return _readerResultSet.GetDataTable(index);
+        }
+
+        /// <summary>
+        /// Obtiene el ResulSet
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="index"></param>
+        /// <returns>Regresa el ResulSet mapeado en un tipo especifico</returns>
+        public IEnumerable<TResult> GetResult<TResult>(int index = 0) where TResult : class, new()
+        {
+            return _readerResultSet.GetResult<TResult>(index);
+        }
+
+        /// <inheritdoc/>
+        public IDataReaderConverter SetColumnPrefixesToRemove(params string[] args)
+        {
+            _translateOptions.ColumnPrefixesToRemove = args;
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IDataReaderConverter SetIgnoreMissingColumns(bool value)
+        {
+            _translateOptions.IgnoreMissingColumns = value;
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IDataReaderConverter SetStrictMapping(bool value)
+        {
+            _translateOptions.StrictMapping = value;
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IDataReaderConverter WithDefaultDataTable()
+        {
+            _useDefaultDataTable = true;
+            return this;
+        }
+
         /// <inheritdoc/>
         public IDataReaderConverter WithResult<TResult>() where TResult : class, new()
         {
@@ -58,11 +133,13 @@ namespace KUtilitiesCore.Dal.Helpers
             });
             return this;
         }
-        /// <inheritdoc/>
-        public IDataReaderConverter WithDefaultDataTable()
+
+        internal void SetParams(IDaoParameterCollection parameters = null)
         {
-            _useDefaultDataTable = true;
-            return this;
+            if (parameters != null && parameters.Count > 0)
+            {
+                parameters.ForEach(x => _paramsUsed.Add(x.ParameterName, x.Value));
+            }
         }
 
         internal IReaderResultSet Translate(IDataReader reader)
@@ -112,43 +189,6 @@ namespace KUtilitiesCore.Dal.Helpers
             return dataTable;
         }
 
-        /// <summary>
-        /// Obtiene el ResulSet
-        /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="index"></param>
-        /// <returns>Regresa el ResulSet mapeado en un tipo especifico</returns>
-        public IEnumerable<TResult> GetResult<TResult>(int index = 0) where TResult : class, new()
-        {
-            return _readerResultSet.GetResult<TResult>(index);
-        }
-        /// <inheritdoc/>
-        public DataTable GetDataTable(int index = 0)
-        {
-            return _readerResultSet.GetDataTable(index);
-        }
-        /// <inheritdoc/>
-        public DataTable[] GetAllDataTables()
-        {
-            return _readerResultSet.GetAllDataTables();
-        }
-        /// <inheritdoc/>
-        public IDataReaderConverter SetStrictMapping(bool value)
-        {
-            _translateOptions.StrictMapping = value;
-            return this;
-        }
-        /// <inheritdoc/>
-        public IDataReaderConverter SetIgnoreMissingColumns(bool value)
-        {
-            _translateOptions.IgnoreMissingColumns = value;
-            return this;
-        }
-        /// <inheritdoc/>
-        public IDataReaderConverter SetColumnPrefixesToRemove(params string[] args)
-        {
-            _translateOptions.ColumnPrefixesToRemove = args;
-            return this;
-        }
+        #endregion Methods
     }
 }
