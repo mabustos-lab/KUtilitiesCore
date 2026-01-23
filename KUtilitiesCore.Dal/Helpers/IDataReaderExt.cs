@@ -1,309 +1,190 @@
-﻿using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
+using System.Data.Common;
+using System.Linq;
 using System.Reflection;
 
 namespace KUtilitiesCore.Dal.Helpers
 {
-    public static class IDataReaderExt
+    /// <summary>
+    /// Provides extension methods for IDataReader and DbDataReader to translate data records into objects.
+    /// </summary>
+    public static class DataReaderExtensions
     {
-        // Cache para funciones de mapeo compiladas
-        private static readonly ConcurrentDictionary<string, Func<IDataReader, object>> _translatorCache =
-            new ConcurrentDictionary<string, Func<IDataReader, object>>();
-
-        // Cache para metadatos de propiedades
-        private static readonly ConcurrentDictionary<Type, PropertyMapper[]> _propertyMapperCache =
-            new ConcurrentDictionary<Type, PropertyMapper[]>();
-
-        // Cache para metadatos de columnas
-        private static readonly ConcurrentDictionary<int, Dictionary<string, int>> _columnMetaCache =
-            new ConcurrentDictionary<int, Dictionary<string, int>>();
-
-        internal static IEnumerable<TResult> Translate<TResult>(this IDataReader reader) where TResult : new()
+        /// <summary>
+        /// Translates the IDataReader records into an enumerable of objects of type T.
+        /// </summary>
+        /// <typeparam name="T">The type of object to create.</typeparam>
+        /// <param name="reader">The IDataReader to read from.</param>
+        /// <returns>An enumerable of objects of type T.</returns>
+        public static IEnumerable<T> Translate<T>(this IDataReader reader) where T : new()
         {
-            return Translate<TResult>(reader, new TranslateOptions());
+            return reader.Translate<T>(new TranslateOptions());
         }
 
-        internal static IEnumerable<TResult> Translate<TResult>(this IDataReader reader, TranslateOptions options) where TResult : new()
+        /// <summary>
+        /// Translates the IDataReader records into an enumerable of objects of type T, using the specified translation options.
+        /// </summary>
+        /// <typeparam name="T">The type of object to create.</typeparam>
+        /// <param name="reader">The IDataReader to read from.</param>
+        /// <param name="options">The options to use for translation.</param>
+        /// <returns>An enumerable of objects of type T.</returns>
+        public static IEnumerable<T> Translate<T>(this IDataReader reader, TranslateOptions options) where T : new()
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
-            if (options == null)
-                throw new ArgumentNullException(nameof(options));
 
-            // Obtener metadatos de columnas
-            var columnMeta = GetColumnMetaData(reader);
-
-            // Obtener o crear función de mapeo compilada
-            var translator = GetOrCreateTranslator<TResult>(columnMeta, options);
-
-            // Validar mapeo estricto si es requerido
-            if (options.StrictMapping)
-            {
-                ValidateStrictMapping<TResult>(columnMeta, options);
-            }
-
-            // Procesar filas
+            var translator = new Translator<T>(reader, options);
             while (reader.Read())
             {
-                yield return (TResult)translator(reader);
+                yield return translator.Translate(reader);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles the translation of an IDataReader record to an object of type T.
+    /// </summary>
+    /// <typeparam name="T">The type of object to translate to.</typeparam>
+    internal class Translator<T> where T : new()
+    {
+        private readonly List<Mapping> _mappings;
+
+        /// <summary>
+        /// Initializes a new instance of the Translator class.
+        /// </summary>
+        /// <param name="reader">The IDataReader to get schema information from.</param>
+        /// <param name="options">The translation options.</param>
+        public Translator(IDataReader reader, TranslateOptions options)
+        {
+            var columnNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                columnNames[reader.GetName(i)] = i;
+            }
+
+            _mappings = new List<Mapping>();
+            var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.CanWrite && p.GetCustomAttribute<IgnoreMappingAttribute>() == null);
+
+            foreach (var property in properties)
+            {
+                if (TryFindColumnIndex(property.Name, columnNames, options, out int columnIndex))
+                {
+                    _mappings.Add(new Mapping(property, columnIndex));
+                }
+                else if (options.StrictMapping && property.GetCustomAttribute<OptionalMappingAttribute>() == null)
+                {
+                    throw new InvalidOperationException($"Property '{property.Name}' not found in the data reader.");
+                }
             }
         }
 
-        private static Dictionary<string, int> GetColumnMetaData(IDataReader reader)
+        /// <summary>
+        /// Translates a single IDataReader record to an object of type T.
+        /// </summary>
+        /// <param name="record">The IDataRecord to translate.</param>
+        /// <returns>An object of type T.</returns>
+        public T Translate(IDataRecord record)
         {
-            var readerHash = reader.GetHashCode();
-
-            return _columnMetaCache.GetOrAdd(readerHash, _ =>
+            var item = new T();
+            foreach (var mapping in _mappings)
             {
-                var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                for (int i = 0; i < reader.FieldCount; i++)
+                var value = record.GetValue(mapping.ColumnIndex);
+                if (value != DBNull.Value && value != null)
                 {
-                    columnMap[reader.GetName(i)] = i;
-                }
-                return columnMap;
-            });
-        }
-
-        private static Func<IDataReader, object> GetOrCreateTranslator<TResult>(
-            Dictionary<string, int> columnMeta,
-            TranslateOptions options) where TResult : new()
-        {
-            string cacheKey = $"{typeof(TResult).FullName}_{options.GetHashCode()}_{columnMeta.Count}";
-
-            return _translatorCache.GetOrAdd(cacheKey, _ =>
-            {
-                // Obtener mapeadores de propiedades
-                var propertyMappers = GetPropertyMappers<TResult>(columnMeta, options);
-
-                // Compilar función de mapeo
-                return CompileTranslator<TResult>(propertyMappers);
-            });
-        }
-
-        private static PropertyMapper[] GetPropertyMappers<TResult>(
-            Dictionary<string, int> columnMeta,
-            TranslateOptions options) where TResult : new()
-        {
-            return _propertyMapperCache.GetOrAdd(typeof(TResult), type =>
-            {
-                var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(p => p.CanWrite && !IsIgnoredProperty(p))
-                    .ToList();
-
-                var mappers = new List<PropertyMapper>(properties.Count);
-
-                foreach (var property in properties)
-                {
-                    var columnIndex = FindMatchingColumnIndex(property.Name, columnMeta, options);
-                    if (columnIndex >= 0)
-                    {
-                        mappers.Add(new PropertyMapper
-                        {
-                            Property = property,
-                            ColumnIndex = columnIndex,
-                            Setter = CreatePropertySetter(property),
-                            Converter = CreateValueConverter(property.PropertyType)
-                        });
-                    }
-                }
-
-                return mappers.ToArray();
-            });
-        }
-
-        private static Func<IDataReader, object> CompileTranslator<TResult>(PropertyMapper[] propertyMappers) where TResult : new()
-        {
-            // Crear expresión lambda para mapeo optimizado
-            var readerParam = Expression.Parameter(typeof(IDataReader), "reader");
-            var instanceVar = Expression.Variable(typeof(TResult), "instance");
-
-            var expressions = new List<Expression>
-            {
-                Expression.Assign(instanceVar, Expression.New(typeof(TResult)))
-            };
-
-            // Agregar asignaciones para cada propiedad
-            foreach (var mapper in propertyMappers)
-            {
-                try
-                {
-                    // Obtener valor del reader
-                    var getValueCall = Expression.Call(
-                        readerParam,
-                        nameof(IDataReader.GetValue),
-                        null,
-                        Expression.Constant(mapper.ColumnIndex));
-
-                    // Convertir valor
-                    var convertedValue = Expression.Invoke(
-                        Expression.Constant(mapper.Converter),
-                        getValueCall);
-
-                    // Asignar a propiedad
-                    var propertyExpr = Expression.Property(instanceVar, mapper.Property);
-                    var assignExpr = Expression.Assign(propertyExpr, Expression.Convert(convertedValue, mapper.Property.PropertyType));
-
-                    expressions.Add(assignExpr);
-                }
-                catch (Exception ex)
-                {
-                    // Fallback a mapeo por reflexión si la compilación falla
-                    System.Diagnostics.Debug.WriteLine($"Error compilando mapeo para {mapper.Property.Name}: {ex.Message}");
+                    var convertedValue = ConvertValue(value, mapping.Property.PropertyType);
+                    mapping.Property.SetValue(item, convertedValue);
                 }
             }
-
-            expressions.Add(instanceVar);
-
-            var block = Expression.Block(new[] { instanceVar }, expressions);
-            var lambda = Expression.Lambda<Func<IDataReader, object>>(block, readerParam);
-
-            return lambda.Compile();
+            return item;
         }
-
-        private static Action<object, object> CreatePropertySetter(PropertyInfo property)
+        
+        private static bool TryFindColumnIndex(string propertyName, Dictionary<string, int> columnNames, TranslateOptions options, out int index)
         {
-            // Crear setter compilado usando Expression Trees
-            var instanceParam = Expression.Parameter(typeof(object), "instance");
-            var valueParam = Expression.Parameter(typeof(object), "value");
-
-            var instanceCast = Expression.Convert(instanceParam, property.DeclaringType);
-            var valueCast = Expression.Convert(valueParam, property.PropertyType);
-            var propertyAccess = Expression.Property(instanceCast, property);
-            var assign = Expression.Assign(propertyAccess, valueCast);
-
-            var lambda = Expression.Lambda<Action<object, object>>(assign, instanceParam, valueParam);
-            return lambda.Compile();
-        }
-
-        private static Func<object, object> CreateValueConverter(Type targetType)
-        {
-            return value =>
+            // Direct match
+            if (columnNames.TryGetValue(propertyName, out index))
             {
-                if (value == null || value == DBNull.Value)
-                    return targetType.IsValueType && Nullable.GetUnderlyingType(targetType) == null
-                        ? Activator.CreateInstance(targetType)
-                        : null;
+                return true;
+            }
 
-                var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-
-                try
-                {
-                    if (underlyingType.IsEnum)
-                        return Enum.ToObject(underlyingType, value);
-
-                    if (underlyingType == typeof(Guid))
-                        return Guid.Parse(value.ToString());
-
-                    if (underlyingType == typeof(DateTimeOffset))
-                        return DateTimeOffset.Parse(value.ToString());
-
-                    return Convert.ChangeType(value, underlyingType);
-                }
-                catch
-                {
-                    return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-                }
-            };
-        }
-
-        private static int FindMatchingColumnIndex(string propertyName, Dictionary<string, int> columnMeta, TranslateOptions options)
-        {
-            // Búsqueda exacta
-            if (columnMeta.TryGetValue(propertyName, out int index))
-                return index;
-
-            // Búsqueda case-insensitive
-            var exactMatch = columnMeta.FirstOrDefault(kv =>
-                string.Equals(kv.Key, propertyName, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrEmpty(exactMatch.Key))
-                return exactMatch.Value;
-
-            // Remover prefijos
+            // Match without prefixes
             var propertyNameWithoutPrefix = RemovePrefixes(propertyName, options.ColumnPrefixesToRemove);
-            if (propertyNameWithoutPrefix != propertyName && columnMeta.TryGetValue(propertyNameWithoutPrefix, out index))
-                return index;
-
-            // Búsqueda flexible
-            var normalizedProperty = NormalizeName(propertyName);
-            foreach (var column in columnMeta.Keys)
+            if (propertyNameWithoutPrefix != propertyName && columnNames.TryGetValue(propertyNameWithoutPrefix, out index))
             {
-                if (string.Equals(NormalizeName(column), normalizedProperty, StringComparison.OrdinalIgnoreCase))
-                    return columnMeta[column];
+                return true;
             }
-
-            return -1;
-        }
-
-        private static string NormalizeName(string name)
-        {
-            return name?.Replace("_", "").Replace(" ", "").Trim() ?? string.Empty;
+            
+            // Flexible match
+            var normalizedProperty = NormalizeName(propertyName);
+            foreach (var columnName in columnNames.Keys)
+            {
+                if (NormalizeName(columnName).Equals(normalizedProperty, StringComparison.OrdinalIgnoreCase))
+                {
+                    index = columnNames[columnName];
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         private static string RemovePrefixes(string input, string[] prefixes)
         {
-            if (prefixes == null || prefixes.Length == 0)
-                return input;
-
+            if (prefixes == null) return input;
             foreach (var prefix in prefixes)
             {
                 if (input.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
                     return input.Substring(prefix.Length);
+                }
             }
             return input;
         }
 
-        private static void ValidateStrictMapping<TResult>(Dictionary<string, int> columnMeta, TranslateOptions options)
+        private static string NormalizeName(string name)
         {
-            var missingProperties = new List<string>();
-            var properties = typeof(TResult).GetProperties()
-                .Where(p => p.CanWrite && !IsIgnoredProperty(p) && !IsOptionalProperty(p))
-                .ToArray();
+            return name.Replace("_", "").Replace(" ", "").Trim();
+        }
 
-            foreach (var prop in properties)
+        private object ConvertValue(object value, Type targetType)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            if (underlyingType.IsEnum)
             {
-                if (FindMatchingColumnIndex(prop.Name, columnMeta, options) < 0)
-                    missingProperties.Add(prop.Name);
+                return Enum.ToObject(underlyingType, value);
             }
 
-            if (missingProperties.Any())
-            {
-                throw new InvalidOperationException(
-                    $"Mapeo estricto fallido para {typeof(TResult).Name}. " +
-                    $"Propiedades no mapeadas: {string.Join(", ", missingProperties)}");
-            }
-        }
-
-        internal static string[] GetPropertiesRequired<T>()
-        {
-            return typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.CanWrite && !IsIgnoredProperty(p))
-                .Select(p => p.Name)
-                .ToArray();
-        }
-
-        private static bool IsIgnoredProperty(PropertyInfo property)
-        {
-            return property.GetCustomAttribute<IgnoreMappingAttribute>() != null;
-        }
-
-        private static bool IsOptionalProperty(PropertyInfo property)
-        {
-            return property.GetCustomAttribute<OptionalMappingAttribute>() != null;
-        }
-
-        private class PropertyMapper
-        {
-            public PropertyInfo Property { get; set; }
-            public int ColumnIndex { get; set; }
-            public Action<object, object> Setter { get; set; }
-            public Func<object, object> Converter { get; set; }
+            return Convert.ChangeType(value, underlyingType);
         }
     }
 
+    /// <summary>
+    /// Represents the mapping between a property and a column index.
+    /// </summary>
+    internal class Mapping
+    {
+        public PropertyInfo Property { get; }
+        public int ColumnIndex { get; }
+
+        public Mapping(PropertyInfo property, int columnIndex)
+        {
+            Property = property;
+            ColumnIndex = columnIndex;
+        }
+    }
+
+    /// <summary>
+    /// When applied to a property, it will be ignored during the translation.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class IgnoreMappingAttribute : Attribute { }
 
+    /// <summary>
+    /// When applied to a property, it will be considered optional during strict mapping.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class OptionalMappingAttribute : Attribute { }
 }

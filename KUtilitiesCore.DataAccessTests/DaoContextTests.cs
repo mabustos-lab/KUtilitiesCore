@@ -81,6 +81,8 @@ namespace KUtilitiesCore.Dal.Tests
                 .SetStrictMapping(true);
             var result= dao.ExecuteReader("Select * From ActiveType", converter, commandType: CommandType.Text);
             Assert.IsTrue(result.HasResultsets);
+            var l = result.GetResult<ActiveTypeModel>().ToList();
+            Assert.IsGreaterThan(0, l.Count());
         }
 
         //[TestMethod()]

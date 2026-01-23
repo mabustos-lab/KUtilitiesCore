@@ -11,6 +11,8 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
+
 
 #if NET48
 
@@ -329,16 +331,22 @@ namespace KUtilitiesCore.Dal
             {
                 if (translate == null)
                 {
-                    translate = DataReaderConverter.Create().WithDefaultDataTable();
+                    translate = DataReaderConverter.GetDefault();
                 }
+                IReaderResultSet result;
+                using (DbCommand command = CreateCommand(sql, parameters, commandType))
+                {
+                    using DbDataReader reader = command.ExecuteReader();
 
-                using DbCommand command = CreateCommand(sql, parameters, commandType);
-                using DbDataReader reader = command.ExecuteReader();
-
-                IReaderResultSet result = translate.RequiredConvert
-                    ? ((DataReaderConverter)translate).Translate(reader)
-                    : new ReaderResultSet();
-
+                    result = translate.RequiredConvert
+                        ? ((DataReaderConverter)translate).Translate(reader)
+                        : new ReaderResultSet();
+                }
+                if(result is ReaderResultSet r1)
+                    r1.SetParams(parameters);
+                if (result is DataReaderConverter r2)
+                    r2.SetParams(parameters);
+                 
                 stopwatch.Stop();
                 _metrics.TrackMetric("ReaderExecutionTime", stopwatch.ElapsedMilliseconds);
                 _logger?.LogDebug("ExecuteReader ejecutado en {Tiempo}ms", stopwatch.ElapsedMilliseconds);
@@ -360,23 +368,27 @@ namespace KUtilitiesCore.Dal
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            IReaderResultSet result = new ReaderResultSet();
+            
 
             try
             {
                 if (translate == null)
                 {
-                    translate = DataReaderConverter.Create().WithDefaultDataTable();
+                    translate = DataReaderConverter.GetDefault();
                 }
-
-                using DbCommand command = CreateCommand(sql, parameters, commandType);
-                using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-
-                if (translate.RequiredConvert)
+                IReaderResultSet result;
+                using(DbCommand command = CreateCommand(sql, parameters, commandType))
                 {
-                    DataReaderConverter converter = (DataReaderConverter)translate;
-                    result = converter.Translate(reader);
+                    using DbDataReader reader = await command.ExecuteReaderAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    result = translate.RequiredConvert
+                        ? ((DataReaderConverter)translate).Translate(reader)
+                        : new ReaderResultSet();
                 }
+                if (result is ReaderResultSet r1)
+                    r1.SetParams(parameters);
+                if (result is DataReaderConverter r2)
+                    r2.SetParams(parameters);
 
                 stopwatch.Stop();
                 _metrics.TrackMetric("ReaderExecutionTime", stopwatch.ElapsedMilliseconds);
