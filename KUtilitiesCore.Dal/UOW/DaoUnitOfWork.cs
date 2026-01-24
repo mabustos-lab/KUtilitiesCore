@@ -18,7 +18,7 @@ namespace KUtilitiesCore.Dal.UOW
         protected readonly IDaoUowContext UowContext;
 
         // Registro opcional de tipos personalizados: <TipoEntidad, TipoRepositorio>
-        private readonly Dictionary<Type, Type> _customRepositories = new Dictionary<Type, Type>();
+        private readonly Dictionary<Type, Type> _customRepositories = [];
 
         private bool _disposed;
         private Hashtable _repositories;
@@ -33,6 +33,29 @@ namespace KUtilitiesCore.Dal.UOW
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Registra una implementación personalizada de un repositorio de lectura.
+        /// Útil para registrar repositorios específicos de reportes que heredan de IRawRepository.
+        /// </summary>
+        /// <typeparam name="TInterface">La interfaz del repositorio (debe heredar de IRawRepository).</typeparam>
+        public void RegisterCustomRepository<TInterface>() where TInterface : class, IRawRepository
+        {
+            var repoType = typeof(TInterface);
+
+            // Validación Temprana: Verificamos si existe un constructor que acepte IDaoUowContext
+            var constructor = repoType.GetConstructor(new[] { typeof(IDaoUowContext) });
+
+            if (constructor == null)
+            {
+                throw new ArgumentException(
+                    $"El repositorio '{repoType.Name}' no tiene un constructor público que acepte un parámetro de tipo '{nameof(IDaoUowContext)}'. " +
+                    $"Esto es necesario para funcionar con DaoUnitOfWork.",
+                   repoType.Name);
+            }
+            _customRepositories[repoType] = repoType;
+            
         }
 
         /// <summary>
@@ -90,7 +113,44 @@ namespace KUtilitiesCore.Dal.UOW
 
             return (IRepository<T>)_repositories[type];
         }
-        
+
+        /// <summary>
+        /// Obtiene un repositorio de lectura registrado.
+        /// Si se solicita la interfaz base IRawRepository y no existe, crea una instancia por defecto.
+        /// </summary>
+        /// <typeparam name="T">El tipo de repositorio a obtener.</typeparam>
+        /// <returns>La instancia del repositorio.</returns>
+        /// <exception cref="InvalidOperationException">Si el repositorio personalizado no ha sido registrado previamente.</exception>
+        public T GetRawRepository<T>() where T : class, IRawRepository
+        {
+            if (_repositories == null)
+                _repositories = new Hashtable();
+
+            var type = typeof(T);
+            if (!_repositories.ContainsKey(type))
+            {
+                object repositoryInstance;
+
+                // 1. Intentamos ver si hay un repositorio específico registrado
+                if (_customRepositories.ContainsKey(typeof(T)))
+                {
+                    var customRepoType = _customRepositories[typeof(T)];
+                    // Instanciamos usando el constructor validado previamente
+                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
+                }
+                else
+                {
+                    // 2. Fallback al genérico (DefaultDaoRepository)
+                    var repositoryType = typeof(RawRepositorybase);
+                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext);
+                }
+
+                _repositories.Add(type, repositoryInstance);
+            }
+
+            return (T)_repositories[type];
+        }
+
         /// <inheritdoc/>
         public int SaveChanges()
         {
