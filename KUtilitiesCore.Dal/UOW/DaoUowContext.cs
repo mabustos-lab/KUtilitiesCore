@@ -69,7 +69,7 @@ namespace KUtilitiesCore.Dal.UOW
             {
                 if (disposing)
                 {
-                    _transaction.Dispose();
+                    _transaction?.Dispose();
                     _context.Dispose();
                 }
 
