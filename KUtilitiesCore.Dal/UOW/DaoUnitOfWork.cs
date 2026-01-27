@@ -40,7 +40,7 @@ namespace KUtilitiesCore.Dal.UOW
         /// Útil para registrar repositorios específicos de reportes que heredan de IRawRepository.
         /// </summary>
         /// <typeparam name="TInterface">La interfaz del repositorio (debe heredar de IRawRepository).</typeparam>
-        public void RegisterCustomRepository<TInterface>() where TInterface : class, IRawRepository
+        public void RegisterCustomRepository<TInterface>() where TInterface : IRawRepository
         {
             var repoType = typeof(TInterface);
 
@@ -118,23 +118,23 @@ namespace KUtilitiesCore.Dal.UOW
         /// Obtiene un repositorio de lectura registrado.
         /// Si se solicita la interfaz base IRawRepository y no existe, crea una instancia por defecto.
         /// </summary>
-        /// <typeparam name="T">El tipo de repositorio a obtener.</typeparam>
+        /// <typeparam name="TRepo">El tipo de repositorio a obtener.</typeparam>
         /// <returns>La instancia del repositorio.</returns>
         /// <exception cref="InvalidOperationException">Si el repositorio personalizado no ha sido registrado previamente.</exception>
-        public T GetRawRepository<T>() where T : class, IRawRepository
+        public TRepo GetRawRepository<TRepo>() where TRepo : IRawRepository
         {
             if (_repositories == null)
                 _repositories = new Hashtable();
 
-            var type = typeof(T);
+            var type = typeof(TRepo);
             if (!_repositories.ContainsKey(type))
             {
                 object repositoryInstance;
 
                 // 1. Intentamos ver si hay un repositorio específico registrado
-                if (_customRepositories.ContainsKey(typeof(T)))
+                if (_customRepositories.ContainsKey(typeof(TRepo)))
                 {
-                    var customRepoType = _customRepositories[typeof(T)];
+                    var customRepoType = _customRepositories[typeof(TRepo)];
                     // Instanciamos usando el constructor validado previamente
                     repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
                 }
@@ -142,13 +142,13 @@ namespace KUtilitiesCore.Dal.UOW
                 {
                     // 2. Fallback al genérico (DefaultDaoRepository)
                     var repositoryType = typeof(RawRepositorybase);
-                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext);
+                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TRepo)), UowContext);
                 }
 
                 _repositories.Add(type, repositoryInstance);
             }
 
-            return (T)_repositories[type];
+            return (TRepo)_repositories[type];
         }
 
         /// <inheritdoc/>
