@@ -17,7 +17,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
 		<!-- 4. Serialización JSON (Nativo y de alto rendimiento) -->
 		<!-- En .NET 5+ viene incluido, pero en Standard 2.1 se requiere -->
-		<PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="10.0.2" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- Referencia al Core (Interfaces) -->
