@@ -140,9 +140,10 @@ namespace KUtilitiesCore.Dal.UOW
                 }
                 else
                 {
-                    // 2. Fallback al genérico (DefaultDaoRepository)
-                    var repositoryType = typeof(RawRepositorybase);
-                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TRepo)), UowContext);
+                    throw new UnregisteredRepositoryException($"Repositorio del tipo: {type.Name}, no esta registrado.");
+                    //// 2. Fallback al genérico (DefaultDaoRepository)
+                    //var repositoryType = typeof(RawRepositorybase);
+                    //repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TRepo)), UowContext);
                 }
 
                 _repositories.Add(type, repositoryInstance);
