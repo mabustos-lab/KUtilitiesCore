@@ -11,7 +11,7 @@ namespace KUtilitiesCore.Dal.UOW
     /// Implementación de Unit of Work para KUtilitiesCore.Dal. Gestiona transacciones SQL nativas a
     /// través de IDAOContext.
     /// </summary>
-    public class DaoUnitOfWork : IUnitOfWork
+    public class DaoUnitOfWork : IUnitOfWork, IDaoRepositoryProvider
     {
         /// <summary>
         /// Contexto transaccional proporcionado por el Unit of Work.
@@ -26,8 +26,7 @@ namespace KUtilitiesCore.Dal.UOW
 
         public DaoUnitOfWork(IDaoContext context)
         {
-            UowContext = new DaoUowContext(context);
-            ((DaoUowContext)UowContext).ParentUOW = () => this;
+            UowContext = new DaoUowContext(this, context);
         }
 
         /// <inheritdoc/>
@@ -116,13 +115,7 @@ namespace KUtilitiesCore.Dal.UOW
             return (IRepository<T>)_repositories[type];
         }
 
-        /// <summary>
-        /// Obtiene un repositorio de lectura registrado.
-        /// Si se solicita la interfaz base IRawRepository y no existe, crea una instancia por defecto.
-        /// </summary>
-        /// <typeparam name="TRepo">El tipo de repositorio a obtener.</typeparam>
-        /// <returns>La instancia del repositorio.</returns>
-        /// <exception cref="InvalidOperationException">Si el repositorio personalizado no ha sido registrado previamente.</exception>
+        /// <inheritdoc/>
         public TRepo GetRawRepository<TRepo>() where TRepo : IRawRepository
         {
             if (_repositories == null)
