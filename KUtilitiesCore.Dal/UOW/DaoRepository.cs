@@ -74,6 +74,10 @@ namespace KUtilitiesCore.Dal.UOW
         /// Acceso directo a la transacción (atajo).
         /// </summary>
         protected ITransaction Transaction => _uowContext.Transaction;
+        /// <summary>
+        /// Accesos directo a las funciones para obtener los repositorios
+        /// </summary>
+        protected IDaoRepositoryProvider RepositoryProvider => _uowContext.DaoRepositoryProvider;
 
         #endregion Properties
 
