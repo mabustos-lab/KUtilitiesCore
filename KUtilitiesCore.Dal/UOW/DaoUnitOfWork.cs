@@ -116,7 +116,7 @@ namespace KUtilitiesCore.Dal.UOW
         }
 
         /// <inheritdoc/>
-        public TRepo GetRawRepository<TRepo>() where TRepo : IRawRepository
+        public TRepo RawRepository<TRepo>() where TRepo : IRawRepository
         {
             if (_repositories == null)
                 _repositories = new Hashtable();

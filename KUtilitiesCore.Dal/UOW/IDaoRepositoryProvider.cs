@@ -14,12 +14,11 @@ namespace KUtilitiesCore.Dal.UOW
     public interface IDaoRepositoryProvider:IRepositoryProvider
     {
         /// <summary>
-        /// Obtiene un repositorio de lectura registrado. Si se solicita la interfaz base IRawRepository y no existe, crea una
-        /// instancia por defecto.
+        /// Obtiene un repositorio de lectura registrado.
         /// </summary>
         /// <typeparam name="TRepo">El tipo de repositorio a obtener.</typeparam>
         /// <returns>La instancia del repositorio.</returns>
         /// <exception cref="InvalidOperationException">Si el repositorio personalizado no ha sido registrado previamente.</exception>
-        TRepo GetRawRepository<TRepo>() where TRepo : IRawRepository;
+        TRepo RawRepository<TRepo>() where TRepo : IRawRepository;
     }
 }
