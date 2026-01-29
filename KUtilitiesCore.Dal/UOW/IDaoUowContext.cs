@@ -24,9 +24,9 @@ namespace KUtilitiesCore.Dal.UOW
         /// </summary>
         ITransaction Transaction { get; }
         /// <summary>
-        /// Obtiene acceso al UOW origen del contexto
+        /// Expone el acceso a las instancias de los repositorion en el UOW
         /// </summary>
-        Func<DaoUnitOfWork> ParentUOW { get;}
+        IDaoRepositoryProvider DaoRepositoryProvider { get; }
 
         #endregion Properties
 

@@ -4,15 +4,8 @@
     /// Contrato para el patrón Unit of Work.
     /// Encargado de mantener una lista de repositorios y coordinar la escritura de cambios.
     /// </summary>
-    public interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork : IRepositoryProvider, IDisposable
     {
-        /// <summary>
-        /// Obtiene una instancia del repositorio genérico para la entidad especificada.
-        /// </summary>
-        /// <typeparam name="T">Tipo de la entidad.</typeparam>
-        /// <returns>Instancia de IRepository con soporte para Specifications.</returns>
-        IRepository<T> Repository<T>() where T : class;
-
         /// <summary>
         /// Guarda todos los cambios realizados en el contexto actual de manera asíncrona.
         /// <para>

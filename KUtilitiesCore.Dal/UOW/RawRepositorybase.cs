@@ -24,5 +24,7 @@ namespace KUtilitiesCore.Dal.UOW
         /// Acceso directo a la transacción (atajo).
         /// </summary>
         protected ITransaction Transaction => _uowContext.Transaction;
+
+        
     }
 }
