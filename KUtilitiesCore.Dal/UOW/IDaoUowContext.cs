@@ -23,6 +23,10 @@ namespace KUtilitiesCore.Dal.UOW
         /// La transacción activa actual. Puede ser null si no se ha iniciado una transacción explícita.
         /// </summary>
         ITransaction Transaction { get; }
+        /// <summary>
+        /// Obtiene acceso al UOW origen del contexto
+        /// </summary>
+        Func<DaoUnitOfWork> ParentUOW { get;}
 
         #endregion Properties
 

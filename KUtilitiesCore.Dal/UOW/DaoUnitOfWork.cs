@@ -3,6 +3,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.Dal;
+using KUtilitiesCore.Extensions;
 
 namespace KUtilitiesCore.Dal.UOW
 {
@@ -26,6 +27,7 @@ namespace KUtilitiesCore.Dal.UOW
         public DaoUnitOfWork(IDaoContext context)
         {
             UowContext = new DaoUowContext(context);
+            ((DaoUowContext)UowContext).ParentUOW = () => this;
         }
 
         /// <inheritdoc/>
@@ -140,9 +142,10 @@ namespace KUtilitiesCore.Dal.UOW
                 }
                 else
                 {
-                    // 2. Fallback al genérico (DefaultDaoRepository)
-                    var repositoryType = typeof(RawRepositorybase);
-                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TRepo)), UowContext);
+                    throw new UnregisteredRepositoryException($"Repositorio del tipo: {type.Name}, no esta registrado.");
+                    //// 2. Fallback al genérico (DefaultDaoRepository)
+                    //var repositoryType = typeof(RawRepositorybase);
+                    //repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(TRepo)), UowContext);
                 }
 
                 _repositories.Add(type, repositoryInstance);

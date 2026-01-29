@@ -41,6 +41,8 @@ namespace KUtilitiesCore.Dal.UOW
                 return _transaction;
             }
         }
+        /// <inheritdoc/>
+        public Func<DaoUnitOfWork> ParentUOW { get; internal set; }
 
         #endregion Properties
 
