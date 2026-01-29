@@ -79,7 +79,7 @@ namespace KUtilitiesCore.Dal.Tests
             {
                 Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
             }
-            var repo= _uow.GetRawRepository<RawRepo>();
+            var repo= _uow.RawRepository<RawRepo>();
             Assert.IsNotNull(repo);
             DataTable dt= repo.GetDataBases();
             Assert.IsNotNull(dt);
