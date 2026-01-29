@@ -3,6 +3,7 @@ using System.Collections;
 using System.Threading.Tasks;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.Dal;
+using KUtilitiesCore.Extensions;
 
 namespace KUtilitiesCore.Dal.UOW
 {
@@ -26,6 +27,7 @@ namespace KUtilitiesCore.Dal.UOW
         public DaoUnitOfWork(IDaoContext context)
         {
             UowContext = new DaoUowContext(context);
+            ((DaoUowContext)UowContext).ParentUOW = () => this;
         }
 
         /// <inheritdoc/>
