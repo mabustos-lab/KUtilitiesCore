@@ -12,8 +12,11 @@
 
 	<ItemGroup>
 	  <Compile Remove="Paging\**" />
+	  <Compile Remove="SPHelper\**" />
 	  <EmbeddedResource Remove="Paging\**" />
+	  <EmbeddedResource Remove="SPHelper\**" />
 	  <None Remove="Paging\**" />
+	  <None Remove="SPHelper\**" />
 	</ItemGroup>
 
 	<ItemGroup>
