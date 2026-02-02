@@ -26,7 +26,7 @@ namespace KUtilitiesCore.Extensions.Serialization
         private static readonly JsonSerializerOptions _jsonOptionsDefault = new()
         {
             PropertyNameCaseInsensitive = true, // Ignora mayúsculas/minúsculas en propiedades
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase, // Usa camelCase para nombres de propiedad (ej. miPropiedad)
+            PropertyNamingPolicy = null, // Usa null para nombres de propiedad (ej. MiPropiedad)
             WriteIndented = true, // Escribe el JSON con formato indentado para legibilidad
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull // No incluye propiedades con valor null
             // podemos agregar mas opciones
@@ -91,7 +91,6 @@ namespace KUtilitiesCore.Extensions.Serialization
 
         private static readonly JsonSerializerSettings _jsonSettingsDefault = new()
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(), // Usa camelCase
             Formatting = Formatting.Indented, // Formato indentado
             NullValueHandling = NullValueHandling.Ignore, // Ignora valores null
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore // Ignora referencias circulares
