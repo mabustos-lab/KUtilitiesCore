@@ -64,8 +64,11 @@ namespace KUtilitiesCore.Dal
         /// <typeparam name="TResult">Tipo de dato esperado como resultado.</typeparam>
         /// <param name="sql">Cadena SQL a ejecutar.</param>
         /// <param name="parameters">Colección de parámetros para el comando.</param>
+        /// <param name="commandType">Tipo de comando.</param>
+        /// <param name="transaction">Transacción opcional.</param>
         /// <returns>Valor escalar obtenido de la consulta.</returns>
-        TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null);
+        TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction transaction = null);
 
         /// <summary>
         /// Ejecuta asincrónicamente una consulta SQL y retorna el primer valor de la primera fila
@@ -74,9 +77,12 @@ namespace KUtilitiesCore.Dal
         /// <typeparam name="TResult">Tipo de dato esperado como resultado.</typeparam>
         /// <param name="sql">Cadena SQL a ejecutar.</param>
         /// <param name="parameters">Colección de parámetros para el comando.</param>
+        /// <param name="commandType">Tipo de comando.</param>
+        /// <param name="transaction">Transacción opcional.</param>
         /// <param name="cancellationToken">Token de cancelación.</param>
         /// <returns>Valor escalar obtenido de la consulta.</returns>
         Task<TResult> ScalarAsync<TResult>(string sql, IDaoParameterCollection parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction transaction = null,
                                           CancellationToken cancellationToken = default);
 
     }
