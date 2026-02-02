@@ -190,6 +190,7 @@ namespace KUtilitiesCore.Dal.SPHelper
                     _dataReaderConverter,
                     Parameters,
                     CommandType.StoredProcedure,
+                    null,
                     cancellationToken);
 
                 LogSuccess($"Conjuntos de resultados: {result.ResultSetCount}");
@@ -209,7 +210,7 @@ namespace KUtilitiesCore.Dal.SPHelper
 
             try
             {
-                var result = Context.Scalar<TResult>(StoreProcedureName, Parameters);
+                var result = Context.Scalar<TResult>(StoreProcedureName, Parameters, CommandType.StoredProcedure);
 
                 LogSuccess($"Resultado escalar: {result}");
                 return result;
@@ -228,7 +229,7 @@ namespace KUtilitiesCore.Dal.SPHelper
 
             try
             {
-                var result = await Context.ScalarAsync<TResult>(StoreProcedureName, Parameters, cancellationToken);
+                var result = await Context.ScalarAsync<TResult>(StoreProcedureName, Parameters, CommandType.StoredProcedure,null, cancellationToken);
 
                 LogSuccess($"Resultado escalar: {result}");
                 return result;
