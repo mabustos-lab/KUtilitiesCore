@@ -21,6 +21,9 @@
 
 	<ItemGroup>
 	  <Compile Remove="Exceptions\RepositoryException.cs" />
+	  <Compile Remove="UOW\IDaoRepositoryProvider.cs" />
+	  <Compile Remove="UOW\IRawRepository.cs" />
+	  <Compile Remove="UOW\UnregisteredRepositoryException.cs" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />

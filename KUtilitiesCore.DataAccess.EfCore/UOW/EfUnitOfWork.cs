@@ -62,6 +62,9 @@ namespace KUtilitiesCore.DataAccess.EfCore.UOW
             _disposed = true;
         }
 
-        
+        TRepo IRepositoryProvider.RawRepository<TRepo>()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
