@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,7 @@ namespace KUtilitiesCore.Dal.UOW
         /// <summary>
         /// Expone el acceso a las instancias de los repositorion en el UOW
         /// </summary>
-        IDaoRepositoryProvider DaoRepositoryProvider { get; }
+        IRepositoryProvider DaoRepositoryProvider { get; }
 
         #endregion Properties
 

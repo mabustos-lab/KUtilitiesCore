@@ -11,7 +11,7 @@ namespace KUtilitiesCore.Dal.UOW
     /// Implementación de Unit of Work para KUtilitiesCore.Dal. Gestiona transacciones SQL nativas a
     /// través de IDAOContext.
     /// </summary>
-    public class DaoUnitOfWork : IUnitOfWork, IDaoRepositoryProvider
+    public class DaoUnitOfWork : IUnitOfWork
     {
         /// <summary>
         /// Contexto transaccional proporcionado por el Unit of Work.

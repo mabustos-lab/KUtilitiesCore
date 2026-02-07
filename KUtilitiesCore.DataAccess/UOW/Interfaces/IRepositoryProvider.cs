@@ -18,5 +18,12 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <typeparam name="T">Tipo de la entidad.</typeparam>
         /// <returns>Instancia de IRepository con soporte para Specifications.</returns>
         IRepository<T> Repository<T>() where T : class;
+        /// <summary>
+        /// Obtiene un repositorio de lectura registrado.
+        /// </summary>
+        /// <typeparam name="TRepo">El tipo de repositorio a obtener.</typeparam>
+        /// <returns>La instancia del repositorio.</returns>
+        /// <exception cref="InvalidOperationException">Si el repositorio personalizado no ha sido registrado previamente.</exception>
+        TRepo RawRepository<TRepo>() where TRepo : IRawRepository;
     }
 }

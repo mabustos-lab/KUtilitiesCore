@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KUtilitiesCore.DataAccess.UOW.Interfaces;
+using System;
 using System.Linq;
 
 namespace KUtilitiesCore.Dal.UOW
@@ -27,6 +28,6 @@ namespace KUtilitiesCore.Dal.UOW
         /// <summary>
         /// Accesos directo a las funciones para obtener los repositorios
         /// </summary>
-        protected IDaoRepositoryProvider RepositoryProvider => _uowContext.DaoRepositoryProvider;
+        protected IRepositoryProvider RepositoryProvider => _uowContext.DaoRepositoryProvider;
     }
 }

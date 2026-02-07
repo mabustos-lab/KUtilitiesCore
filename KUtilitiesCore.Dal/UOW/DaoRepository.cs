@@ -77,7 +77,7 @@ namespace KUtilitiesCore.Dal.UOW
         /// <summary>
         /// Accesos directo a las funciones para obtener los repositorios
         /// </summary>
-        protected IDaoRepositoryProvider RepositoryProvider => _uowContext.DaoRepositoryProvider;
+        protected IRepositoryProvider RepositoryProvider => _uowContext.DaoRepositoryProvider;
 
         #endregion Properties
 

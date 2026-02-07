@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Dal.Helpers;
+using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using System;
 using System.Linq;
 
@@ -17,7 +18,7 @@ namespace KUtilitiesCore.Dal.UOW
         #region Fields
 
         private readonly IDaoContext _context;
-        private readonly IDaoRepositoryProvider _DaoRepositoryProvider;
+        private readonly IRepositoryProvider _DaoRepositoryProvider;
         private ITransaction _transaction;
         private bool disposedValue;
         private bool isTransactionCreated;
@@ -26,7 +27,7 @@ namespace KUtilitiesCore.Dal.UOW
 
         #region Public Constructors
 
-        public DaoUowContext(IDaoRepositoryProvider provider, IDaoContext context)
+        public DaoUowContext(IRepositoryProvider provider, IDaoContext context)
 
         {
             _context = context;
@@ -41,7 +42,7 @@ namespace KUtilitiesCore.Dal.UOW
         public IDaoContext Context => _context;
 
         /// <inheritdoc/>
-        public IDaoRepositoryProvider DaoRepositoryProvider => _DaoRepositoryProvider;
+        public IRepositoryProvider DaoRepositoryProvider => _DaoRepositoryProvider;
 
         /// <inheritdoc/>
         public ITransaction Transaction
