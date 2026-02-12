@@ -1,5 +1,6 @@
 ﻿using KUtilitiesCore.Extensions;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 
 namespace KUtilitiesCore.Dal.Helpers
@@ -7,15 +8,14 @@ namespace KUtilitiesCore.Dal.Helpers
     /// <summary>
     /// Convierte datos de un IDataReader en conjuntos de resultados fuertemente tipados.
     /// </summary>
-    public sealed class DataReaderConverter : IDataReaderConverter, IReaderResultSet
+    public sealed class DataReaderConverter : IDataReaderConverter
     {
         #region Fields
 
-        private readonly Dictionary<string, object> _paramsUsed;
-        private readonly ReaderResultSet _readerResultSet;
-        private readonly List<Func<IDataReader, IEnumerable>> _resultSets;
+        private readonly Queue<IMappingStrategy> _mappingStrategies;
         private readonly TranslateOptions _translateOptions;
         private bool _useDefaultDataTable;
+        private IDaoParameterCollection _parametersUsed; // To store parameters to be passed to ReaderResultSet
 
         #endregion Fields
 
@@ -23,187 +23,85 @@ namespace KUtilitiesCore.Dal.Helpers
 
         private DataReaderConverter()
         {
-            _resultSets = new List<Func<IDataReader, IEnumerable>>();
-            _readerResultSet = new ReaderResultSet();
+            _mappingStrategies = new Queue<IMappingStrategy>();
             _useDefaultDataTable = false;
             _translateOptions = new TranslateOptions();
-            _paramsUsed = [];
         }
 
         #endregion Constructors
 
-        #region Properties
 
-        /// <inheritdoc/>
-        public bool HasResultsets => _readerResultSet.HasResultsets;
-
-        /// <inheritdoc/>
-        public IReadOnlyDictionary<string, object> ParamsUsed => _paramsUsed;
-
-        /// <inheritdoc/>
-        public bool RequiredConvert => _resultSets.Count > 0 || _useDefaultDataTable;
-
-        /// <inheritdoc/>
-        public int ResultSetCount => _readerResultSet.ResultSetCount;
-
-        #endregion Properties
 
         #region Methods
 
         public static IDataReaderConverter Create()
-
         {
             return new DataReaderConverter();
         }
 
         public static IDataReaderConverter GetDefault()
-
         {
             var converter = new DataReaderConverter();
-
             converter.WithDefaultDataTable();
-
             return converter;
         }
 
         /// <inheritdoc/>
-
-        public DataTable[] GetAllDataTables()
-        {
-            return _readerResultSet.GetAllDataTables();
-        }
-
-        /// <inheritdoc/>
-
-        public DataTable GetDataTable(int index = 0)
-        {
-            return _readerResultSet.GetDataTable(index);
-        }
-
-        /// <summary>
-        /// Obtiene el ResulSet
-        /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="index"></param>
-        /// <returns>Regresa el ResulSet mapeado en un tipo especifico</returns>
-        public IEnumerable<TResult> GetResult<TResult>(int index = 0) where TResult : class, new()
-        {
-            return _readerResultSet.GetResult<TResult>(index);
-        }
-
-        /// <inheritdoc/>
-
         public IDataReaderConverter SetColumnPrefixesToRemove(params string[] args)
         {
             _translateOptions.ColumnPrefixesToRemove = args;
-
             return this;
         }
 
         /// <inheritdoc/>
-
         public IDataReaderConverter SetStrictMapping(bool value)
         {
             _translateOptions.StrictMapping = value;
-
             return this;
         }
 
         /// <inheritdoc/>
-
         public IDataReaderConverter WithDefaultDataTable()
         {
             _useDefaultDataTable = true;
-
             return this;
         }
 
         /// <inheritdoc/>
-
         public IDataReaderConverter WithResult<TResult>() where TResult : class, new()
         {
-            _useDefaultDataTable = false;
-            _resultSets.Add(reader =>
-            {
-                try
-                {
-                    return reader.Translate<TResult>(_translateOptions).ToList();
-                }
-                catch (Exception ex)
-                {
-                    ex.Data.Add("TResultType", typeof(TResult).FullName);
-
-                    throw;
-                }
-            });
-
+            _mappingStrategies.Enqueue(new ObjectMappingStrategy<TResult>(_translateOptions));
+            _useDefaultDataTable = false; // If specific results are configured, default table is not used unless explicitly set again for subsequent results.
             return this;
         }
 
-        internal void SetParams(IDaoParameterCollection parameters = null)
+        /// <summary>
+        /// Sets the parameters used for the query, to be passed to the ReaderResultSet.
+        /// </summary>
+        /// <param name="parameters">The collection of parameters.</param>
+        internal void SetParametersUsed(IDaoParameterCollection parameters = null)
         {
-            if (parameters != null && parameters.Count > 0)
-            {
-                parameters.ForEach(x => _paramsUsed.Add(x.ParameterName, x.Value));
-            }
+            _parametersUsed = parameters;
         }
 
-        internal IReaderResultSet Translate(IDataReader reader)
+        /// <inheritdoc/>
+        public IReaderResultSet BuildReaderResultSet(IDataReader reader, ref bool moreResultSets)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader), "El parámetro reader no puede ser nulo.");
 
+            var readerResultSet = new ReaderResultSet();
             try
             {
-                int resultSetIndex = 0;
-
-                do
-                {
-                    object resultSet;
-                    if (_useDefaultDataTable || resultSetIndex >= _resultSets.Count)
-                    {
-                        // Comportamiento por defecto: convertir a DataTable
-                        resultSet = ConvertToDataTable(reader);
-                    }
-                    else
-                    {
-                        var transform = _resultSets[resultSetIndex];
-                        resultSet = transform(reader);
-                    }
-
-                    _readerResultSet.AddResult(resultSet);
-                    resultSetIndex++;
-                }
-
-                while (reader.NextResult());
-                return this;
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
+                readerResultSet.Load(reader, _mappingStrategies, _useDefaultDataTable); // Load processes only the current result set
+                readerResultSet.SetParams(_parametersUsed); // Pass the parameters to the ReaderResultSet
+                moreResultSets = reader.NextResult(); // Check for more result sets after processing the current one
             }
             catch (Exception ex)
             {
                 throw new DataException("Ocurrió un error al traducir los datos del IDataReader.", ex);
             }
-        }
-
-        private static DataTable ConvertToDataTable(IDataReader reader)
-        {
-            var dataTable = new DataTable();
-
-            for (int i = 0; i < reader.FieldCount; i++)
-            {
-                dataTable.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-            }
-
-            object[] values = new object[reader.FieldCount];
-            while (reader.Read())
-            {
-                reader.GetValues(values);
-                dataTable.Rows.Add(values);
-            }
-            return dataTable;
+            return readerResultSet;
         }
 
         #endregion Methods

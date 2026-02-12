@@ -1,38 +1,21 @@
-﻿namespace KUtilitiesCore.Dal.Helpers
+﻿using System.Data;
+
+namespace KUtilitiesCore.Dal.Helpers
 {
-    /// <summary>
-    /// Interfaz que almacena una colección de transformaciones para un IDataReader
-    /// </summary>
     public interface IDataReaderConverter
     {
-
-        /// <summary>
-        /// Indica si el convertidor puede realizar conversiones
-        /// </summary>
-        bool RequiredConvert { get; }
-
-        /// <summary>
-        /// Prefijos a remover de los nombres de columna antes del mapeo
-        /// </summary>
         IDataReaderConverter SetColumnPrefixesToRemove(params string[] args);
-
-        /// <summary>
-        /// Si es true, lanza excepción cuando no se pueden mapear todas las propiedades requeridas
-        /// </summary>
         IDataReaderConverter SetStrictMapping(bool value);
-
-        /// <summary>
-        /// Configura el convertidor para usar DataTable como transformación por defecto
-        /// </summary>
-        /// <returns>La instancia actual de IDataReaderConverter.</returns>
         IDataReaderConverter WithDefaultDataTable();
-
-        /// <summary>
-        /// Agrega una transformación de conjunto de resultados al convertidor.
-        /// </summary>
-        /// <typeparam name="TResult">El tipo del conjunto de resultados.</typeparam>
-        /// <returns>La instancia actual de IDataReaderConverter.</returns>
         IDataReaderConverter WithResult<TResult>() where TResult : class, new();
-
+        
+        /// <summary>
+        /// Builds an IReaderResultSet by applying the configured transformations to the provided IDataReader.
+        /// This method processes a single result set from the IDataReader and indicates if more result sets are available.
+        /// </summary>
+        /// <param name="reader">The IDataReader to translate.</param>
+        /// <param name="moreResultSets">Outputs true if there are more result sets in the reader, false otherwise.</param>
+        /// <returns>An IReaderResultSet containing the results of the *current* result set.</returns>
+        IReaderResultSet BuildReaderResultSet(IDataReader reader, ref bool moreResultSets);
     }
 }
