@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.Dal.Helpers;
+﻿#nullable enable
+using KUtilitiesCore.Dal.Helpers;
 using System.Data;
 using System.Data.Common;
 
@@ -52,7 +53,8 @@ namespace KUtilitiesCore.Dal
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
             IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null, DbDataReader? dbDataReader = null);
+            CommandType commandType = CommandType.Text, ITransaction transaction = null, 
+            DbDataReader? dbDataReader = null);
 
 
         /// <summary>

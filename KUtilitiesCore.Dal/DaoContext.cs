@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.Dal.ConnectionBuilder;
+﻿#nullable enable
+using KUtilitiesCore.Dal.ConnectionBuilder;
 using KUtilitiesCore.Dal.Exceptions;
 using KUtilitiesCore.Dal.Helpers;
 using KUtilitiesCore.Dal.SQLLog;
@@ -332,14 +333,15 @@ namespace KUtilitiesCore.Dal
 
         /// <inheritdoc/>
         public IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
-           IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null, DbDataReader? dbDataReader = null)
+           IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text,
+           ITransaction transaction = null, DbDataReader? dbDataReader = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
             DbCommand command = null;
             DbDataReader reader = null;
-            ReaderResultSet fullResultSet = new ReaderResultSet(); // Accumulate all results here
-            bool moreResultSets = true; // Initialize to true to enter the do-while loop﻿
+            ReaderResultSet fullResultSet = new ReaderResultSet(); // Acumula todos los resultados aquí.
+            bool moreResultSets = true; 
             try
             {
                 if (translate == null)
@@ -363,14 +365,14 @@ namespace KUtilitiesCore.Dal
                     reader = command.ExecuteReader();
                 }
 
-                using (reader) // Ensure the reader is disposed after all processing
+                using (reader) 
                 {
                     do
                     {
                         IReaderResultSet currentResultSet = translate.BuildReaderResultSet(reader, ref moreResultSets);
                         if (currentResultSet is ReaderResultSet rs)
                         {
-                            foreach (var item in rs._results) // Access internal list for accumulation
+                            foreach (var item in rs._results) // Acceder a la lista interna para acumulación
                             {
                                 fullResultSet.AddResult(item);
                             }

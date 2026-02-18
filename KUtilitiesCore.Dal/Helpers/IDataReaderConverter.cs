@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿#nullable enable
+using System.Data;
 
 namespace KUtilitiesCore.Dal.Helpers
 {
@@ -8,14 +9,14 @@ namespace KUtilitiesCore.Dal.Helpers
         IDataReaderConverter SetStrictMapping(bool value);
         IDataReaderConverter WithDefaultDataTable();
         IDataReaderConverter WithResult<TResult>() where TResult : class, new();
-        
+
         /// <summary>
-        /// Builds an IReaderResultSet by applying the configured transformations to the provided IDataReader.
-        /// This method processes a single result set from the IDataReader and indicates if more result sets are available.
+        /// Crea un IReaderResultSet aplicando las transformaciones configuradas al IDataReader proporcionado.
+        /// Este método procesa un único conjunto de resultados del IDataReader e indica si hay más conjuntos de resultados disponibles.
         /// </summary>
-        /// <param name="reader">The IDataReader to translate.</param>
-        /// <param name="moreResultSets">Outputs true if there are more result sets in the reader, false otherwise.</param>
-        /// <returns>An IReaderResultSet containing the results of the *current* result set.</returns>
+        /// <param name="reader">El IDataReader que se va a traducir.</param>
+        /// <param name="moreResultSets">Devuelve true si hay más conjuntos de resultados en el lector, false en caso contrario.</param>
+        /// <returns>Un IReaderResultSet que contiene los resultados del conjunto de resultados *actual*.</returns>
         IReaderResultSet BuildReaderResultSet(IDataReader reader, ref bool moreResultSets);
     }
 }

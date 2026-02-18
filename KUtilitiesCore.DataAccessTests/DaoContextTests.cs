@@ -126,83 +126,82 @@ namespace KUtilitiesCore.Dal.Tests
 
         public void ExecuteReader_MultipleResultSets_Test()
         {
-            // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')
-            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true")
-            {
-                Assert.Inconclusive("Esta prueba se omite en GitHub Actions.");
-            }
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Assert.Inconclusive("Esta prueba solo se ejecuta en Windows.");
-            }
+            
             // Arrange
-            var mockDataReader = new Moq.Mock<DbDataReader>();
+            var mockDataReader = new Moq.Mock<DbDataReader>() { CallBase = true };
 
-            // SetupSequence for Read() for all result sets
-            mockDataReader.SetupSequence(dr => dr.Read())
-                // UserDto Result Set (2 rows)
-                .Returns(true)
-                .Returns(true)
-                .Returns(false)
-                // InvoiceDto Result Set (2 rows)
-                .Returns(true)
-                .Returns(true)
-                .Returns(false)
+            int currentResultSet = 0;
+            int currentRow = -1;
+            int[] rowsPerResultSet = { 2, 2, 1 };
 
-                // DataTable Result Set (1 row)
-                .Returns(true)
-                .Returns(false)
-                .Returns(false); // No more result sets
+            mockDataReader.Setup(dr => dr.Read()).Returns(() =>
+            {
+                currentRow++;
+                bool hasMore = currentResultSet < rowsPerResultSet.Length && currentRow < rowsPerResultSet[currentResultSet];
+                return hasMore;
+            });
 
+            mockDataReader.Setup(dr => dr.NextResult()).Returns(() =>
+            {
+                currentResultSet++;
+                currentRow = -1;
+                return currentResultSet < rowsPerResultSet.Length;
+            });
 
+            mockDataReader.Setup(dr => dr.FieldCount).Returns(() =>
+            {
+                if (currentResultSet == 0) return 2;
+                if (currentResultSet == 1) return 3;
+                if (currentResultSet == 2) return 1;
+                return 0;
+            });
 
-            // SetupSequence for NextResult()
-            mockDataReader.SetupSequence(dr => dr.NextResult())
-                .Returns(true) // Move from UserDto to InvoiceDto
-                .Returns(true) // Move from InvoiceDto to DataTable
-                .Returns(false); // No more result sets
+            mockDataReader.Setup(dr => dr.GetName(It.IsAny<int>())).Returns((int i) =>
+            {
+                if (currentResultSet == 0) return i == 0 ? "Id" : "Name";
+                if (currentResultSet == 1) return i == 0 ? "Id" : i == 1 ? "UserId" : "Amount";
+                if (currentResultSet == 2) return "Column1";
+                return string.Empty;
+            });
 
-            // SetupSequence for FieldCount
-            mockDataReader.SetupSequence(dr => dr.FieldCount)
-                .Returns(2) // UserDto has 2 fields
-                .Returns(3) // InvoiceDto has 3 fields
-                .Returns(1); // DataTable has 1 field
+            mockDataReader.Setup(dr => dr.GetFieldType(It.IsAny<int>())).Returns((int i) =>
+            {
+                if (currentResultSet == 0) return i == 0 ? typeof(int) : typeof(string);
+                if (currentResultSet == 1) return i == 0 ? typeof(int) : i == 1 ? typeof(int) : typeof(decimal);
+                if (currentResultSet == 2) return typeof(string);
+                return typeof(object);
+            });
 
-            // Setup GetName, GetFieldType, GetOrdinal for UserDto, InvoiceDto, and DataTable
-            // This needs to be sequenced or handled dynamically as GetName/GetFieldType changes per result set
+            mockDataReader.Setup(dr => dr.GetValue(It.IsAny<int>())).Returns((int i) =>
+            {
+                if (currentResultSet == 0)
+                {
+                    if (currentRow == 0) return i == 0 ? (object)1 : (object)"User1";
+                    if (currentRow == 1) return i == 0 ? (object)2 : (object)"User2";
+                }
+                else if (currentResultSet == 1)
+                {
+                    if (currentRow == 0) return i == 0 ? (object)101 : i == 1 ? (object)1 : (object)50.5m;
+                    if (currentRow == 1) return i == 0 ? (object)102 : i == 1 ? (object)2 : (object)150.0m;
+                }
+                else if (currentResultSet == 2)
+                {
+                    if (currentRow == 0) return (object)"Value1";
+                }
+                return DBNull.Value;
+            });
 
-            mockDataReader.SetupSequence(dr => dr.GetName(It.IsAny<int>()))
-                // For UserDto (2 fields)
-                .Returns("Id").Returns("Name")
-                // For InvoiceDto (3 fields)
-                .Returns("Id").Returns("UserId").Returns("Amount")
-                // For DataTable (1 field)
-                .Returns("Column1");
-
-            mockDataReader.SetupSequence(dr => dr.GetFieldType(It.IsAny<int>()))
-                // For UserDto (2 fields)
-                .Returns(typeof(int)).Returns(typeof(string))
-                // For InvoiceDto (3 fields)
-                .Returns(typeof(int)).Returns(typeof(int)).Returns(typeof(decimal))
-                // For DataTable (1 field)
-                .Returns(typeof(string));
-
-            mockDataReader.SetupSequence(dr => dr.GetOrdinal(It.IsAny<string>()))
-                // For UserDto
-                .Returns(0) // Id
-                .Returns(1) // Name
-                            // For InvoiceDto
-                .Returns(1) // Id
-                .Returns(1) // UserId
-                .Returns(2) // Amount
-                            // For DataTable
-                .Returns(0); // Column1
-
-            mockDataReader.Setup(dr => dr.GetValue(0)).Returns(1); // User 1.Id
-            mockDataReader.Setup(dr => dr.GetValue(1)).Returns("User1"); // User 1.Name
-
-
-            // No GetValue(2) setup needed as there are only 2 columns (for UserDto)
+            // Explicitly setup GetValues to avoid any CallBase issues
+            mockDataReader.Setup(dr => dr.GetValues(It.IsAny<object[]>())).Returns((object[] values) =>
+            {
+                int fieldCount = mockDataReader.Object.FieldCount;
+                int count = Math.Min(values.Length, fieldCount);
+                for (int i = 0; i < count; i++)
+                {
+                    values[i] = mockDataReader.Object.GetValue(i);
+                }
+                return count;
+            });
 
             using DaoContext dao = new(builder, metrics: new Telemetry.LoggerMetrics());
 
@@ -212,16 +211,31 @@ namespace KUtilitiesCore.Dal.Tests
                 .WithDefaultDataTable();    // If there is a third, let it be DataTable
 
             // Act
-            var result = ((IDaoContext)dao).ExecuteReader("sp_GetData", converter, commandType: CommandType.StoredProcedure, dbDataReader: mockDataReader.Object);
+            var result = ((IDaoContext)dao).ExecuteReader("sp_GetData", converter, 
+                commandType: CommandType.StoredProcedure, dbDataReader: mockDataReader.Object);
 
             // Assert
             Assert.IsTrue(result.HasResultsets);
             Assert.AreEqual(3, result.ResultSetCount);
+            
             var users = result.GetResult<UserDto>().ToList();
             Assert.IsNotNull(users);
-            Assert.HasCount(2, users);
+            Assert.AreEqual(2, users.Count);
             Assert.AreEqual(1, users[0].Id);
             Assert.AreEqual("User1", users[0].Name);
+            Assert.AreEqual(2, users[1].Id);
+            Assert.AreEqual("User2", users[1].Name);
+
+            var invoices = result.GetResult<InvoiceDto>(1).ToList();
+            Assert.IsNotNull(invoices);
+            Assert.AreEqual(2, invoices.Count);
+            Assert.AreEqual(101, invoices[0].Id);
+            Assert.AreEqual(50.5m, invoices[0].Amount);
+
+            var dt = result.GetDataTable(2);
+            Assert.IsNotNull(dt);
+            Assert.AreEqual(1, dt.Rows.Count);
+            Assert.AreEqual("Value1", dt.Rows[0][0]);
         }
     }
 }

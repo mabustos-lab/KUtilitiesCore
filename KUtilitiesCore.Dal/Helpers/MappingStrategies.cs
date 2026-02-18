@@ -1,3 +1,4 @@
+#nullable enable
 using KUtilitiesCore.Extensions;
 using System.Collections;
 using System.Data;

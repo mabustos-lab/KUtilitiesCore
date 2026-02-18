@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.Extensions;
+﻿#nullable enable
+using KUtilitiesCore.Extensions;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -29,8 +30,6 @@ namespace KUtilitiesCore.Dal.Helpers
         }
 
         #endregion Constructors
-
-
 
         #region Methods
 
@@ -71,14 +70,14 @@ namespace KUtilitiesCore.Dal.Helpers
         public IDataReaderConverter WithResult<TResult>() where TResult : class, new()
         {
             _mappingStrategies.Enqueue(new ObjectMappingStrategy<TResult>(_translateOptions));
-            _useDefaultDataTable = false; // If specific results are configured, default table is not used unless explicitly set again for subsequent results.
+            _useDefaultDataTable = false; // Si se configuran resultados específicos, no se utiliza la tabla predeterminada a menos que se vuelva a establecer explícitamente para resultados posteriores.
             return this;
         }
 
         /// <summary>
-        /// Sets the parameters used for the query, to be passed to the ReaderResultSet.
+        /// Establece los parámetros utilizados para la consulta, que se pasarán al ReaderResultSet.
         /// </summary>
-        /// <param name="parameters">The collection of parameters.</param>
+        /// <param name="parameters">La recopilación de parámetros.</param>
         internal void SetParametersUsed(IDaoParameterCollection parameters = null)
         {
             _parametersUsed = parameters;
@@ -93,9 +92,9 @@ namespace KUtilitiesCore.Dal.Helpers
             var readerResultSet = new ReaderResultSet();
             try
             {
-                readerResultSet.Load(reader, _mappingStrategies, _useDefaultDataTable); // Load processes only the current result set
-                readerResultSet.SetParams(_parametersUsed); // Pass the parameters to the ReaderResultSet
-                moreResultSets = reader.NextResult(); // Check for more result sets after processing the current one
+                readerResultSet.Load(reader, _mappingStrategies, _useDefaultDataTable); // Cargar solo el conjunto de resultados actual.
+                readerResultSet.SetParams(_parametersUsed); // Pase los parámetros al ReaderResultSet.
+                moreResultSets = reader.NextResult(); // Comprueba si hay más conjuntos de resultados después de procesar el actual.
             }
             catch (Exception ex)
             {

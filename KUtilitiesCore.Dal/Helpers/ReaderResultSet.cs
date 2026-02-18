@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.Extensions;
+﻿#nullable enable
+using KUtilitiesCore.Extensions;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Data;
@@ -60,9 +61,9 @@ namespace KUtilitiesCore.Dal.Helpers
             }
             else
             {
-                // If no strategy is defined, and no default is set, skip this result set
-                // We still need to consume the current result set to advance the reader
-                CreateDataTableFromReader(reader); // Consume the data
+                // Si no se define ninguna estrategia y no se establece ningún valor predeterminado, omita este conjunto de resultados.
+                // Aún necesitamos consumir el conjunto de resultados actual para avanzar en el lector.
+                CreateDataTableFromReader(reader); // Consumir los datos
             }
         }
         public IEnumerable<TResult> GetResult<TResult>(int index = 0) where TResult : class, new()
@@ -75,7 +76,7 @@ namespace KUtilitiesCore.Dal.Helpers
                 return typedResult;
 
             if (result is DataTable dataTable)
-                return DataTableToEnumerable<TResult>(dataTable, new TranslateOptions()); // Default options if not provided
+                return DataTableToEnumerable<TResult>(dataTable, new TranslateOptions()); // Opciones predeterminadas si no se proporcionan
 
             throw new InvalidCastException($"No se puede convertir el resultado en el índice {index} al tipo {typeof(TResult).Name}.");
         }
@@ -158,21 +159,14 @@ namespace KUtilitiesCore.Dal.Helpers
 
 
 
-            // if (options.StrictMapping)
-
-            // {
-
-            //     var missingProps = props.Where(p => !dataTableColumnNames.Contains(p.Name)).ToList();
-
-            //     if (missingProps.Any())
-
-            //     {
-
-            //         throw new InvalidOperationException($"Strict mapping failed: Properties {string.Join(", ", missingProps.Select(p => p.Name))} not found in DataTable.");
-
-            //     }
-
-            // }
+            if (options.StrictMapping)
+            {
+                var missingProps = props.Where(p => !dataTableColumnNames.Contains(p.Name)).ToList();
+                if (missingProps.Any())
+                {
+                    throw new InvalidOperationException($"Strict mapping failed: Properties {string.Join(", ", missingProps.Select(p => p.Name))} not found in DataTable.");
+                }
+            }
 
 
 
