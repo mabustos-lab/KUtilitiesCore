@@ -211,7 +211,7 @@ namespace KUtilitiesCore.Dal.Tests
                 .WithDefaultDataTable();    // If there is a third, let it be DataTable
 
             // Act
-            var result = ((IDaoContext)dao).ExecuteReader("sp_GetData", converter, 
+            var result = dao.ExecuteReaderCore("sp_GetData", converter, 
                 commandType: CommandType.StoredProcedure, dbDataReader: mockDataReader.Object);
 
             // Assert

@@ -53,8 +53,7 @@ namespace KUtilitiesCore.Dal
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
             IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null, 
-            DbDataReader? dbDataReader = null);
+            CommandType commandType = CommandType.Text, ITransaction transaction = null);
 
 
         /// <summary>
@@ -70,12 +69,11 @@ namespace KUtilitiesCore.Dal
         /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
         /// <param name="transaction">La transacción asociada, si existe.</param>
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
-        /// <param name="dbDataReader">Opcional: un DbDataReader para usar en lugar de crear uno nuevo desde el comando. Para fines de prueba.</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         Task<IReaderResultSet> ExecuteReaderAsync(string sql, IDataReaderConverter translate,
             IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.Text, ITransaction transaction = null,
-            CancellationToken cancellationToken = default, DbDataReader? dbDataReader = null);
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Ejecuta una consulta SELECT y rellena un DataSet con la información.

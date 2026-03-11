@@ -330,9 +330,27 @@ namespace KUtilitiesCore.Dal
                 ReturnToPool(command);
             }
         }
-
         /// <inheritdoc/>
         public IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
+           IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text,
+           ITransaction transaction = null)
+            => ExecuteReaderCore(sql,translate, parameters, commandType, transaction);
+
+        /// <summary>
+        /// Ejecuta una consulta y devuelve una colección de objetos mapeados.
+        /// </summary>
+        /// <param name="sql">
+        /// La consulta SQL que debe retornar resultados del tipo del objeto a mapear.
+        /// </param>
+        /// <param name="translate">
+        /// Convierte datos de un <see cref="IDataReader"/> en conjuntos de resultados fuertemente tipados.
+        /// </param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
+        /// <param name="transaction">La transacción asociada, si existe.</param>
+        /// <param name="dbDataReader">Opcional: un DbDataReader para usar en lugar de crear uno nuevo desde el comando. Para fines de prueba.</param>
+        /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
+        public IReaderResultSet ExecuteReaderCore(string sql, IDataReaderConverter translate,
            IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text,
            ITransaction transaction = null, DbDataReader? dbDataReader = null)
         {
@@ -400,9 +418,38 @@ namespace KUtilitiesCore.Dal
                 }
             }
         }
-
         /// <inheritdoc/>
-        public async Task<IReaderResultSet> ExecuteReaderAsync(string sql, IDataReaderConverter translate,
+        public async Task<IReaderResultSet> ExecuteReaderAsync(
+            string sql,
+            IDataReaderConverter translate,
+            IDaoParameterCollection parameters = null,
+            CommandType commandType = CommandType.Text,
+            ITransaction transaction = null,
+            CancellationToken cancellationToken = default) => await ExecuteReaderAsyncCore(
+            sql,
+            translate,
+            parameters,
+            commandType,
+            transaction,
+            cancellationToken,
+            null);
+
+        /// <summary>
+        /// Ejecuta de manera asincrona una consulta y devuelve una colección de objetos mapeados.
+        /// </summary>
+        /// <param name="sql">
+        /// La consulta SQL que debe retornar resultados del tipo del objeto a mapear.
+        /// </param>
+        /// <param name="translate">
+        /// Convierte datos de un <see cref="IDataReader"/> en conjuntos de resultados fuertemente tipados.
+        /// </param>
+        /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
+        /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
+        /// <param name="transaction">La transacción asociada, si existe.</param>
+        /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
+        /// <param name="dbDataReader">Opcional: un DbDataReader para usar en lugar de crear uno nuevo desde el comando. Para fines de prueba.</param>
+        /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
+        public async Task<IReaderResultSet> ExecuteReaderAsyncCore(string sql, IDataReaderConverter translate,
            IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null,
            CancellationToken cancellationToken = default, DbDataReader? dbDataReader = null)
         {
