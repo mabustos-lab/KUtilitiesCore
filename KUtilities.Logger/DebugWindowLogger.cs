@@ -27,11 +27,11 @@ namespace KUtilitiesCore.Logger
         /// <param name="entry">La entrada de log a registrar.</param>
         internal override void WriteLog(LogEntry entry)
         {
-            Debug.WriteLine(entry.ToString());
+            Trace.WriteLine(entry.ToString());
             if (entry.Exception != null)
             {
                 var exception = new ExceptionInfo(entry.Exception);
-                Debug.WriteLine(exception.GetReport());
+                Trace.WriteLine(exception.GetReport());
             }
         }
     }

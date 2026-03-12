@@ -12,7 +12,6 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 
 #if NET48
 

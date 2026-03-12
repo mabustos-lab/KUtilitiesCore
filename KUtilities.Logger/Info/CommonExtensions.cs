@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -44,8 +43,15 @@ namespace KUtilitiesCore.Logger.Info
         /// <returns>Una cadena que representa el tipo en formato corto.</returns>
         public static string ToShortString(this Type type)
         {
-            var typeSyntax = SyntaxFactory.ParseTypeName(type.FullName);
-            return typeSyntax.ToString();
+            if (type == null) return "null";
+            if (type.IsGenericType)
+            {
+                var genericTypeName = type.GetGenericTypeDefinition().Name;
+                genericTypeName = genericTypeName.Substring(0, genericTypeName.IndexOf('`'));
+                var genericArgs = string.Join(", ", type.GetGenericArguments().Select(a => a.ToShortString()));
+                return $"{genericTypeName}<{genericArgs}>";
+            }
+            return type.Name;
         }
 
         /// <summary>
