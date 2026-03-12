@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.Dal.Helpers;
+﻿#nullable enable
+using KUtilitiesCore.Dal.Helpers;
 using System.Data;
 using System.Data.Common;
 
@@ -53,6 +54,7 @@ namespace KUtilitiesCore.Dal
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
             IDaoParameterCollection parameters = null,
             CommandType commandType = CommandType.Text, ITransaction transaction = null);
+
 
         /// <summary>
         /// Ejecuta de manera asincrona una consulta y devuelve una colección de objetos mapeados.
