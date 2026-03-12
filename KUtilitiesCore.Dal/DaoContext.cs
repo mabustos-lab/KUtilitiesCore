@@ -752,14 +752,13 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <summary>
-        ﻿        /// Libera los recursos no administrados utilizados por la clase y opcionalmente libera los
-        ﻿        /// recursos administrados.
-        ﻿        /// </summary>
-        ﻿        /// <param name="disposing">
-        ﻿        /// Es <see langword="true"/> para liberar tanto recursos administrados como no
-        ﻿        /// administrados; es <see langword="false"/> para liberar únicamente recursos no administrados.
-        ﻿        /// </param>
-
+﻿        /// Libera los recursos no administrados utilizados por la clase y opcionalmente libera los
+﻿        /// recursos administrados.
+﻿        /// </summary>
+﻿        /// <param name="disposing">
+﻿        /// Es <see langword="true"/> para liberar tanto recursos administrados como no
+﻿        /// administrados; es <see langword="false"/> para liberar únicamente recursos no administrados.
+﻿        /// </param>
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposedValue)
@@ -817,7 +816,7 @@ namespace KUtilitiesCore.Dal
         {
             try
             {
-                DbConnection connection = _factory.CreateConnection();
+                DbConnection connection = _factory.CreateConnection()!;
                 connection.ConnectionString = _connectionString.CnnString;
                 connection.Open();
                 _logger?.LogDebug("Conexión de base de datos creada y abierta");

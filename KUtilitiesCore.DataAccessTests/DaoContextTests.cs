@@ -27,9 +27,7 @@ namespace KUtilitiesCore.Dal.Tests
         [TestInitialize]
         public void Initilize()
         {
-#if NET8_0_OR_GREATER
             DbProviderFactories.RegisterFactory("System.Data.SqlClient", SqlClientFactory.Instance);
-#endif
             builder = new SecureConnectionBuilder
             {
                 InitialCatalog = "SiomaxDB",
