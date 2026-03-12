@@ -23,11 +23,11 @@ namespace KUtilitiesCore.Logger.Options
         /// <summary>
         /// Establece la ruta raiz del archivo Log
         /// </summary>
-        public string LogDirectory { get; internal set; } = string.Empty;
+        public string LogDirectory { get; set; } = string.Empty;
         /// <summary>
         /// Indica si el formato de almacenamiento sea una estructura JSON o solo Texto
         /// </summary>
-        public bool UseJSonFormat { get; internal set; } = false;
-        public string ApplicationName { get; internal set; } = "Application";
+        public bool UseJSonFormat { get; set; } = false;
+        public string ApplicationName { get; set; } = "Application";
     }
 }
