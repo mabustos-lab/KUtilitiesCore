@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Dal.ConnectionBuilder;
+using KUtilitiesCore.Dal.Helpers;
 using KUtilitiesCore.Dal.UOW;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -40,6 +41,7 @@ namespace KUtilitiesCore.Dal.Tests
                     throw;
                 }
             }
+
         }
 
         [TestInitialize]
@@ -85,6 +87,6 @@ namespace KUtilitiesCore.Dal.Tests
             Assert.IsNotNull(dt);
             Assert.IsGreaterThan(0, dt.Rows.Count);
         }
-        
+      
     }
 }
