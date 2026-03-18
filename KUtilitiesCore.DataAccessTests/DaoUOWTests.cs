@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Dal.ConnectionBuilder;
+using KUtilitiesCore.Dal.Helpers;
 using KUtilitiesCore.Dal.UOW;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -39,6 +40,18 @@ namespace KUtilitiesCore.Dal.Tests
                     Debug.Write(ex.Message);
                     throw;
                 }
+            }
+
+            public List<SequenceCollectionDto> GeScenarioActivitiesAsync(int monetizaId)
+            {
+                var param = Context.CreateParameterCollection();
+                param.Add("p_monetiza_Id", monetizaId);
+
+                var converter = DataReaderConverter.Create().WithResult<SequenceCollectionDto>();
+
+                var result = Context.ExecuteReader("spWidgets_GetScenarioActivities", converter, param,
+                           CommandType.StoredProcedure, Transaction);
+                return result.GetResult<SequenceCollectionDto>().ToList();
             }
         }
 
@@ -85,6 +98,6 @@ namespace KUtilitiesCore.Dal.Tests
             Assert.IsNotNull(dt);
             Assert.IsGreaterThan(0, dt.Rows.Count);
         }
-        
+      
     }
 }

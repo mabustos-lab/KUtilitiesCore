@@ -131,14 +131,35 @@ namespace KUtilitiesCore.Dal.Helpers
             foreach (DataRow row in dataTable.Rows)
             {
                 var item = new TResult();
-                foreach (var prop in properties)
+                string currentPropertyName = string.Empty;
+
+                try
                 {
-                    if (dataTable.Columns.Contains(prop.Name) && !row.IsNull(prop.Name))
+                    foreach (var prop in properties)
                     {
-                        var value = row[prop.Name];
-                        prop.SetValue(item, Convert.ChangeType(value, prop.PropertyType));
+                        currentPropertyName = prop.Name;
+                        if (dataTable.Columns.Contains(prop.Name) && !row.IsNull(prop.Name))
+                        {
+                            var value = row[prop.Name];
+                            // Manejo de tipos Nullable para evitar errores en Convert.ChangeType
+                            var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                            prop.SetValue(item, Convert.ChangeType(value, targetType));
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    if (!ex.Data.Contains("PropertyName"))
+                    {
+                        ex.Data.Add("PropertyName", currentPropertyName);
+                    }
+                    if (!ex.Data.Contains("TargetType"))
+                    {
+                        ex.Data.Add("TargetType", typeof(TResult).Name);
+                    }
+                    throw;
+                }
+
                 yield return item;
             }
         }
