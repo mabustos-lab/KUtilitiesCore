@@ -34,13 +34,14 @@ namespace KUtilitiesCore.Logger
         {
             try
             {
+                
                 using (var connection = new SqlConnection(LogOptions.ConnectionString))
                 {
                     connection.Open();
                     string query = $@"
                         INSERT INTO [{LogOptions.SchemaName}].[{LogOptions.TableName}] 
-                        ([Timestamp], [LogLevel], [Category], [EventId], [Message], [Exception], [ApplicationName])
-                        VALUES (@Timestamp, @LogLevel, @Category, @EventId, @Message, @Exception, @ApplicationName)";
+                        ([Timestamp], [LogLevel], [Category], [EventId], [UserName], [Message], [Exception], [ApplicationName])
+                        VALUES (@Timestamp, @LogLevel, @Category, @EventId, @UserName, @Message, @Exception, @ApplicationName)";
 
                     using (var command = new SqlCommand(query, connection))
                     {
@@ -54,6 +55,7 @@ namespace KUtilitiesCore.Logger
                         command.Parameters.AddWithValue("@LogLevel", entry.Level.ToString());
                         command.Parameters.AddWithValue("@Category", CategoryName);
                         command.Parameters.AddWithValue("@EventId", entry.Event.Id);
+                        command.Parameters.AddWithValue("@UserName", GetSafeResolveduser());
                         command.Parameters.AddWithValue("@Message", entry.Message ?? (object)DBNull.Value);
                         command.Parameters.AddWithValue("@Exception", exception);
                         command.Parameters.AddWithValue("@ApplicationName", LogOptions.ApplicationName);
@@ -66,6 +68,21 @@ namespace KUtilitiesCore.Logger
             {
                 System.Diagnostics.Debug.WriteLine($"Error al escribir en el registro SQL: {ex.Message}");
             }
+        }
+
+        private string GetSafeResolveduser()
+        {
+            string userName = string.Empty;
+
+            if (LogOptions.ResolveUser != null)
+            {
+                userName = LogOptions.ResolveUser(); // delegado configurable
+            }
+            else
+            {
+                userName = Environment.UserName; // fallback
+            }
+            return userName;
         }
 
         /// <inheritdoc/>
@@ -91,6 +108,7 @@ namespace KUtilitiesCore.Logger
                                     [LogLevel] [nvarchar](50) NOT NULL,
                                     [Category] [nvarchar](255) NOT NULL,
                                     [EventId] [int] NULL,
+                                    [UserName] [nvarchar](255) NULL,
                                     [Message] [nvarchar](max) NULL,
                                     [Exception] [nvarchar](max) NULL,
                                     [ApplicationName] [nvarchar](100) NULL

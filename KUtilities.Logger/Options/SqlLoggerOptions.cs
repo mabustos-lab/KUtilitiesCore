@@ -32,5 +32,14 @@ namespace KUtilitiesCore.Logger.Options
         /// Nombre de la aplicación para identificar el origen de los logs.
         /// </summary>
         public string ApplicationName { get; set; } = "KUtilitiesApp";
+        /// <summary>
+        /// Obtiene o establece el delegado utilizado para resolver el identificador del usuario actual.
+        /// </summary>
+        /// <remarks>
+        /// El delegado debe devolver una cadena que represente al usuario, como un nombre de usuario o un ID de usuario.
+        /// Esta propiedad se puede configurar para personalizar la forma en que se recupera la información del usuario, por ejemplo, para integrarla con
+        /// sistemas de autenticación o proveedores de contexto de usuario.
+        /// </remarks>
+        public Func<string>? ResolveUser { get; set; }
     }
 }
