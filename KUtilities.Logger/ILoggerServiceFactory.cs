@@ -30,12 +30,16 @@ namespace KUtilitiesCore.Logger
         ILoggerService<TCategoryName> GetLogger<TCategoryName>(string providerName);
 
         /// <summary>
-        /// Obtiene una instancia de <see cref="ILoggerService{TCategoryName}"/> utilizando el proveedor por defecto
-        /// o el primer proveedor registrado si no se especifica uno por defecto.
+        /// Obtiene una instancia de <see cref="ILoggerService{TCategoryName}"/> utilizando el proveedor por defecto,
+        /// el primer proveedor registrado o una implementación compuesta de todos los proveedores.
         /// </summary>
         /// <typeparam name="TCategoryName">El tipo usado para la categoría del logger.</typeparam>
+        /// <param name="composite">
+        /// Si es true, devuelve un logger que envía los mensajes a todos los proveedores registrados.
+        /// Si es false (por defecto), devuelve el logger del primer proveedor registrado.
+        /// </param>
         /// <returns>Una instancia de <see cref="ILoggerService{TCategoryName}"/>.</returns>
         /// <exception cref="InvalidOperationException">Si no hay proveedores registrados.</exception>
-        ILoggerService<TCategoryName> GetLogger<TCategoryName>();
+        ILoggerService<TCategoryName> GetLogger<TCategoryName>(bool composite = false);
     }
 }

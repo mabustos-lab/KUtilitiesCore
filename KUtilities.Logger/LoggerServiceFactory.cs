@@ -85,7 +85,7 @@ namespace KUtilitiesCore.Logger
         }
 
         /// <inheritdoc/>
-        public ILoggerService<TCategoryName> GetLogger<TCategoryName>()
+        public ILoggerService<TCategoryName> GetLogger<TCategoryName>(bool composite = false)
         {
             if (_disposed)
             {
@@ -94,6 +94,32 @@ namespace KUtilitiesCore.Logger
             if (_providers.Count == 0)
             {
                 return NullLoggerService<TCategoryName>.Instance;
+            }
+
+            if (composite)
+            {
+                const string compositeKey = "__Composite__";
+                // Asegurarse de que el caché para el logger compuesto exista.
+                if (!_loggerCache.TryGetValue(compositeKey, out var compositeCache))
+                {
+                    compositeCache = new Dictionary<Type, object>();
+                    _loggerCache[compositeKey] = compositeCache;
+                }
+
+                var categoryType = typeof(TCategoryName);
+                if (compositeCache.TryGetValue(categoryType, out var cachedComposite))
+                {
+                    return (ILoggerService<TCategoryName>)cachedComposite;
+                }
+
+                // Crear loggers para todos los proveedores registrados.
+                var allLoggers = _providers.Keys
+                    .Select(providerName => GetLogger<TCategoryName>(providerName))
+                    .ToList();
+
+                var newComposite = new CompositeLogger<TCategoryName>(allLoggers);
+                compositeCache[categoryType] = newComposite;
+                return newComposite;
             }
 
             // Usar el primer proveedor registrado como el predeterminado.
