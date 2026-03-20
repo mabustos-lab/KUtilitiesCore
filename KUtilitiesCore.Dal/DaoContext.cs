@@ -6,8 +6,6 @@ using KUtilitiesCore.Dal.SQLLog;
 using KUtilitiesCore.Logger;
 using KUtilitiesCore.Telemetry;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
-using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;

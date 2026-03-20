@@ -10,14 +10,14 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- 1. Extensiones para HttpClientFactory (Inyección de dependencias robusta) -->
-		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.5" />
 		<!-- 2. Políticas de Resiliencia (Reintentos, Circuit Breaker) -->
-		<PackageReference Include="Microsoft.Extensions.Http.Polly" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http.Polly" Version="10.0.5" />
 		<!-- 3. Utilidades Web (Para construir QueryStrings limpiamente sin System.Web) -->
 		<PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.25" />
 		<!-- 4. Serialización JSON (Nativo y de alto rendimiento) -->
 		<!-- En .NET 5+ viene incluido, pero en Standard 2.1 se requiere -->
-		<PackageReference Include="System.Net.Http.Json" Version="10.0.4" />
+		<PackageReference Include="System.Net.Http.Json" Version="10.0.5" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- Referencia al Core (Interfaces) -->
