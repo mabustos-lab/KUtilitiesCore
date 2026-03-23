@@ -64,7 +64,7 @@ namespace KUtilitiesCore.Data.ValidationAttributes
                 .Equals(_comparisonPropertyName, StringComparison.OrdinalIgnoreCase))
             {
                 return new ValidationResult(
-                    string.Format(ValidationAtrributesStrings.ValidationSamePropertyError, nameof(DateGreaterThanAttribute)));
+                    string.Format(ValidationAtrributesStrings.ValidationSamePropertyError, nameof(DateLessThanAttribute)));
             }
 
             var comparisonProperty = validationContext.ObjectType.GetProperty(_comparisonPropertyName);
