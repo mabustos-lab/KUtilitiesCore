@@ -40,6 +40,36 @@ namespace KUtilitiesCore.Data
         }
 
         /// <summary>
+        /// Valida el objeto completo usando DataAnnotations y MetadataType.
+        /// </summary>
+        /// <param name="source">El objeto a validar.</param>
+        /// <returns>Una lista de <see cref="ValidationResult"/> con los errores encontrados.</returns>
+        public static IList<ValidationResult> GetValidationResults(this object source)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            var results = new List<ValidationResult>();
+            var context = new ValidationContext(source, serviceProvider: null, items: null);
+
+            try
+            {
+                // Registrar la clase de metadatos para que Validator la reconozca
+                MetadataHelper.RegisterMetadataClass(source.GetType());
+
+                // Ejecutar validación de DataAnnotations
+                Validator.TryValidateObject(source, context, results, validateAllProperties: true);
+            }
+            catch (Exception ex)
+            {
+                ex.Data.Add("Type", source.GetType().Name);
+                throw;
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// Verifica si un objeto que implementa IDataErrorInfo tiene errores.
         /// </summary>
         /// <param name="owner">El objeto que implementa IDataErrorInfo.</param>
@@ -120,11 +150,13 @@ namespace KUtilitiesCore.Data
         /// <returns>El validador de propiedades, o null si no se encuentra.</returns>
         private static PropertyValidator? GetPropertyValidator(Type type, string propertyName)
         {
-            var property = type.GetProperty(propertyName);
+            MetadataHelper.RegisterMetadataClass(type);
+            var property = TypeDescriptor.GetProperties(type)[propertyName];
+
             return property is null
                 ? null
                 : PropertyValidator
-                .CreateFromAttributes(GetAllAttributes(property).OfType<ValidationAttribute>(), propertyName);
+                .CreateFromAttributes(property.Attributes.OfType<ValidationAttribute>(), propertyName);
         }
 
         /// <summary>
