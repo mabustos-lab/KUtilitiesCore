@@ -26,6 +26,21 @@ namespace KUtilitiesCore.Tests.Data
             public int Age { get; set; }
         }
 
+        [MetadataType(typeof(TestDataErrorInfo))]
+        private class TestDataWithoutAttributes : IDataErrorInfo
+        {
+            public string Error { get; set; }
+            public string this[string columnName]
+            {
+                get
+                {
+                    return DataErrorInfoExt.GetErrorText(this, columnName);
+                }
+            }
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
         [TestMethod]
         public void GetErrorText_ShouldReturnErrorForNonNestedProperty()
         {
@@ -37,6 +52,32 @@ namespace KUtilitiesCore.Tests.Data
 
             // Assert
             Assert.IsTrue(errorText.Length>0);
+        }
+
+        [TestMethod]
+        public void GetErrorText_ShouldGetValidationError()
+        {
+            // Arrange
+            var testObject = new TestDataErrorInfo { Name = "", Age = 300 };
+
+            // Act
+            var valresults= testObject.GetValidationResults();
+
+            // Assert
+            Assert.IsGreaterThan(0, valresults.Count);
+        }
+
+        [TestMethod]
+        public void UseMetaData_ShouldGetValidationError()
+        {
+            // Arrange
+            var testObject = new TestDataWithoutAttributes { Name = "", Age = 300 };
+
+            // Act
+            var valresults = testObject.GetValidationResults();
+
+            // Assert
+            Assert.IsGreaterThan(0, valresults.Count);
         }
 
         [TestMethod]
