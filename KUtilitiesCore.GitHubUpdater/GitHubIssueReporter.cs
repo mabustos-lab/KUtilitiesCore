@@ -1,4 +1,5 @@
-﻿using KUtilitiesCore.GitHubUpdater.Interface;
+﻿using KUtilitiesCore.Encryption.Extensions;
+using KUtilitiesCore.GitHubUpdater.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,7 +62,7 @@ namespace KUtilitiesCore.GitHubUpdater
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Siomax");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "token",
-                _info.GetDecryptedToken());
+                _info.GetToken().ToPlainText());
             var payload = new
             {
                 title = title,

@@ -1,0 +1,26 @@
+# TODO: GitHubUpdater Refactor
+
+- [x] **Task 1: Update Configuration Model**
+  - [x] Step 1: Add AssetPattern to IAppUpdateInfo
+  - [x] Step 2: Implement AssetPattern in AppUpdateInfo
+  - [x] Step 3: Update Save/Load logic
+  - [x] Step 4: Commit
+- [x] **Task 2: Robust Version Parsing (IVersionParser)**
+  - [x] Step 1: Define IVersionParser interface
+  - [x] Step 2: Create failing tests
+  - [x] Step 3: Implement DefaultVersionParser (Regex)
+  - [x] Step 4: Verify tests and Commit
+- [x] **Task 3: Pattern-based Asset Selection (IAssetSelector)**
+  - [x] Step 1: Define IAssetSelector interface
+  - [x] Step 2: Implement WildcardAssetSelector
+  - [x] Step 3: Verify tests and Commit
+- [x] **Task 4: The Orchestrator (GitHubUpdateManager)**
+  - [x] Step 1: Define IGitHubUpdateManager
+  - [x] Step 2: Implement GitHubUpdateManager (Injection)
+  - [x] Step 3: Connect Progress Reporting
+  - [x] Step 4: Commit
+- [x] **Task 5: Final Integration & Cleanup**
+  - [x] Step 1: Update GitHubUpdateService
+  - [x] Step 2: Create full integration test
+  - [x] Step 3: Final Documentation
+  - [x] Step 4: Final Commit
