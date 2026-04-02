@@ -1,3 +1,4 @@
+using DotNetEnv;
 using KUtilitiesCore.GitHubUpdater;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,13 +10,15 @@ namespace KUtilitiesCore.GitHubUpdaterTests
         [TestMethod]
         public void AppUpdateInfo_PropiedadesYToken_SonAsignadasCorrectamente()
         {
+            // Cargamos los secretos de .env
+            Env.TraversePath().Load();
             // Arrange
             var appUpdateInfo = new AppUpdateInfo();
             string version = "v1.0.0-test";
             string canal = "Production";
             string owner = "mabustos-lab";
             string repo = "master";
-            string token = "github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+            string token = Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? "Pruebatoken";
 
             // Act
             appUpdateInfo.AppVersion = version;
