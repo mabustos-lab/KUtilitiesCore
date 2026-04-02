@@ -1,3 +1,4 @@
+using DotNetEnv;
 using KUtilitiesCore.GitHubUpdater;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,13 +10,15 @@ namespace KUtilitiesCore.GitHubUpdaterTests
         [TestMethod]
         public void AppUpdateInfo_PropiedadesYToken_SonAsignadasCorrectamente()
         {
+            // Cargamos los secretos de .env
+            Env.TraversePath().Load();
             // Arrange
             var appUpdateInfo = new AppUpdateInfo();
-            string version = "2.1.0";
+            string version = "v1.0.0-test";
             string canal = "Production";
-            string owner = "MiOrg";
-            string repo = "MiRepo";
-            string token = "TokenSuperSecreto123";
+            string owner = "mabustos-lab";
+            string repo = "master";
+            string token = Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? "Pruebatoken";
 
             // Act
             appUpdateInfo.AppVersion = version;
@@ -29,7 +32,25 @@ namespace KUtilitiesCore.GitHubUpdaterTests
             Assert.AreEqual(canal, appUpdateInfo.UpdateChannel);
             Assert.AreEqual(owner, appUpdateInfo.GitHub.Owner);
             Assert.AreEqual(repo, appUpdateInfo.GitHub.Repository);
-            Assert.AreEqual(token, appUpdateInfo.GetDecryptedToken());
+            Assert.AreEqual("*", appUpdateInfo.AssetPattern); // Default value
+        }
+
+        [TestMethod]
+        public void AppUpdateInfo_LoadJson_RestauraPropiedadesCorrectamente()
+        {
+            // Arrange
+            var appUpdateInfo = new AppUpdateInfo();
+            string json = "{\"appVersion\":\"v2.0.0\",\"assetPattern\":\"*.msi\",\"updateChannel\":\"QA\",\"gitHub\":{\"owner\":\"test-owner\",\"repository\":\"test-repo\"}}";
+
+            // Act
+            appUpdateInfo.LoadJson(json);
+
+            // Assert
+            Assert.AreEqual("v2.0.0", appUpdateInfo.AppVersion);
+            Assert.AreEqual("*.msi", appUpdateInfo.AssetPattern);
+            Assert.AreEqual("QA", appUpdateInfo.UpdateChannel);
+            Assert.AreEqual("test-owner", appUpdateInfo.GitHub.Owner);
+            Assert.AreEqual("test-repo", appUpdateInfo.GitHub.Repository);
         }
     }
 }

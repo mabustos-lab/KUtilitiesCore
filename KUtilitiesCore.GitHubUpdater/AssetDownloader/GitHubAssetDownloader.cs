@@ -63,7 +63,7 @@ namespace KUtilitiesCore.GitHubUpdater.AssetDownloader
                      OnProgresoDescarga(0, DownloadStatus.Wait, null);
 
                 using var client = new HttpClient();
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("YourAppName");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("KUtilitiesCore");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", secureGithubToken.ToPlainText());
 
                 using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);

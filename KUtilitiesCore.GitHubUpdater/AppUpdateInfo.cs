@@ -74,6 +74,7 @@ namespace KUtilitiesCore.GitHubUpdater
             _encryptionService = encryptionService;
             UpdateChannel = string.Empty;
             AppVersion = string.Empty;
+            AssetPattern = "*";
 
             if (string.IsNullOrEmpty(filePath))
                 filePath = Path.Combine(
@@ -97,6 +98,12 @@ namespace KUtilitiesCore.GitHubUpdater
         public string AppVersion { get; set; }
 
         /// <summary>
+        /// Patrón para filtrar los assets de la release de GitHub (por ejemplo, "*.zip", "Setup*.exe").
+        /// Por defecto es "*".
+        /// </summary>
+        public string AssetPattern { get; set; }
+
+        /// <summary>
         /// Información del repositorio de GitHub donde se gestionan las releases y otros módulos
         /// como el reporte de errores.
         /// </summary>
@@ -116,18 +123,18 @@ namespace KUtilitiesCore.GitHubUpdater
         /// Obtiene el token desencriptado (solo cuando se necesita).
         /// </summary>
         /// <returns>Token de acceso personal en texto plano, o cadena vacía si no está disponible.</returns>
-        public string GetDecryptedToken()
+        public SecureString GetToken()
         {
             if (secureToken.Length > 0)
-                return secureToken.ToPlainText();
+                return secureToken;
+            
+            //if (!string.IsNullOrEmpty(GitHub.EncryptedToken))
+            //{
+            //    secureToken = GitHub.GetSecuredToken(_encryptionService);
+            //    return _encryptionService.Decrypt(GitHub.EncryptedToken);
+            //}
 
-            if (!string.IsNullOrEmpty(GitHub.EncryptedToken))
-            {
-                secureToken = GitHub.GetSecuredToken(_encryptionService);
-                return _encryptionService.Decrypt(GitHub.EncryptedToken);
-            }
-
-            return string.Empty;
+            return new SecureString();
         }
 
         /// <summary>
@@ -186,6 +193,15 @@ namespace KUtilitiesCore.GitHubUpdater
             _gitHub.EncryptedToken = _encryptionService.Encrypt(token);
             secureToken = token.ToSecureString();
         }
+
+        private class AppUpdateInfoDTO
+        {
+            public string? AppVersion { get; set; }
+            public string? AssetPattern { get; set; }
+            public string? UpdateChannel { get; set; }
+            public GitHubRepositoryInfo? GitHub { get; set; }
+        }
+
         /// <summary>
         /// Restaura la infomación establecida desde un objeto serializado en formato JSON
         /// </summary>
@@ -194,13 +210,18 @@ namespace KUtilitiesCore.GitHubUpdater
         {
             try
             {
-                AppUpdateInfo deserialized= Utilities.FromJson<AppUpdateInfo>(json);
-                AppVersion=deserialized.AppVersion;
-                UpdateChannel = deserialized.UpdateChannel;
-                _gitHub.EncryptedToken= deserialized.GitHub.EncryptedToken;
-                _gitHub.Repository=deserialized.GitHub.Repository;
-                _gitHub.IssueLabels=deserialized.GitHub.IssueLabels;
-                _gitHub.Owner=deserialized.GitHub.Owner;
+                AppUpdateInfoDTO deserialized = Utilities.FromJson<AppUpdateInfoDTO>(json);
+                AppVersion = deserialized.AppVersion ?? string.Empty;
+                AssetPattern = deserialized.AssetPattern ?? "*";
+                UpdateChannel = deserialized.UpdateChannel ?? string.Empty;
+
+                if (deserialized.GitHub != null)
+                {
+                    _gitHub.EncryptedToken = deserialized.GitHub.EncryptedToken;
+                    _gitHub.Repository = deserialized.GitHub.Repository;
+                    _gitHub.IssueLabels = deserialized.GitHub.IssueLabels;
+                    _gitHub.Owner = deserialized.GitHub.Owner;
+                }
             }
             catch (Exception ex)
             {

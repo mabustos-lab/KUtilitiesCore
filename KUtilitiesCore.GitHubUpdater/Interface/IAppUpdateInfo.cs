@@ -28,6 +28,12 @@ namespace KUtilitiesCore.GitHubUpdater.Interface
         string AppVersion { get; set; }
 
         /// <summary>
+        /// Patrón para filtrar los assets de la release de GitHub (por ejemplo, "*.zip", "Setup*.exe").
+        /// Por defecto es "*".
+        /// </summary>
+        string AssetPattern { get; set; }
+
+        /// <summary>
         /// Información del repositorio de GitHub donde se gestionan las releases y otros módulos
         /// como el reporte de errores.
         /// </summary>
@@ -43,7 +49,7 @@ namespace KUtilitiesCore.GitHubUpdater.Interface
         /// Obtiene el token desencriptado (solo cuando se necesita).
         /// </summary>
         /// <returns>Token de acceso personal en texto plano, o cadena vacía si no está disponible.</returns>
-        string GetDecryptedToken();
+        SecureString GetToken();
 
         /// <summary>
         /// Restaura la infomación establecida desde un objeto serializado en formato JSON
