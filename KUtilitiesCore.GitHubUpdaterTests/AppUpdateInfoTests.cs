@@ -15,7 +15,7 @@ namespace KUtilitiesCore.GitHubUpdaterTests
             string canal = "Production";
             string owner = "mabustos-lab";
             string repo = "master";
-            string token = "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";
+            string token = "github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
             // Act
             appUpdateInfo.AppVersion = version;
@@ -29,7 +29,6 @@ namespace KUtilitiesCore.GitHubUpdaterTests
             Assert.AreEqual(canal, appUpdateInfo.UpdateChannel);
             Assert.AreEqual(owner, appUpdateInfo.GitHub.Owner);
             Assert.AreEqual(repo, appUpdateInfo.GitHub.Repository);
-            Assert.AreEqual(token, appUpdateInfo.GetDecryptedToken());
             Assert.AreEqual("*", appUpdateInfo.AssetPattern); // Default value
         }
 

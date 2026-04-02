@@ -123,18 +123,18 @@ namespace KUtilitiesCore.GitHubUpdater
         /// Obtiene el token desencriptado (solo cuando se necesita).
         /// </summary>
         /// <returns>Token de acceso personal en texto plano, o cadena vacía si no está disponible.</returns>
-        public string GetDecryptedToken()
+        public SecureString GetToken()
         {
             if (secureToken.Length > 0)
-                return secureToken.ToPlainText();
+                return secureToken;
+            
+            //if (!string.IsNullOrEmpty(GitHub.EncryptedToken))
+            //{
+            //    secureToken = GitHub.GetSecuredToken(_encryptionService);
+            //    return _encryptionService.Decrypt(GitHub.EncryptedToken);
+            //}
 
-            if (!string.IsNullOrEmpty(GitHub.EncryptedToken))
-            {
-                secureToken = GitHub.GetSecuredToken(_encryptionService);
-                return _encryptionService.Decrypt(GitHub.EncryptedToken);
-            }
-
-            return string.Empty;
+            return new SecureString();
         }
 
         /// <summary>

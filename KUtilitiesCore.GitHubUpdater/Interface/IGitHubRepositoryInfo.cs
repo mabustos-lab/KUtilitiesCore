@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security;
 
 namespace KUtilitiesCore.GitHubUpdater.Interface
 {
@@ -39,5 +40,6 @@ namespace KUtilitiesCore.GitHubUpdater.Interface
         /// </summary>
         string Repository { get; set; }
 
+  
     }
 }

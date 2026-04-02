@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Security;
 
 namespace KUtilitiesCore.GitHubUpdater.Tests
 {
@@ -19,7 +20,7 @@ namespace KUtilitiesCore.GitHubUpdater.Tests
             public IGitHubRepositoryInfo GitHub { get; } = new GitHubRepositoryInfo();
             public string UpdateChannel { get; set; } = "";
             public string AssetPattern { get; set; } = "*";
-            public string GetDecryptedToken() => "";
+            public SecureString GetToken() => new SecureString();
             public void LoadJson(string json) { }
             public void SaveChanges() { }
             public void SetPlaintextToken(string token) { }

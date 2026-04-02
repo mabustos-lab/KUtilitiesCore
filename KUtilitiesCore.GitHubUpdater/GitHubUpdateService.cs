@@ -1,3 +1,4 @@
+using KUtilitiesCore.Encryption.Extensions;
 using KUtilitiesCore.GitHubUpdater.Helpers;
 using KUtilitiesCore.GitHubUpdater.Interface;
 using System;
@@ -57,10 +58,10 @@ namespace KUtilitiesCore.GitHubUpdater
 
             client.DefaultRequestHeaders.UserAgent.ParseAdd("KUtilitiesCore-Updater");
             
-            string token = _info.GetDecryptedToken();
-            if (!string.IsNullOrEmpty(token))
+            
+            if (_info.GetToken().Length>0)
             {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", token);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", _info.GetToken().ToPlainText());
             }
 
             string apiUrl = $"{_info.GitHub.API_URL}/repos/{_info.GitHub.Owner}/{_info.GitHub.Repository}/releases";

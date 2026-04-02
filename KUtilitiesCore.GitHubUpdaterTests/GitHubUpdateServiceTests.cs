@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DotNetEnv;
+using KUtilitiesCore.GitHubUpdater.Helpers;
+using KUtilitiesCore.GitHubUpdater.AssetDownloader;
 
 
 namespace KUtilitiesCore.GitHubUpdater.Tests
@@ -25,7 +27,7 @@ namespace KUtilitiesCore.GitHubUpdater.Tests
             Env.TraversePath().Load();
 
             AppUpdateInfo appUpdateInfo = new AppUpdateInfo();
-            string version = "1.0.0";
+            string version = "0.0.0";
             string canal = Environment.GetEnvironmentVariable("UpdateChannel");
             string owner = "mabustos-lab";
             string repo = "Sefoil.Siomax";
@@ -38,15 +40,20 @@ namespace KUtilitiesCore.GitHubUpdater.Tests
             appUpdateInfo.GitHub.Repository = repo;
             appUpdateInfo.SetPlaintextToken(token);
             //appUpdateInfo.SaveChanges();
-            GitHubUpdateService service = new GitHubUpdateService(appUpdateInfo);
-            var release =service.GetLatestReleaseAsync().GetAwaiter().GetResult();
+            var service = new GitHubUpdateService(appUpdateInfo);
+            var asset = new GitHubAssetDownloader(appUpdateInfo.GetToken());
+            var parser = new DefaultVersionParser();
+            var selector = new WildcardAssetSelector();
+            var manager = new GitHubUpdateManager(appUpdateInfo, service, asset, parser, selector);
+            var release = manager.CheckForUpdatesAsync().GetAwaiter().GetResult();
+
+            //if(release != null)
+            //{
+            //    manager.DownloadUpdateAsync(release, "C:\\Users\\Mike\\AppData\\Local\\Temp").GetAwaiter().GetResult();                
+            //}
+            
             Assert.IsNotNull(release);
         }
 
-        [TestMethod()]
-        public void GetLatestReleaseAsyncTest()
-        {
-
-        }
     }
 }

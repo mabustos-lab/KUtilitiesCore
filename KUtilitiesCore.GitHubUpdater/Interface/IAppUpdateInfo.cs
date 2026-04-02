@@ -49,7 +49,7 @@ namespace KUtilitiesCore.GitHubUpdater.Interface
         /// Obtiene el token desencriptado (solo cuando se necesita).
         /// </summary>
         /// <returns>Token de acceso personal en texto plano, o cadena vacía si no está disponible.</returns>
-        string GetDecryptedToken();
+        SecureString GetToken();
 
         /// <summary>
         /// Restaura la infomación establecida desde un objeto serializado en formato JSON
