@@ -11,11 +11,11 @@ namespace KUtilitiesCore.GitHubUpdaterTests
         {
             // Arrange
             var appUpdateInfo = new AppUpdateInfo();
-            string version = "2.1.0";
+            string version = "v1.0.0-test";
             string canal = "Production";
-            string owner = "MiOrg";
-            string repo = "MiRepo";
-            string token = "TokenSuperSecreto123";
+            string owner = "mabustos-lab";
+            string repo = "master";
+            string token = "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";
 
             // Act
             appUpdateInfo.AppVersion = version;

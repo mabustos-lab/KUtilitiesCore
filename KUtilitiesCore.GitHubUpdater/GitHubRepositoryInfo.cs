@@ -18,5 +18,7 @@ namespace KUtilitiesCore.GitHubUpdater
         public string Owner { get; set; } = string.Empty;
 
         public string Repository { get; set; } = string.Empty;
+
+        public string API_URL { get; set; } = "https://api.github.com";
     }
 }

@@ -56,7 +56,7 @@ namespace KUtilitiesCore.GitHubUpdater
                 "token",
                 _info.GetDecryptedToken());
             GitHubRelease? result = null;
-            string apiUrl = $"https://api.github.com/repos/{_info.GitHub.Owner}/{_info.GitHub.Repository}/releases";
+            string apiUrl = $"{_info.GitHub.API_URL}/repos/{_info.GitHub.Owner}/{_info.GitHub.Repository}/releases";
             try
             {
                 var response = await client.GetAsync(apiUrl).ConfigureAwait(true);

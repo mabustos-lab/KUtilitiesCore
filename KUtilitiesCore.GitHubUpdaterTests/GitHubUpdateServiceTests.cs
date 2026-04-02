@@ -26,13 +26,14 @@ namespace KUtilitiesCore.GitHubUpdater.Tests
 
             AppUpdateInfo appUpdateInfo = new AppUpdateInfo();
             string version = "1.0.0";
-            string canal = "dev";
-            string owner = "SiomaxPMX";
+            string canal = Environment.GetEnvironmentVariable("UpdateChannel");
+            string owner = "mabustos-lab";
             string repo = "Sefoil.Siomax";
             
             string token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
             appUpdateInfo.AppVersion = version;
             appUpdateInfo.UpdateChannel = canal;
+            appUpdateInfo.GitHub.API_URL = Environment.GetEnvironmentVariable("API_URL"); 
             appUpdateInfo.GitHub.Owner = owner;
             appUpdateInfo.GitHub.Repository = repo;
             appUpdateInfo.SetPlaintextToken(token);
