@@ -28,6 +28,12 @@ namespace KUtilitiesCore.GitHubUpdater.Interface
         string AppVersion { get; set; }
 
         /// <summary>
+        /// Patrón para filtrar los assets de la release de GitHub (por ejemplo, "*.zip", "Setup*.exe").
+        /// Por defecto es "*".
+        /// </summary>
+        string AssetPattern { get; set; }
+
+        /// <summary>
         /// Información del repositorio de GitHub donde se gestionan las releases y otros módulos
         /// como el reporte de errores.
         /// </summary>

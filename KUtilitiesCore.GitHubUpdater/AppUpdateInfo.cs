@@ -74,6 +74,7 @@ namespace KUtilitiesCore.GitHubUpdater
             _encryptionService = encryptionService;
             UpdateChannel = string.Empty;
             AppVersion = string.Empty;
+            AssetPattern = "*";
 
             if (string.IsNullOrEmpty(filePath))
                 filePath = Path.Combine(
@@ -95,6 +96,12 @@ namespace KUtilitiesCore.GitHubUpdater
         /// disponible en GitHub.
         /// </summary>
         public string AppVersion { get; set; }
+
+        /// <summary>
+        /// Patrón para filtrar los assets de la release de GitHub (por ejemplo, "*.zip", "Setup*.exe").
+        /// Por defecto es "*".
+        /// </summary>
+        public string AssetPattern { get; set; }
 
         /// <summary>
         /// Información del repositorio de GitHub donde se gestionan las releases y otros módulos
@@ -186,6 +193,15 @@ namespace KUtilitiesCore.GitHubUpdater
             _gitHub.EncryptedToken = _encryptionService.Encrypt(token);
             secureToken = token.ToSecureString();
         }
+
+        private class AppUpdateInfoDTO
+        {
+            public string? AppVersion { get; set; }
+            public string? AssetPattern { get; set; }
+            public string? UpdateChannel { get; set; }
+            public GitHubRepositoryInfo? GitHub { get; set; }
+        }
+
         /// <summary>
         /// Restaura la infomación establecida desde un objeto serializado en formato JSON
         /// </summary>
@@ -194,13 +210,18 @@ namespace KUtilitiesCore.GitHubUpdater
         {
             try
             {
-                AppUpdateInfo deserialized= Utilities.FromJson<AppUpdateInfo>(json);
-                AppVersion=deserialized.AppVersion;
-                UpdateChannel = deserialized.UpdateChannel;
-                _gitHub.EncryptedToken= deserialized.GitHub.EncryptedToken;
-                _gitHub.Repository=deserialized.GitHub.Repository;
-                _gitHub.IssueLabels=deserialized.GitHub.IssueLabels;
-                _gitHub.Owner=deserialized.GitHub.Owner;
+                AppUpdateInfoDTO deserialized = Utilities.FromJson<AppUpdateInfoDTO>(json);
+                AppVersion = deserialized.AppVersion ?? string.Empty;
+                AssetPattern = deserialized.AssetPattern ?? "*";
+                UpdateChannel = deserialized.UpdateChannel ?? string.Empty;
+
+                if (deserialized.GitHub != null)
+                {
+                    _gitHub.EncryptedToken = deserialized.GitHub.EncryptedToken;
+                    _gitHub.Repository = deserialized.GitHub.Repository;
+                    _gitHub.IssueLabels = deserialized.GitHub.IssueLabels;
+                    _gitHub.Owner = deserialized.GitHub.Owner;
+                }
             }
             catch (Exception ex)
             {

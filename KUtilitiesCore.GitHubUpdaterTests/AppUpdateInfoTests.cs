@@ -30,6 +30,25 @@ namespace KUtilitiesCore.GitHubUpdaterTests
             Assert.AreEqual(owner, appUpdateInfo.GitHub.Owner);
             Assert.AreEqual(repo, appUpdateInfo.GitHub.Repository);
             Assert.AreEqual(token, appUpdateInfo.GetDecryptedToken());
+            Assert.AreEqual("*", appUpdateInfo.AssetPattern); // Default value
+        }
+
+        [TestMethod]
+        public void AppUpdateInfo_LoadJson_RestauraPropiedadesCorrectamente()
+        {
+            // Arrange
+            var appUpdateInfo = new AppUpdateInfo();
+            string json = "{\"appVersion\":\"v2.0.0\",\"assetPattern\":\"*.msi\",\"updateChannel\":\"QA\",\"gitHub\":{\"owner\":\"test-owner\",\"repository\":\"test-repo\"}}";
+
+            // Act
+            appUpdateInfo.LoadJson(json);
+
+            // Assert
+            Assert.AreEqual("v2.0.0", appUpdateInfo.AppVersion);
+            Assert.AreEqual("*.msi", appUpdateInfo.AssetPattern);
+            Assert.AreEqual("QA", appUpdateInfo.UpdateChannel);
+            Assert.AreEqual("test-owner", appUpdateInfo.GitHub.Owner);
+            Assert.AreEqual("test-repo", appUpdateInfo.GitHub.Repository);
         }
     }
 }
