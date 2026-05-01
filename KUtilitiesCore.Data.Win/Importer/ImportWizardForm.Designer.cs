@@ -48,10 +48,10 @@
             this.tsslWarning = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabErrors = new System.Windows.Forms.TabPage();
             this.dgvErrors = new System.Windows.Forms.DataGridView();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.panelActions = new System.Windows.Forms.Panel();
+            this.cbFilterHasError = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnImport = new System.Windows.Forms.Button();
-            this.cbFilterHasError = new System.Windows.Forms.CheckBox();
             this.pnlTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -65,7 +65,7 @@
             this.statusStrip1.SuspendLayout();
             this.tabErrors.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvErrors)).BeginInit();
-            this.panel1.SuspendLayout();
+            this.panelActions.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlTop
@@ -132,7 +132,7 @@
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 160);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 210);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -283,16 +283,27 @@
             this.dgvErrors.Size = new System.Drawing.Size(715, 408);
             this.dgvErrors.TabIndex = 0;
             // 
-            // panel1
+            // panelActions
             // 
-            this.panel1.Controls.Add(this.cbFilterHasError);
-            this.panel1.Controls.Add(this.btnCancel);
-            this.panel1.Controls.Add(this.btnImport);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 603);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(982, 50);
-            this.panel1.TabIndex = 3;
+            this.panelActions.Controls.Add(this.cbFilterHasError);
+            this.panelActions.Controls.Add(this.btnCancel);
+            this.panelActions.Controls.Add(this.btnImport);
+            this.panelActions.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelActions.Location = new System.Drawing.Point(0, 160);
+            this.panelActions.Name = "panelActions";
+            this.panelActions.Size = new System.Drawing.Size(982, 50);
+            this.panelActions.TabIndex = 3;
+            // 
+            // cbFilterHasError
+            // 
+            this.cbFilterHasError.AutoSize = true;
+            this.cbFilterHasError.Location = new System.Drawing.Point(11, 16);
+            this.cbFilterHasError.Name = "cbFilterHasError";
+            this.cbFilterHasError.Size = new System.Drawing.Size(204, 20);
+            this.cbFilterHasError.TabIndex = 2;
+            this.cbFilterHasError.Text = "Mostrar solo filas con errores.";
+            this.cbFilterHasError.UseVisualStyleBackColor = true;
+            this.cbFilterHasError.CheckedChanged += new System.EventHandler(this.cbFilterHasError_CheckedChanged);
             // 
             // btnCancel
             // 
@@ -316,24 +327,13 @@
             this.btnImport.UseVisualStyleBackColor = true;
             this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
             // 
-            // cbFilterHasError
-            // 
-            this.cbFilterHasError.AutoSize = true;
-            this.cbFilterHasError.Location = new System.Drawing.Point(11, 16);
-            this.cbFilterHasError.Name = "cbFilterHasError";
-            this.cbFilterHasError.Size = new System.Drawing.Size(204, 20);
-            this.cbFilterHasError.TabIndex = 2;
-            this.cbFilterHasError.Text = "Mostrar solo filas con errores.";
-            this.cbFilterHasError.UseVisualStyleBackColor = true;
-            this.cbFilterHasError.CheckedChanged += new System.EventHandler(this.cbFilterHasError_CheckedChanged);
-            // 
             // ImportWizardForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(982, 653);
             this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.panelActions);
             this.Controls.Add(this.pnlConfig);
             this.Controls.Add(this.pnlTop);
             this.Name = "ImportWizardForm";
@@ -355,8 +355,8 @@
             this.statusStrip1.PerformLayout();
             this.tabErrors.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvErrors)).EndInit();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.panelActions.ResumeLayout(false);
+            this.panelActions.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -377,7 +377,7 @@
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel tsslCount;
         private DataGridView dgvErrors;
-        private Panel panel1;
+        private Panel panelActions;
         private ToolStripStatusLabel tsslWarning;
         private Button btnCancel;
         private Button btnImport;

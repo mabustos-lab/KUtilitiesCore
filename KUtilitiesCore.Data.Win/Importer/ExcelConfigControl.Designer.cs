@@ -60,7 +60,7 @@
             this.cboSheet.FormattingEnabled = true;
             this.cboSheet.Location = new System.Drawing.Point(3, 22);
             this.cboSheet.Name = "cboSheet";
-            this.cboSheet.Size = new System.Drawing.Size(100, 24);
+            this.cboSheet.Size = new System.Drawing.Size(253, 24);
             this.cboSheet.TabIndex = 3;
             // 
             // ExcelConfigControl
