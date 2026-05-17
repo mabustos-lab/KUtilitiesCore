@@ -9,6 +9,8 @@
 
 <PropertyGroup>
    <Title>KUtilitiesCore</Title>
+   <Description>Librería de utilidades base para .NET, proporcionando un marco robusto de validación de datos, conversión de tipos, extensiones avanzadas de LINQ y colecciones, y soporte de telemetría.</Description>
+   <PackageReadmeFile>README.md</PackageReadmeFile>
    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	<LangVersion>latest</LangVersion>
    <GenerateDocumentationFile>True</GenerateDocumentationFile>

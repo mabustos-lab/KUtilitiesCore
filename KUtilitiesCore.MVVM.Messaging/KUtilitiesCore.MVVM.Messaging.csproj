@@ -9,6 +9,8 @@
 	<PropertyGroup>
 		<LangVersion>latest</LangVersion>
 		<Title>KUtilitiesCore.MVVM.Messaging</Title>
+			<Description>Sistema de mensajería desacoplado para la comunicación eficiente entre componentes en aplicaciones MVVM.</Description>
+			<PackageReadmeFile>README.md</PackageReadmeFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	</PropertyGroup>
 </Project>

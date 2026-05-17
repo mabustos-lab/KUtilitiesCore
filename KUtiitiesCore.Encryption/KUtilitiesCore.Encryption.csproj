@@ -6,6 +6,9 @@
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
 	  <LangVersion>latest</LangVersion>
+		  <Title>KUtilitiesCore.Encryption</Title>
+		  <Description>Servicios de seguridad para cifrado y hashing de datos, soportando AES, Base64 y DPAPI.</Description>
+		  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
