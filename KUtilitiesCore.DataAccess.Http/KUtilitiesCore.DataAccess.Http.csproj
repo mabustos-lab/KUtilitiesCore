@@ -5,6 +5,9 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<LangVersion>latest</LangVersion>
+			<Title>KUtilitiesCore.DataAccess.Http</Title>
+			<Description>Implementación de acceso a datos mediante servicios API/HTTP.</Description>
+			<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackAsTool>False</PackAsTool>
 		<IncludeSymbols>False</IncludeSymbols>
 	</PropertyGroup>

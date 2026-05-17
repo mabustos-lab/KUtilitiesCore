@@ -3,6 +3,9 @@
   <PropertyGroup>
    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
    <LangVersion>latest</LangVersion>
+   <Title>KUtilitiesCore.Data.Win</Title>
+   <Description>Componentes de interfaz de usuario para Windows Forms destinados a la configuración de importación y exportación de datos.</Description>
+   <PackageReadmeFile>README.md</PackageReadmeFile>
    <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>

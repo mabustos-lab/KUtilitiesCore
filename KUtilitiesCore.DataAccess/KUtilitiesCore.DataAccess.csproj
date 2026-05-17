@@ -8,6 +8,8 @@
 	  <Nullable>disable</Nullable>
 	  <LangVersion>latest</LangVersion>
 	  <Title>KUtilitiesCore.DataAccess</Title>
+		  <Description>Definiciones genéricas, paginación y el patrón Specification.</Description>
+		  <PackageReadmeFile>README.md</PackageReadmeFile>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 

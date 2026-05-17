@@ -6,6 +6,9 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<LangVersion>latest</LangVersion>
+			<Title>KUtilitiesCore.DataAccess.EfCore</Title>
+			<Description>Implementación concreta de acceso a datos basada en Entity Framework Core.</Description>
+			<PackageReadmeFile>README.md</PackageReadmeFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>

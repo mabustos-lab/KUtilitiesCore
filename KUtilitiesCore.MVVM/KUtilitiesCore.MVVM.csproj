@@ -9,6 +9,8 @@
 <PropertyGroup>
    <LangVersion>latest</LangVersion>
    <Title>KUtilitiesCore.MVVM</Title>
+   <Description>Implementaciones core para el patrón Model-View-ViewModel, incluyendo RelayCommands y asistentes para ViewModels.</Description>
+   <PackageReadmeFile>README.md</PackageReadmeFile>
    <GenerateDocumentationFile>True</GenerateDocumentationFile>
  </PropertyGroup>
 <ItemGroup>
