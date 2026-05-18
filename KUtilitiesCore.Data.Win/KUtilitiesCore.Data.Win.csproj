@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
@@ -10,17 +10,18 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
+		  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
-
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Resources.Extensions" Version="10.*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -28,7 +29,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

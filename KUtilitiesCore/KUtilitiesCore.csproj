@@ -16,6 +16,10 @@
    <GenerateDocumentationFile>True</GenerateDocumentationFile>
  </PropertyGroup>
 
+ <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+ </ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net48|AnyCPU'">
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>

@@ -1,14 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
-	<LangVersion>latest</LangVersion>
-	<Title>KUtilitiesCore.Logger</Title>
-		<Description>Servicios de registro (logging) flexibles y extensibles con proveedores para archivos, SQL Server y consola de depuración.</Description>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-	<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+		<Title>KUtilitiesCore.Logger</Title>
+			<Description>Servicios de registro (logging) flexibles y extensibles con proveedores para archivos, SQL Server y consola de depuración.</Description>
+			<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8" />
