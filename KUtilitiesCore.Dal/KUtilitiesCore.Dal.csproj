@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -7,11 +7,13 @@
 		<Nullable>disable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<Title>KUtilitiesCore.Dal</Title>
-			<Description>Capa de acceso a datos con soporte para Unit of Work e inserciones masivas.</Description>
-			<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>Capa de acceso a datos con soporte para Unit of Work e inserciones masivas.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	</PropertyGroup>
-
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 	<ItemGroup>
 	  <Compile Remove="Paging\**" />
 	  <Compile Remove="SPHelper\**" />
@@ -20,7 +22,6 @@
 	  <None Remove="Paging\**" />
 	  <None Remove="SPHelper\**" />
 	</ItemGroup>
-
 	<ItemGroup>
 	  <Compile Remove="Exceptions\RepositoryException.cs" />
 	  <Compile Remove="UOW\IDaoRepositoryProvider.cs" />

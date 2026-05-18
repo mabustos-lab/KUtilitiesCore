@@ -1,16 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <!--<TargetFrameworks>netstandard2.0;net8.0;net48</TargetFrameworks>-->
-	  <TargetFramework>netstandard2.1</TargetFramework>
-	  <OutputType>Library</OutputType>
-	  <ImplicitUsings>enable</ImplicitUsings>
-	  <Nullable>disable</Nullable>
-	  <LangVersion>latest</LangVersion>
-	  <Title>KUtilitiesCore.DataAccess</Title>
-		  <Description>Definiciones genéricas, paginación y el patrón Specification.</Description>
-		  <PackageReadmeFile>README.md</PackageReadmeFile>
-	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
+		  <!--<TargetFrameworks>netstandard2.0;net8.0;net48</TargetFrameworks>-->
+		  <TargetFramework>netstandard2.1</TargetFramework>
+		  <OutputType>Library</OutputType>
+		  <ImplicitUsings>enable</ImplicitUsings>
+		  <Nullable>disable</Nullable>
+		  <LangVersion>latest</LangVersion>
+		  <Title>KUtilitiesCore.DataAccess</Title>
+			  <Description>Definiciones genéricas, paginación y el patrón Specification.</Description>
+			  <PackageReadmeFile>README.md</PackageReadmeFile>
+		  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
