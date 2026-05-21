@@ -65,6 +65,9 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         /// Enlaza de forma segura y desechable un evento de un objeto a un comando del ViewModel, usando una expresión de método sin parámetros.
         /// </summary>
         /// <typeparam name="T">Tipo del objeto que expone el evento.</typeparam>
+        /// <param name="commandName">
+        /// Establece el nombre asociado al comando
+        /// </param>
         /// <param name="targetObject">El objeto que expone el evento (ej. un control de UI).</param>
         /// <param name="eventExpression">
         /// Expresión lambda que identifica el evento a enlazar (ej. <c>c =&gt; c.Click</c>).
@@ -75,7 +78,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         /// <param name="executeExpression">
         /// Expresión que representa el método a ejecutar en el ViewModel.
         /// </param>
-        public void BindCommand<T>(T targetObject, Expression<Func<T, Delegate>> eventExpression,
+        public void BindCommand<T>(string commandName,T targetObject, Expression<Func<T, Delegate>> eventExpression,
             Action<bool> targetStatus, Expression<Action<TViewModel>> executeExpression)
             where T : class
         {
@@ -83,7 +86,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
                 targetObject,
                 eventExpression,
                 targetStatus,
-                RelayCommand<TViewModel>.Create(_viewModel, executeExpression));
+                RelayCommand<TViewModel>.Create(_viewModel, commandName, executeExpression));
         }
 
         /// <summary>
@@ -95,6 +98,9 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         /// <param name="eventExpression">
         /// Expresión lambda que identifica el evento a enlazar (ej. <c>c =&gt; c.Click</c>).
         /// </param>
+        /// <param name="commandName">
+        /// Establece el nombre asociado al comando
+        /// </param>
         /// <param name="targetStatus">
         /// Acción que establece el estado del objeto según si el comando puede ejecutarse.
         /// </param>
@@ -104,7 +110,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         /// <param name="parameterPropertyExpression">
         /// Expresión que representa la propiedad del parámetro en el ViewModel.
         /// </param>
-        public void BindCommand<T, TParam>(T targetObject, Expression<Func<T, Delegate>> eventExpression,
+        public void BindCommand<T, TParam>(string commandName,T targetObject, Expression<Func<T, Delegate>> eventExpression,
             Action<bool> targetStatus, Expression<Action<TViewModel, TParam?>> executeExpression,
             Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
             where T : class
@@ -113,7 +119,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
                 targetObject,
                 eventExpression,
                 targetStatus,
-                RelayCommand<TViewModel, TParam>.Create(_viewModel, executeExpression, parameterPropertyExpression));
+                RelayCommand<TViewModel, TParam>.Create(_viewModel, commandName, executeExpression, parameterPropertyExpression));
         }
 
         /// <summary>

@@ -29,6 +29,10 @@ namespace KUtilitiesCore.MVVM.Command
 
         private Func<TParam?> _getParamDelegate = () => default;
 
+        public RelayCommand(string commandName) : base(commandName)
+        {
+        }
+
         #endregion Fields
 
         #region Properties
@@ -53,6 +57,7 @@ namespace KUtilitiesCore.MVVM.Command
         /// Crea un comando que ejecuta un método con parámetro en el ViewModel. La lógica
         /// CanExecute se busca por reflexión.
         /// </summary>
+        /// <param name="commandName">Texto que representa el comando</param>
         /// <param name="viewModel">Instancia del ViewModel.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar con parámetro.</param>
         /// <param name="parameterPropertyExpression">
@@ -63,10 +68,12 @@ namespace KUtilitiesCore.MVVM.Command
         /// Si viewModel, executeExpression o parameterPropertyExpression son nulos.
         /// </exception>
         public static RelayCommand<TViewModel, TParam> Create(
-            TViewModel viewModel,
+            TViewModel viewModel,string commandName,
             Expression<Action<TViewModel, TParam?>> executeExpression,
             Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
         {
+            if (string.IsNullOrEmpty(commandName))
+                throw new ArgumentNullException(nameof(commandName));
             if (viewModel == null)
                 throw new ArgumentNullException(nameof(viewModel));
             if (executeExpression == null)
@@ -74,7 +81,7 @@ namespace KUtilitiesCore.MVVM.Command
             if (parameterPropertyExpression == null)
                 throw new ArgumentNullException(nameof(parameterPropertyExpression));
 
-            RelayCommand<TViewModel, TParam> relayCommand = new();
+            RelayCommand<TViewModel, TParam> relayCommand = new(commandName);
             relayCommand.InitializeMemberMetaData(viewModel, parameterPropertyExpression);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 1);
 
@@ -244,6 +251,10 @@ namespace KUtilitiesCore.MVVM.Command
         /// </summary>
         private Action? _executeAction;
 
+        public RelayCommand(string commandName) : base(commandName)
+        {
+        }
+
         #endregion Fields
 
         #region Methods
@@ -252,20 +263,23 @@ namespace KUtilitiesCore.MVVM.Command
         /// Crea un comando que ejecuta un método sin parámetros en el ViewModel. La lógica
         /// CanExecute se busca automáticamente por reflexión.
         /// </summary>
+        /// <param name="commandName">Texto que representa el comando</param>
         /// <param name="viewModel">Instancia del ViewModel.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar.</param>
         /// <returns>Instancia de RelayCommand configurada.</returns>
         /// <exception cref="ArgumentNullException">Si viewModel o executeExpression son nulos.</exception>
         public static RelayCommand<TViewModel> Create(
-            TViewModel viewModel,
+            TViewModel viewModel,string commandName,
             Expression<Action<TViewModel>> executeExpression)
         {
+            if (string.IsNullOrEmpty(commandName))
+                throw new ArgumentNullException(nameof(commandName));
             if (viewModel == null)
                 throw new ArgumentNullException(nameof(viewModel));
             if (executeExpression == null)
                 throw new ArgumentNullException(nameof(executeExpression));
 
-            RelayCommand<TViewModel> relayCommand = new();
+            RelayCommand<TViewModel> relayCommand = new(commandName);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 0);
 
             // Buscar el método CanExecute usando reflexión

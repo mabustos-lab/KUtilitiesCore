@@ -25,5 +25,11 @@ namespace KUtilitiesCore.MVVM
         /// Itera sobre los comandos registrados y notifica que su estado de ejecución puede haber cambiado.
         /// </summary>
         void UpdateRegisteredCommands();
+        /// <summary>
+        /// Obtiene el Comando registrado basado en el nombre
+        /// </summary>
+        /// <param name="commandName"></param>
+        RelayCommandBase? GetRegisteredCommand(string commandName);
+        bool RemoveRegisteredCommand(string commandName);
     }
 }

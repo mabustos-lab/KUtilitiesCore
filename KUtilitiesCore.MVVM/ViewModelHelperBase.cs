@@ -15,7 +15,7 @@ namespace KUtilitiesCore.MVVM
         : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel,
         IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
-        private readonly List<RelayCommandBase> _registeredCommands = [];
+        private readonly Dictionary<string, RelayCommandBase> _registeredCommands = [];
         private IViewModelDocumentOwner? documentOwner;
         private string error = string.Empty;
         private ConcurrentDictionary<string, string> errorMessages = [];
@@ -140,7 +140,7 @@ namespace KUtilitiesCore.MVVM
         /// <param name="command">El comando a registrar.</param>
         void ISupportCommands.RegisterCommand<TCommand>(TCommand command)
         {
-            _registeredCommands.Add(command);
+            _registeredCommands[command.CommandName] = command;
         }
 
         /// <inheritdoc/>
@@ -172,7 +172,7 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         void ISupportCommands.UpdateRegisteredCommands()
         {
-            foreach (var command in _registeredCommands)
+            foreach (var command in _registeredCommands.Values)
             {
                 command.RaiseCanExecuteChanged();
             }
@@ -299,5 +299,16 @@ namespace KUtilitiesCore.MVVM
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        /// <inheritdoc/>
+        RelayCommandBase? ISupportCommands.GetRegisteredCommand(string commandName)
+        {
+            _registeredCommands.TryGetValue(commandName, out var registeredCommand);
+            return registeredCommand;
+        }
+
+        /// <inheritdoc/>
+        bool ISupportCommands.RemoveRegisteredCommand(string commandName)
+        => _registeredCommands.Remove(commandName);
     }
 }
