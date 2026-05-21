@@ -15,8 +15,9 @@ namespace KUtilitiesCore.MVVM.Command
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="RelayCommandBase"/>.
         /// </summary>
-        protected RelayCommandBase()
+        protected RelayCommandBase(string commandName)
         {
+            CommandName = commandName;
         }
 
         #endregion Constructors
@@ -31,7 +32,7 @@ namespace KUtilitiesCore.MVVM.Command
         #region Properties
 
         /// <inheritdoc/>
-        public virtual string CommandName { get; internal set; } = string.Empty;
+        public virtual string CommandName { get; internal set; }
 
         /// <inheritdoc/>
         public virtual bool IsParametrizedCommand { get; internal set; }
