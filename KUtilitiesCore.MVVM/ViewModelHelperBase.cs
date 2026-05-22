@@ -15,7 +15,7 @@ namespace KUtilitiesCore.MVVM
         : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel,
         IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
-        private readonly Dictionary<string, RelayCommandBase> _registeredCommands = [];
+        private readonly Dictionary<string, IViewModelCommand> _registeredCommands = [];
         private IViewModelDocumentOwner? documentOwner;
         private string error = string.Empty;
         private ConcurrentDictionary<string, string> errorMessages = [];
@@ -123,7 +123,6 @@ namespace KUtilitiesCore.MVVM
         public virtual void RaisePropertyChanged([CallerMemberName] string propertyName = "")
         {
             OnPropertyChanged(propertyName);
-            Update();
         }
 
         /// <inheritdoc/>
@@ -174,7 +173,7 @@ namespace KUtilitiesCore.MVVM
         {
             foreach (var command in _registeredCommands.Values)
             {
-                command.RaiseCanExecuteChanged();
+                ((RelayCommandBase)command).RaiseCanExecuteChanged();
             }
         }
 
@@ -298,13 +297,14 @@ namespace KUtilitiesCore.MVVM
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            Update();
         }
 
         /// <inheritdoc/>
         RelayCommandBase? ISupportCommands.GetRegisteredCommand(string commandName)
         {
             _registeredCommands.TryGetValue(commandName, out var registeredCommand);
-            return registeredCommand;
+            return (RelayCommandBase?)registeredCommand;
         }
 
         /// <inheritdoc/>

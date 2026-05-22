@@ -25,7 +25,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         private readonly EventInfo _eventInfo;
         private readonly T _targetObject;
         private readonly Action<bool> _targetStatus;
-        private readonly SynchronizationContext _capturedSyncContext;
+        private readonly SynchronizationContext? _capturedSyncContext;
         private bool _isDisposed;
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
 
             _eventInfo.AddEventHandler(_targetObject, _eventHandler);
             _command.CanExecuteChanged += UpdateTargetStatus;
-            _capturedSyncContext = SynchronizationContext.Current ?? new SynchronizationContext();
+            _capturedSyncContext = SynchronizationContext.Current;
         }
 
         /// <summary>

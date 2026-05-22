@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using KUtilitiesCore.MVVM;
 
 namespace KUtilitiesCore.MVVMTests.EventCommandBinder.Models
@@ -42,7 +43,15 @@ namespace KUtilitiesCore.MVVMTests.EventCommandBinder.Models
         public bool IsToggleEnabled
         {
             get => _isToggleEnabled;
-            set => this.SetVMValue(ref _isToggleEnabled, value);
+            set => this.SetVMValue(ref _isToggleEnabled, value, onPropertyChanged: OnIsToggleEnabledChanged);
+        }
+        /// <summary>
+        /// Muestra en Debug que hubo un cambio
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        private void OnIsToggleEnabledChanged()
+        {
+            Debug.WriteLine("IsToggleEnabled: Cambio!!");
         }
 
         /// <summary>
