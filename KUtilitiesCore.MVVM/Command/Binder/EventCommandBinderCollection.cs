@@ -54,6 +54,7 @@ namespace KUtilitiesCore.MVVM.Command.Binder
             where T : class
         {
             _binders.Add(new EventCommandBinder<T>(targetObject, eventName, targetStatus, command));
+            _viewModel.RegisterCommand(command);
         }
 
         /// <summary>

@@ -175,7 +175,7 @@ namespace KUtilitiesCore.MVVMTests.EventCommandBinder
             binder.BindCommand(button, "Click", status => { 
                 lastStatus = status; 
                 callCount++; 
-            }, vm => vm.ExecuteAction(), "ExecuteAction");
+            }, vm => vm.ExecuteAction());
             
             viewModel.ToggleState(); // false
 

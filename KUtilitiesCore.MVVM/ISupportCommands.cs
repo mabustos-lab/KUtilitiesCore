@@ -19,7 +19,7 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         /// <typeparam name="TCommand">Tipo de comando a registrar.</typeparam>
         /// <param name="command">El comando a registrar.</param>
-        void RegisterCommand<TCommand>(TCommand command) where TCommand : RelayCommandBase;
+        void RegisterCommand<TCommand>(TCommand command) where TCommand : IViewModelCommand;
 
         /// <summary>
         /// Itera sobre los comandos registrados y notifica que su estado de ejecución puede haber cambiado.
