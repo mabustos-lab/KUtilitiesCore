@@ -57,7 +57,8 @@ namespace KUtilitiesCore.MVVM.Command
         /// Crea un comando que ejecuta un método con parámetro en el ViewModel. La lógica
         /// CanExecute se busca por reflexión.
         /// </summary>
-        /// <param name="commandName">Texto que representa el comando</param>
+        /// <param name="customCommandName">Representa el nombre del comando, si es nulo
+        /// o vasio el texto sera el mismo que el metodoo de ejecución del comando</param>
         /// <param name="viewModel">Instancia del ViewModel.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar con parámetro.</param>
         /// <param name="parameterPropertyExpression">
@@ -68,12 +69,12 @@ namespace KUtilitiesCore.MVVM.Command
         /// Si viewModel, executeExpression o parameterPropertyExpression son nulos.
         /// </exception>
         public static RelayCommand<TViewModel, TParam> Create(
-            TViewModel viewModel,string commandName,
+            TViewModel viewModel,
             Expression<Action<TViewModel, TParam?>> executeExpression,
-            Expression<Func<TViewModel, TParam>> parameterPropertyExpression)
+            Expression<Func<TViewModel, TParam>> parameterPropertyExpression,
+            string customCommandName = "")
         {
-            if (string.IsNullOrEmpty(commandName))
-                throw new ArgumentNullException(nameof(commandName));
+            
             if (viewModel == null)
                 throw new ArgumentNullException(nameof(viewModel));
             if (executeExpression == null)
@@ -81,7 +82,7 @@ namespace KUtilitiesCore.MVVM.Command
             if (parameterPropertyExpression == null)
                 throw new ArgumentNullException(nameof(parameterPropertyExpression));
 
-            RelayCommand<TViewModel, TParam> relayCommand = new(commandName);
+            RelayCommand<TViewModel, TParam> relayCommand = new(customCommandName);
             relayCommand.InitializeMemberMetaData(viewModel, parameterPropertyExpression);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 1);
 
@@ -262,24 +263,27 @@ namespace KUtilitiesCore.MVVM.Command
         /// <summary>
         /// Crea un comando que ejecuta un método sin parámetros en el ViewModel. La lógica
         /// CanExecute se busca automáticamente por reflexión.
-        /// </summary>
-        /// <param name="commandName">Texto que representa el comando</param>
+        /// </summary>        
         /// <param name="viewModel">Instancia del ViewModel.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar.</param>
         /// <returns>Instancia de RelayCommand configurada.</returns>
         /// <exception cref="ArgumentNullException">Si viewModel o executeExpression son nulos.</exception>
+        /// <param name="customCommandName">Representa el nombre del comando, si es nulo
+        /// o vasio el texto sera el mismo que el metodoo de ejecución del comando.
+        /// </param>
         public static RelayCommand<TViewModel> Create(
-            TViewModel viewModel,string commandName,
-            Expression<Action<TViewModel>> executeExpression)
+            TViewModel viewModel,
+            Expression<Action<TViewModel>> executeExpression,
+            string customCommandName = ""
+            )
         {
-            if (string.IsNullOrEmpty(commandName))
-                throw new ArgumentNullException(nameof(commandName));
+            
             if (viewModel == null)
                 throw new ArgumentNullException(nameof(viewModel));
             if (executeExpression == null)
                 throw new ArgumentNullException(nameof(executeExpression));
 
-            RelayCommand<TViewModel> relayCommand = new(commandName);
+            RelayCommand<TViewModel> relayCommand = new(customCommandName);
             relayCommand.InitializeCommandMetadata(executeExpression, expectedParameters: 0);
 
             // Buscar el método CanExecute usando reflexión

@@ -32,33 +32,30 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         /// Inicializa una nueva instancia de la clase <see cref="EventCommandBinder{T}"/>.
         /// </summary>
         /// <param name="targetObject">El objeto que expone el evento (ej. un control de UI).</param>
-        /// <param name="eventExpression">
-        /// Una expresión lambda que identifica el evento a enlazar (ej. c =&gt; c.Click).
-        /// </param>
+        /// <param name="eventName">El nombre del evento a enlazar (ej. "Click").</param>
         /// <param name="targetStatus">
-        /// Establece el estado del objeto si permite ejecutar o no el comando.
+        /// Acción que establece el estado del objeto si permite ejecutar o no el comando.
         /// </param>
         /// <param name="command">El comando que se ejecutará cuando el evento se dispare.</param>
         /// <exception cref="ArgumentNullException">
-        /// Se lanza si targetObject, eventExpression o command son nulos.
+        /// Se lanza si targetObject, eventName o command son nulos.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Se lanza si la expresión no apunta a un evento válido en el objeto de destino.
+        /// Se lanza si el evento especificado no fue encontrado en el objeto de destino.
         /// </exception>
-        public EventCommandBinder(T targetObject, Expression<Func<T, Delegate>> eventExpression,
+        public EventCommandBinder(T targetObject, string eventName,
             Action<bool> targetStatus, IViewModelCommand command)
         {
             _targetObject = targetObject ?? throw new ArgumentNullException(nameof(targetObject));
             _command = command ?? throw new ArgumentNullException(nameof(command));
 
-            if (eventExpression == null)
+            if (string.IsNullOrEmpty(eventName))
             {
-                throw new ArgumentNullException(nameof(eventExpression));
+                throw new ArgumentNullException(nameof(eventName));
             }
             _targetStatus = targetStatus;
-            string eventName = GetEventNameFromExpression(eventExpression);
             _eventInfo = _targetObject.GetType().GetEvent(eventName)
-                         ?? throw new ArgumentException($"El evento '{eventName}' no fue encontrado en el tipo '{typeof(T).Name}'.", nameof(eventExpression));
+                         ?? throw new ArgumentException($"El evento '{eventName}' no fue encontrado en el tipo '{typeof(T).Name}'.", nameof(eventName));
 
             // Se crea un delegado al manejador de eventos de instancia. Esto es más limpio y seguro
             // que usar reflexión para buscar el método por nombre.
@@ -85,18 +82,6 @@ namespace KUtilitiesCore.MVVM.Command.Binder
 
             _eventInfo.RemoveEventHandler(_targetObject, _eventHandler);
             _isDisposed = true;
-        }
-
-        /// <summary>
-        /// Extrae el nombre del miembro (evento) de la expresión lambda de forma segura.
-        /// </summary>
-        private static string GetEventNameFromExpression(Expression<Func<T, Delegate>> expression)
-        {
-            if (expression.Body is not MemberExpression memberExpression)
-            {
-                throw new ArgumentException("La expresión debe ser una expresión de miembro que apunte a un evento.", nameof(expression));
-            }
-            return memberExpression.Member.Name;
         }
 
         private bool GetCanExecuteLogic()
@@ -127,6 +112,5 @@ namespace KUtilitiesCore.MVVM.Command.Binder
             else
                 _targetStatus?.Invoke(GetCanExecuteLogic());
         }
-
     }
 }
