@@ -324,7 +324,9 @@ namespace KUtilitiesCore.MVVM.Command
         {
             // Estrategia 1: Buscar por atributo [CanExecuteAttribute]
             var attribute = executeMethod.GetCustomAttribute<CanExecuteAttribute>();
-            string canExecuteName = attribute?.MethodName ?? $"Can{executeMethod.Name}";
+            string canExecuteName = attribute?.MethodName ?? string.Empty;
+            if(string.IsNullOrEmpty(canExecuteName))
+                canExecuteName = $"Can{executeMethod.Name}";
 
             // Estrategia 2: Buscar por convención "Can" + Nombre del método
             var bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
