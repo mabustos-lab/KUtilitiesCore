@@ -15,7 +15,7 @@ namespace KUtilitiesCore.MVVM.Command
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="RelayCommandBase"/>.
         /// </summary>
-        protected RelayCommandBase(string commandName)
+        protected RelayCommandBase(string commandName = "")
         {
             CommandName = commandName;
         }
@@ -117,7 +117,8 @@ namespace KUtilitiesCore.MVVM.Command
         {
             if (expression.Body is MethodCallExpression methodCall)
             {
-                CommandName = methodCall.Method.Name;
+                if (string.IsNullOrEmpty(CommandName))
+                    CommandName = methodCall.Method.Name;
             }
 
             IsParametrizedCommand = expectedParameters > 0;
