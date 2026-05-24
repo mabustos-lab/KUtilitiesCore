@@ -50,6 +50,7 @@ namespace KUtilitiesCore.Tracking
         /// </summary>
         public void BeginEdit()
         {
+            if (_snapshotStack.Count > 0) return;
             var snapshot = CreateCleanSnapshot();
             _snapshotStack.Push(snapshot);
         }
