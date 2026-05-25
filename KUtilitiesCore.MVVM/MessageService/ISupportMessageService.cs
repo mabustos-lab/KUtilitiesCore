@@ -34,23 +34,55 @@ namespace KUtilitiesCore.MVVM.MessageService
         /// <param name="caption">El título de la ventana del mensaje (por defecto "Error").</param>
         /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
         ValueTask ShowErrorAsync(string message, string caption = "Error");
+        /// <summary>
+        /// Muestra un mensaje con un tipo e icono específicos de forma asíncrona.
+        /// </summary>
+        /// <param name="message">El contenido del mensaje.</param>
+        /// <param name="caption">El título de la ventana del mensaje.</param>
+        /// <param name="type">El tipo de mensaje (<see cref="MessageType"/>).</param>
+        /// <param name="icon">El icono a mostrar (<see cref="MessageIcon"/>).</param>
+        /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
         ValueTask ShowAsync(string message, string caption, MessageType type, MessageIcon icon = MessageIcon.None);
 
+        /// <summary>
+        /// Muestra un mensaje de confirmación al usuario y devuelve el resultado de forma asíncrona.
+        /// </summary>
+        /// <param name="message">La pregunta o mensaje de confirmación.</param>
+        /// <param name="caption">El título de la ventana del mensaje.</param>
+        /// <param name="icon">El icono de pregunta a mostrar (por defecto <see cref="MessageIcon.Question"/>).</param>
+        /// <returns>Una <see cref="ValueTask{Boolean}"/> que devuelve true si el usuario confirma, de lo contrario false.</returns>
         ValueTask<bool> ConfirmAsync(string message, string caption, MessageIcon icon = MessageIcon.Question);
     }
+
+    /// <summary>
+    /// Define los iconos disponibles para mostrar en los servicios de mensajes.
+    /// </summary>
     public enum MessageIcon
     {
+        /// <summary>Sin icono.</summary>
         None,
+        /// <summary>Icono de información.</summary>
         Information,
+        /// <summary>Icono de advertencia.</summary>
         Warning,
+        /// <summary>Icono de error.</summary>
         Error,
+        /// <summary>Icono de pregunta.</summary>
         Question
     }
+
+    /// <summary>
+    /// Define las categorías o tipos de mensajes.
+    /// </summary>
     public enum MessageType
     {
+        /// <summary>Mensaje genérico sin categoría específica.</summary>
         Generic,
+        /// <summary>Mensaje de carácter informativo.</summary>
         Information,
+        /// <summary>Mensaje de advertencia sobre una posible situación anómala.</summary>
         Warning,
+        /// <summary>Mensaje que indica un error o fallo.</summary>
         Error
     }
 }
