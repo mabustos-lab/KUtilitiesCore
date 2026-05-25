@@ -1,5 +1,6 @@
 ﻿using KUtilitiesCore.Data;
 using KUtilitiesCore.MVVM.Command;
+using KUtilitiesCore.MVVM.MessageService;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -8,18 +9,36 @@ using System.Runtime.CompilerServices;
 namespace KUtilitiesCore.MVVM
 {
     /// <summary>
-    /// Clase base abstracta para ViewModels en aplicaciones MVVM. Gestiona validación de datos, estado de carga,
-    /// comunicación con el modelo del documento y registro de comandos.
+    /// Clase base abstracta para ViewModels en aplicaciones MVVM. Gestiona validación de datos,
+    /// estado de carga, comunicación con el modelo del documento y registro de comandos.
     /// </summary>
     public abstract class ViewModelHelperBase : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel, IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
         private readonly Dictionary<string, IViewModelCommand> _registeredCommands = [];
         private IViewModelDocumentOwner? documentOwner;
+
+        /// <inheritdoc/>
+        public ISupportMessageService? MessageService { get; internal set; }
+
         private ConcurrentDictionary<string, string> errorMessages = [];
         private bool hasValidationErrors;
-        private string _error = string.Empty;
         private bool isLoading;
         private object? parentViewModel;
+
+        public ViewModelHelperBase()
+        {
+        }
+
+        public ViewModelHelperBase(IViewModelDocumentOwner documentOwner, ISupportMessageService? messageService = null)
+        {
+            this.documentOwner = documentOwner;
+            if (messageService != null)
+            {
+                MessageService = messageService;
+            }
+            else if (documentOwner is ISupportMessageService service)
+                MessageService = service;
+        }
 
         /// <summary>
         /// Se dispara cuando cambia el estado de <see cref="IsLoading"/>.
@@ -33,6 +52,7 @@ namespace KUtilitiesCore.MVVM
         public event PropertyChangedEventHandler? PropertyChanged;
 
         private string _title = string.Empty;
+        private string _error = string.Empty;
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
@@ -42,7 +62,7 @@ namespace KUtilitiesCore.MVVM
             set
             {
                 documentOwner = value ?? throw new ArgumentNullException(nameof(value));
-                if(documentOwner != null)
+                if (documentOwner != null)
                     documentOwner.Content = this;
             }
         }
@@ -78,7 +98,8 @@ namespace KUtilitiesCore.MVVM
 #pragma warning disable CS8601 // Non-nullable field is uninitialized. Agregado por que persiste el mensaje
 
         /// <inheritdoc/>
-        public string Title { get => _title; set { this.SetVMValue(ref _title, value ?? string.Empty); } }
+        public string Title
+        { get => _title; set { this.SetVMValue(ref _title, value ?? string.Empty); } }
 
 #pragma warning restore CS8601
 
@@ -90,13 +111,19 @@ namespace KUtilitiesCore.MVVM
         {
             hasValidationErrors = false;
             _error = string.Empty;
-            if(errorMessages != null && !errorMessages.IsEmpty)
+            if (errorMessages != null && !errorMessages.IsEmpty)
                 errorMessages.Clear();
         }
 
-        void IViewModelDocumentContent.OnClose(CancelEventArgs e) { OnClose(e); }
+        void IViewModelDocumentContent.OnClose(CancelEventArgs e)
+        {
+            OnClose(e);
+        }
 
-        void IViewModelDocumentContent.OnDestroy() { OnDestroy(); }
+        void IViewModelDocumentContent.OnDestroy()
+        {
+            OnDestroy();
+        }
 
         /// <inheritdoc/>
         public abstract void OnDestroy();
@@ -119,8 +146,8 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Registra un comando para que su estado CanExecute sea re-evaluado automáticamente cuando una propiedad del ViewModel
-        /// cambie.
+        /// Registra un comando para que su estado CanExecute sea re-evaluado automáticamente cuando
+        /// una propiedad del ViewModel cambie.
         /// </summary>
         /// <typeparam name="TCommand">Tipo de comando a registrar.</typeparam>
         /// <param name="command">El comando a registrar.</param>
@@ -153,7 +180,7 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         void ISupportCommands.UpdateRegisteredCommands()
         {
-            foreach(var command in _registeredCommands.Values)
+            foreach (var command in _registeredCommands.Values)
             {
                 ((RelayCommandBase)command).RaiseCanExecuteChanged();
             }
@@ -173,18 +200,19 @@ namespace KUtilitiesCore.MVVM
         [Display(AutoGenerateField = false)]
         protected internal void SendMessageStatus(string message)
         {
-            if(IsLoading)
+            if (IsLoading)
                 MessageStatusLoadingChanged?.Invoke(this, message ?? string.Empty);
         }
 
         /// <summary>
         /// Cierra el documento actual usando el <see cref="DocumentOwner"/>.
         /// </summary>
-        protected virtual void Close() { DocumentOwner?.Close(this); }
+        protected virtual void Close()
+        { DocumentOwner?.Close(this); }
 
         /// <summary>
-        /// Permite establecer un mensaje de error personalizado para una propiedad específica. Implementar en clases
-        /// derivadas si se requiere lógica especial.
+        /// Permite establecer un mensaje de error personalizado para una propiedad específica.
+        /// Implementar en clases derivadas si se requiere lógica especial.
         /// </summary>
         /// <param name="sender">Instancia que genera el error.</param>
         /// <param name="columnName">Nombre de la propiedad con error.</param>
@@ -193,8 +221,8 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Permite establecer un mensaje de error general personalizado. Implementar en clases derivadas si se requiere
-        /// lógica especial.
+        /// Permite establecer un mensaje de error general personalizado. Implementar en clases
+        /// derivadas si se requiere lógica especial.
         /// </summary>
         /// <param name="sender">Instancia que genera el error.</param>
         protected virtual void CustomMessageError(IViewModelDataErrorInfo sender)
@@ -210,7 +238,8 @@ namespace KUtilitiesCore.MVVM
         /// <summary>
         /// Se invoca cuando cambia el estado de <see cref="IsLoading"/>.
         /// </summary>
-        protected virtual void OnIsLoadingChanged() { SendMessageStatus("Trabajando..."); }
+        protected virtual void OnIsLoadingChanged()
+        { SendMessageStatus("Trabajando..."); }
 
         /// <summary>
         /// Se invoca cuando cambia el objeto padre del ViewModel.
@@ -233,14 +262,15 @@ namespace KUtilitiesCore.MVVM
         {
             errorMessages ??= new ConcurrentDictionary<string, string>();
             string ret;
-            if(!errorMessages.ContainsKey(columnName))
+            if (!errorMessages.ContainsKey(columnName))
             {
                 ret = this.GetErrorText(columnName);
-                if(string.IsNullOrEmpty(ret))
+                if (string.IsNullOrEmpty(ret))
                     CustomColumnMessageError(this, columnName);
-            } else
+            }
+            else
                 ret = errorMessages?[columnName] ?? string.Empty;
-            if(!string.IsNullOrEmpty(ret))
+            if (!string.IsNullOrEmpty(ret))
                 errorMessages![columnName] = ret;
             return ret;
         }
