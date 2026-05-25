@@ -8,18 +8,16 @@ using System.Runtime.CompilerServices;
 namespace KUtilitiesCore.MVVM
 {
     /// <summary>
-    /// Clase base abstracta para ViewModels en aplicaciones MVVM. Gestiona validación de datos,
-    /// estado de carga, comunicación con el modelo del documento y registro de comandos.
+    /// Clase base abstracta para ViewModels en aplicaciones MVVM. Gestiona validación de datos, estado de carga,
+    /// comunicación con el modelo del documento y registro de comandos.
     /// </summary>
-    public abstract class ViewModelHelperBase
-        : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel,
-        IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
+    public abstract class ViewModelHelperBase : IViewModelHelper, ISupportParameter, ISupportCommands, ISupportParentViewModel, IViewModelDocumentContent, IViewModelDataErrorInfo, INotifyPropertyChanged
     {
         private readonly Dictionary<string, IViewModelCommand> _registeredCommands = [];
         private IViewModelDocumentOwner? documentOwner;
-        private string error = string.Empty;
         private ConcurrentDictionary<string, string> errorMessages = [];
         private bool hasValidationErrors;
+        private string _error = string.Empty;
         private bool isLoading;
         private object? parentViewModel;
 
@@ -44,18 +42,19 @@ namespace KUtilitiesCore.MVVM
             set
             {
                 documentOwner = value ?? throw new ArgumentNullException(nameof(value));
-                if (documentOwner != null)
+                if(documentOwner != null)
                     documentOwner.Content = this;
             }
         }
 
         /// <inheritdoc/>
-        string IDataErrorInfo.Error => error;
+        string IDataErrorInfo.Error => _error;
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
-        public bool HasValidationErrors
-         => !string.IsNullOrEmpty(error) || (errorMessages?.Count > 0) || hasValidationErrors;
+        public bool HasValidationErrors => !string.IsNullOrEmpty(_error) ||
+            (errorMessages?.Count > 0) ||
+            hasValidationErrors;
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
@@ -79,11 +78,7 @@ namespace KUtilitiesCore.MVVM
 #pragma warning disable CS8601 // Non-nullable field is uninitialized. Agregado por que persiste el mensaje
 
         /// <inheritdoc/>
-        public string Title
-        {
-            get => _title;
-            set { this.SetVMValue(ref _title, value ?? string.Empty); }
-        }
+        public string Title { get => _title; set { this.SetVMValue(ref _title, value ?? string.Empty); } }
 
 #pragma warning restore CS8601
 
@@ -94,20 +89,14 @@ namespace KUtilitiesCore.MVVM
         void IViewModelDataErrorInfo.ClearErrors()
         {
             hasValidationErrors = false;
-            error = string.Empty;
-            if (errorMessages != null && !errorMessages.IsEmpty)
+            _error = string.Empty;
+            if(errorMessages != null && !errorMessages.IsEmpty)
                 errorMessages.Clear();
         }
 
-        void IViewModelDocumentContent.OnClose(CancelEventArgs e)
-        {
-            OnClose(e);
-        }
+        void IViewModelDocumentContent.OnClose(CancelEventArgs e) { OnClose(e); }
 
-        void IViewModelDocumentContent.OnDestroy()
-        {
-            OnDestroy();
-        }
+        void IViewModelDocumentContent.OnDestroy() { OnDestroy(); }
 
         /// <inheritdoc/>
         public abstract void OnDestroy();
@@ -121,9 +110,7 @@ namespace KUtilitiesCore.MVVM
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
         public virtual void RaisePropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            OnPropertyChanged(propertyName);
-        }
+        { OnPropertyChanged(propertyName); }
 
         /// <inheritdoc/>
         [Display(AutoGenerateField = false)]
@@ -132,15 +119,13 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <summary>
-        /// Registra un comando para que su estado CanExecute sea re-evaluado automáticamente cuando
-        /// una propiedad del ViewModel cambie.
+        /// Registra un comando para que su estado CanExecute sea re-evaluado automáticamente cuando una propiedad del ViewModel
+        /// cambie.
         /// </summary>
         /// <typeparam name="TCommand">Tipo de comando a registrar.</typeparam>
         /// <param name="command">El comando a registrar.</param>
         void ISupportCommands.RegisterCommand<TCommand>(TCommand command)
-        {
-            _registeredCommands[command.CommandName] = command;
-        }
+        { _registeredCommands[command.CommandName] = command; }
 
         /// <inheritdoc/>
         void IViewModelDataErrorInfo.SetError(string propertyName, string errorMessage)
@@ -150,10 +135,7 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <inheritdoc/>
-        void IViewModelDataErrorInfo.SetError(string errorMessage)
-        {
-            error = errorMessage;
-        }
+        void IViewModelDataErrorInfo.SetError(string errorMessage) { _error = errorMessage; }
 
         /// <summary>
         /// Actualiza el estado de validación y comandos del ViewModel.
@@ -171,7 +153,7 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         void ISupportCommands.UpdateRegisteredCommands()
         {
-            foreach (var command in _registeredCommands.Values)
+            foreach(var command in _registeredCommands.Values)
             {
                 ((RelayCommandBase)command).RaiseCanExecuteChanged();
             }
@@ -182,8 +164,7 @@ namespace KUtilitiesCore.MVVM
         /// </summary>
         /// <param name="columnName">Nombre de la propiedad.</param>
         /// <returns>Mensaje de error, si existe.</returns>
-        internal virtual string GetErrorMessage(string columnName)
-                 => GetErrorMessageCore(columnName);
+        internal virtual string GetErrorMessage(string columnName) => GetErrorMessageCore(columnName);
 
         /// <summary>
         /// Envía un mensaje de estado cuando <see cref="IsLoading"/> es verdadero.
@@ -192,34 +173,33 @@ namespace KUtilitiesCore.MVVM
         [Display(AutoGenerateField = false)]
         protected internal void SendMessageStatus(string message)
         {
-            if (IsLoading)
-                MessageStatusLoadingChanged?.Invoke(this, message ?? "");
+            if(IsLoading)
+                MessageStatusLoadingChanged?.Invoke(this, message ?? string.Empty);
         }
 
         /// <summary>
         /// Cierra el documento actual usando el <see cref="DocumentOwner"/>.
         /// </summary>
-        protected virtual void Close()
-        {
-            DocumentOwner?.Close(this);
-        }
+        protected virtual void Close() { DocumentOwner?.Close(this); }
 
         /// <summary>
-        /// Permite establecer un mensaje de error personalizado para una propiedad específica.
-        /// Implementar en clases derivadas si se requiere lógica especial.
+        /// Permite establecer un mensaje de error personalizado para una propiedad específica. Implementar en clases
+        /// derivadas si se requiere lógica especial.
         /// </summary>
         /// <param name="sender">Instancia que genera el error.</param>
         /// <param name="columnName">Nombre de la propiedad con error.</param>
         protected virtual void CustomColumnMessageError(IViewModelDataErrorInfo sender, string columnName)
-        { }
+        {
+        }
 
         /// <summary>
-        /// Permite establecer un mensaje de error general personalizado. Implementar en clases
-        /// derivadas si se requiere lógica especial.
+        /// Permite establecer un mensaje de error general personalizado. Implementar en clases derivadas si se requiere
+        /// lógica especial.
         /// </summary>
         /// <param name="sender">Instancia que genera el error.</param>
         protected virtual void CustomMessageError(IViewModelDataErrorInfo sender)
-        { }
+        {
+        }
 
         /// <summary>
         /// Ejecuta lógica personalizada cuando se inicia la operación de cierre.
@@ -230,10 +210,7 @@ namespace KUtilitiesCore.MVVM
         /// <summary>
         /// Se invoca cuando cambia el estado de <see cref="IsLoading"/>.
         /// </summary>
-        protected virtual void OnIsLoadingChanged()
-        {
-            SendMessageStatus("Trabajando...");
-        }
+        protected virtual void OnIsLoadingChanged() { SendMessageStatus("Trabajando..."); }
 
         /// <summary>
         /// Se invoca cuando cambia el objeto padre del ViewModel.
@@ -256,15 +233,14 @@ namespace KUtilitiesCore.MVVM
         {
             errorMessages ??= new ConcurrentDictionary<string, string>();
             string ret;
-            if (!errorMessages.ContainsKey(columnName))
+            if(!errorMessages.ContainsKey(columnName))
             {
                 ret = this.GetErrorText(columnName);
-                if (string.IsNullOrEmpty(ret))
+                if(string.IsNullOrEmpty(ret))
                     CustomColumnMessageError(this, columnName);
-            }
-            else
+            } else
                 ret = errorMessages?[columnName] ?? string.Empty;
-            if (!string.IsNullOrEmpty(ret))
+            if(!string.IsNullOrEmpty(ret))
                 errorMessages![columnName] = ret;
             return ret;
         }
@@ -276,9 +252,9 @@ namespace KUtilitiesCore.MVVM
         {
             ((IViewModelDataErrorInfo)(this)).ClearErrors();
             CustomMessageError(this);
-            hasValidationErrors = DataErrorInfoExt.HasErrors(this)
-                || !string.IsNullOrEmpty(error)
-                || (errorMessages != null && !errorMessages.IsEmpty);
+            hasValidationErrors = DataErrorInfoExt.HasErrors(this) ||
+                !string.IsNullOrEmpty(_error) ||
+                (errorMessages != null && !errorMessages.IsEmpty);
         }
 
         /// <summary>
@@ -308,7 +284,6 @@ namespace KUtilitiesCore.MVVM
         }
 
         /// <inheritdoc/>
-        bool ISupportCommands.RemoveRegisteredCommand(string commandName)
-        => _registeredCommands.Remove(commandName);
+        bool ISupportCommands.RemoveRegisteredCommand(string commandName) => _registeredCommands.Remove(commandName);
     }
 }

@@ -53,36 +53,4 @@ namespace KUtilitiesCore.MVVM.MessageService
         /// <returns>Una <see cref="ValueTask{Boolean}"/> que devuelve true si el usuario confirma, de lo contrario false.</returns>
         ValueTask<bool> ConfirmAsync(string message, string caption, MessageIcon icon = MessageIcon.Question);
     }
-
-    /// <summary>
-    /// Define los iconos disponibles para mostrar en los servicios de mensajes.
-    /// </summary>
-    public enum MessageIcon
-    {
-        /// <summary>Sin icono.</summary>
-        None,
-        /// <summary>Icono de información.</summary>
-        Information,
-        /// <summary>Icono de advertencia.</summary>
-        Warning,
-        /// <summary>Icono de error.</summary>
-        Error,
-        /// <summary>Icono de pregunta.</summary>
-        Question
-    }
-
-    /// <summary>
-    /// Define las categorías o tipos de mensajes.
-    /// </summary>
-    public enum MessageType
-    {
-        /// <summary>Mensaje genérico sin categoría específica.</summary>
-        Generic,
-        /// <summary>Mensaje de carácter informativo.</summary>
-        Information,
-        /// <summary>Mensaje de advertencia sobre una posible situación anómala.</summary>
-        Warning,
-        /// <summary>Mensaje que indica un error o fallo.</summary>
-        Error
-    }
 }
