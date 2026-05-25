@@ -29,6 +29,7 @@
 </ItemGroup>
 <ItemGroup>
   <PackageReference Include="System.ComponentModel.Annotations" Version="5.*" />
+  <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" Condition="'$(TargetFramework)' == 'net48'" />
 </ItemGroup>
 <ItemGroup>
   <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
