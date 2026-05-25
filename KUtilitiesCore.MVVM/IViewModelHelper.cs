@@ -21,6 +21,6 @@ namespace KUtilitiesCore.MVVM
         /// Establece la funcionalidad para mostrar mensajes en la interfaz de usuario
         /// de forma asíncrona e independiente de la tecnología de UI.
         /// </summary>
-        ISupportMessageService MessageService { get; }
+        ISupportMessageService? MessageService { get; }
     }
 }
