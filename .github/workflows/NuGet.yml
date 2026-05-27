@@ -32,37 +32,40 @@ jobs:
 
       - name: Build all projects (except tests)
         run: |
+          # Obtén la versión desde el tag (elimina el prefijo 'v' si existe)
+          $tag = $env:GITHUB_REF_NAME -replace '^v', ''
+
           $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
             $_.FullName -notmatch 'Test|Tests|\.Tests' } # Excluye proyectos de pruebas
           foreach ($proj in $projects) {
             $isNet48 = Select-String -Path $proj.FullName -Pattern '<TargetFramework.*>net48' -Quiet
             if ($isNet48) {
-              msbuild "$($proj.FullName)" /p:Configuration=Release /t:Restore,Build
+              msbuild "$($proj.FullName)" /p:Configuration=Release /p:Version=$tag /t:Restore,Build
             } else {
-              dotnet build "$($proj.FullName)" --configuration Release --no-restore
+              dotnet build "$($proj.FullName)" --configuration Release --no-restore /p:Version=$tag
             }
           }
         shell: pwsh
 
       - name: Pack all projects (except tests)
         run: |
-          # Obtén la versión desde el tag (maneja tags tipo v1.2.3 o release-1.2.3)
-          $tagRaw = '${{ github.ref }}'
-          $tag = if ($tagRaw -match 'refs/tags/(?:v|release-)?([\d\.]+)') { $matches[1] } else { $tagRaw -replace 'refs/tags/', '' }
+          # Obtén la versión desde el tag (elimina el prefijo 'v' si existe)
+          $tag = $env:GITHUB_REF_NAME -replace '^v', ''
+          
           $projects = Get-ChildItem -Path . -Recurse -Include *.csproj | Where-Object {
                       $_.FullName -notmatch 'Test|Tests|\.Tests'} # Excluye proyectos de pruebas
           
           foreach ($proj in $projects) {
             $isNet48 = Select-String -Path $proj.FullName -Pattern '<TargetFramework.*>net48' -Quiet
             if ($isNet48) {
-              msbuild "$($proj.FullName)" /p:Configuration=Release /p:PackageVersion=$tag /t:Pack
+              msbuild "$($proj.FullName)" /p:Configuration=Release /p:Version=$tag /p:PackageVersion=$tag /t:Pack
               $projDir = Split-Path $proj.FullName -Parent
               $pkgFiles = Get-ChildItem -Path "$projDir\bin\Release" -Filter *.nupkg
               foreach ($pkg in $pkgFiles) {
                 Move-Item $pkg.FullName ./nupkgs/ -Force
               }
             } else {
-              dotnet pack "$($proj.FullName)" --configuration Release --no-build --output ./nupkgs /p:PackageVersion=$tag
+              dotnet pack "$($proj.FullName)" --configuration Release --no-build --output ./nupkgs /p:Version=$tag /p:PackageVersion=$tag
             }
           }
         shell: pwsh

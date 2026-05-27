@@ -364,3 +364,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /.opencode
 /graphify-out
+/.codegraph/daemon.pid
