@@ -15,25 +15,27 @@ namespace KUtilitiesCore.MVVM.MessageService
         /// Muestra un mensaje de información al usuario de forma asíncrona.
         /// </summary>
         /// <param name="message">El contenido del mensaje a mostrar.</param>
-        /// <param name="caption">El título de la ventana del mensaje (por defecto "Información").</param>
         /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
-        ValueTask ShowInfoAsync(string message, string caption = "Información");
+        ValueTask ShowInfoAsync(string message);
 
         /// <summary>
         /// Muestra un mensaje de advertencia al usuario de forma asíncrona.
         /// </summary>
         /// <param name="message">El contenido del mensaje de advertencia.</param>
-        /// <param name="caption">El título de la ventana del mensaje (por defecto "Advertencia").</param>
         /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
-        ValueTask ShowWarningAsync(string message, string caption = "Advertencia");
-
+        ValueTask ShowWarningAsync(string message);
+        /// <summary>
+        /// Muestra un mensaje de advertencia al usuario de forma asíncrona.
+        /// </summary>
+        /// <param name="message">El contenido del mensaje de advertencia.</param>
+        /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
+        ValueTask ShowSuccessAsync(string message); 
         /// <summary>
         /// Muestra un mensaje de error al usuario de forma asíncrona.
         /// </summary>
         /// <param name="message">El contenido del mensaje de error.</param>
-        /// <param name="caption">El título de la ventana del mensaje (por defecto "Error").</param>
         /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
-        ValueTask ShowErrorAsync(string message, string caption = "Error");
+        ValueTask ShowErrorAsync(string message);
         /// <summary>
         /// Muestra un mensaje con un tipo e icono específicos de forma asíncrona.
         /// </summary>
