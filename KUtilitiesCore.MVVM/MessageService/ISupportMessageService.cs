@@ -37,20 +37,15 @@ namespace KUtilitiesCore.MVVM.MessageService
         /// <summary>
         /// Muestra un mensaje con un tipo e icono específicos de forma asíncrona.
         /// </summary>
-        /// <param name="message">El contenido del mensaje.</param>
-        /// <param name="caption">El título de la ventana del mensaje.</param>
-        /// <param name="type">El tipo de mensaje (<see cref="MessageType"/>).</param>
-        /// <param name="icon">El icono a mostrar (<see cref="MessageIcon"/>).</param>
+        /// <param name="messageArgs">Propiedades que contienen la información del mensaje que se mostrará.</param>
         /// <returns>Una <see cref="ValueTask"/> que representa la operación asíncrona.</returns>
-        ValueTask ShowAsync(string message, string caption, MessageType type, MessageIcon icon = MessageIcon.None);
+        ValueTask ShowAsync(MessageArgs messageArgs);
 
         /// <summary>
         /// Muestra un mensaje de confirmación al usuario y devuelve el resultado de forma asíncrona.
         /// </summary>
-        /// <param name="message">La pregunta o mensaje de confirmación.</param>
-        /// <param name="caption">El título de la ventana del mensaje.</param>
-        /// <param name="icon">El icono de pregunta a mostrar (por defecto <see cref="MessageIcon.Question"/>).</param>
+        /// <param name="messageArgs">Propiedades que contienen la información del mensaje que se mostrará.</param>
         /// <returns>Una <see cref="ValueTask{Boolean}"/> que devuelve true si el usuario confirma, de lo contrario false.</returns>
-        ValueTask<bool> ConfirmAsync(string message, string caption, MessageIcon icon = MessageIcon.Question);
+        ValueTask<bool> ConfirmAsync(MessageArgs messageArgs);
     }
 }
