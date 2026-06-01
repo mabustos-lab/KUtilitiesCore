@@ -58,6 +58,25 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         }
 
         /// <summary>
+        /// Enlaza un comando mediante un proceso manual de suscripción y desuscripción.
+        /// Útil para controles de terceros con firmas de eventos complejas.
+        /// </summary>
+        /// <typeparam name="T">Tipo del objeto de destino.</typeparam>
+        /// <typeparam name="THandler">Tipo del delegado del evento.</typeparam>
+        /// <param name="targetObject">Objeto de destino.</param>
+        /// <param name="subscribe">Acción para suscribir el manejador.</param>
+        /// <param name="unsubscribe">Acción para desuscribir el manejador.</param>
+        /// <param name="targetStatus">Acción para actualizar el estado del objetivo.</param>
+        /// <param name="command">Comando a ejecutar.</param>
+        public void BindCommand<T, THandler>(T targetObject, Action<T, THandler> subscribe, 
+            Action<T, THandler> unsubscribe, Action<bool> targetStatus, IViewModelCommand command)
+            where T : class
+        {
+            _binders.Add(new ManualCommandBinder<T, THandler>(targetObject, subscribe, unsubscribe, targetStatus, command));
+            _viewModel.RegisterCommand(command);
+        }
+
+        /// <summary>
         /// Enlaza de forma segura y desechable un evento de un objeto a un comando del ViewModel, usando una expresión de método sin parámetros.
         /// </summary>
         /// <typeparam name="T">Tipo del objeto que expone el evento.</typeparam>
@@ -84,13 +103,13 @@ namespace KUtilitiesCore.MVVM.Command.Binder
         /// </summary>
         /// <typeparam name="T">Tipo del objeto que expone el evento.</typeparam>
         /// <typeparam name="TParam">Tipo del parámetro del comando.</typeparam>
-        /// <param name="targetObject">El objeto que expone el evento (ej. un control de UI).</param>
+        /// <param name="targetObject">El objeto que expone el evento (ej. uncontrol de UI).</param>
         /// <param name="eventName">Nombre del evento a enlazar (ej. "Click").</param>
         /// <param name="targetStatus">Acción que establece el estado del objeto según si el comando puede ejecutarse.</param>
         /// <param name="executeExpression">Expresión que representa el método a ejecutar en el ViewModel con parámetro.</param>
         /// <param name="parameterPropertyExpression">Expresión que representa la propiedad del parámetro en el ViewModel.</param>
         /// <param name="customCommandName">Representa el nombre del comando, si es nulo
-        /// o vasio el texto sera el mismo que el metodoo de ejecución del comando.
+        /// o vasio el texto sera el mismo que el metodoo de ejecución el comando.
         /// </param>
         public void BindCommand<T, TParam>(T targetObject, string eventName,
             Action<bool> targetStatus, Expression<Action<TViewModel, TParam?>> executeExpression,
