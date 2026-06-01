@@ -31,13 +31,11 @@ namespace KUtilitiesCore.MVVM
 
         public ViewModelHelperBase(IViewModelDocumentOwner documentOwner, ISupportMessageService? messageService = null)
         {
-            this.documentOwner = documentOwner;
+            this.DocumentOwner = documentOwner;
             if (messageService != null)
             {
                 MessageService = messageService;
             }
-            else if (documentOwner is ISupportMessageService service)
-                MessageService = service;
         }
 
         /// <summary>
@@ -64,6 +62,8 @@ namespace KUtilitiesCore.MVVM
                 documentOwner = value ?? throw new ArgumentNullException(nameof(value));
                 if (documentOwner != null)
                     documentOwner.Content = this;
+                if(DocumentOwner != null && documentOwner is ISupportMessageService service)
+                    MessageService = service;
             }
         }
 
