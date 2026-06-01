@@ -31,6 +31,8 @@ namespace KUtilitiesCore.MVVM.Command.Binder
                 _eventInfo.EventHandlerType!,
                 this,
                 nameof(OnEventTriggered));
+            
+            base.Initialize(); // Explicitly call initialize to trigger Subscribe()
         }
 
         protected override void Subscribe()

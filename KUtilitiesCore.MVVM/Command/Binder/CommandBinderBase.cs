@@ -25,6 +25,15 @@ namespace KUtilitiesCore.MVVM.Command.Binder
             CapturedSyncContext = SynchronizationContext.Current;
 
             Command.CanExecuteChanged += UpdateTargetStatus;
+            // Subscribe(); // Removed from constructor
+        }
+
+        /// <summary>
+        /// Fuerza la suscripción al evento o mecanismo de disparo del comando. 
+        /// Debe llamarse después de que el objeto haya sido completamente inicializado si es necesario.
+        /// </summary>
+        public void Initialize()
+        {
             Subscribe();
         }
 

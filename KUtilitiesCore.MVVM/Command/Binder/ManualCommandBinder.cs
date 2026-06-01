@@ -23,6 +23,8 @@ namespace KUtilitiesCore.MVVM.Command.Binder
             _unsubscribeAction = unsubscribe ?? throw new ArgumentNullException(nameof(unsubscribe));
 
             _handler = CreateHandler();
+            
+            base.Initialize(); // Explicitly call initialize to trigger Subscribe()
         }
 
         protected override void Subscribe()
