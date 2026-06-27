@@ -31,6 +31,17 @@ namespace KUtilitiesCore.Dal.Helpers
         IEnumerable<TResult> GetResult<TResult>(int index = 0) where TResult : class, new();
 
         /// <summary>
+        /// Recupera un conjunto de resultados fuertemente tipado por índice, sin imponer restricciones sobre el tipo.
+        /// Diseñado para usarse con resultados mapeados mediante delegado (<see cref="IDataReaderConverter.WithResult{TResult}(Func{DataTable, IEnumerable{TResult}})"/>),
+        /// permitiendo recuperar structs, records o cualquier tipo sin constructor sin parámetros.
+        /// </summary>
+        /// <typeparam name="TResult">El tipo del conjunto de resultados. No tiene restricciones de tipo.</typeparam>
+        /// <param name="index">Índice del conjunto de resultados (0-based)</param>
+        /// <returns>Un enumerable del tipo especificado.</returns>
+        /// <exception cref="InvalidCastException">Si el resultado en el índice especificado no es una colección de <typeparamref name="TResult"/>.</exception>
+        IEnumerable<TResult> GetResultUnsafe<TResult>(int index = 0);
+
+        /// <summary>
         /// Recupera un DataTable por índice.
         /// </summary>
         /// <param name="index">Índice del conjunto de resultados (0-based)</param>
