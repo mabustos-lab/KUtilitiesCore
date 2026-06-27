@@ -35,4 +35,30 @@ namespace KUtilitiesCore.Dal.Helpers
             return ReaderResultSet.DataTableToEnumerable<TResult>(dataTable, _options).ToList();
         }
     }
+
+    /// <summary>
+    /// Estrategia que permite mapear un DataTable a una colección de objetos mediante un delegado personalizado.
+    /// Esta estrategia no impone restricciones de tipo, permitiendo la creación de structs, records o cualquier
+    /// tipo de objeto sin necesidad de un constructor sin parámetros.
+    /// </summary>
+    /// <typeparam name="TResult">El tipo de objeto al que se mapeará cada fila del DataTable.</typeparam>
+    internal class DelegateMappingStrategy<TResult> : IMappingStrategy
+    {
+        private readonly Func<DataTable, IEnumerable<TResult>> _mapper;
+
+        /// <summary>
+        /// Inicializa una nueva instancia de <see cref="DelegateMappingStrategy{TResult}"/> con el delegado de mapeo especificado.
+        /// </summary>
+        /// <param name="mapper">Función que recibe un DataTable y retorna una colección de objetos del tipo <typeparamref name="TResult"/>.</param>
+        public DelegateMappingStrategy(Func<DataTable, IEnumerable<TResult>> mapper)
+        {
+            _mapper = mapper;
+        }
+
+        /// <inheritdoc/>
+        public object Map(DataTable dataTable)
+        {
+            return _mapper(dataTable).ToList();
+        }
+    }
 }

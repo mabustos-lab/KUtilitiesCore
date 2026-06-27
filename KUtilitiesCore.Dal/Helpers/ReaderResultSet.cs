@@ -80,6 +80,19 @@ namespace KUtilitiesCore.Dal.Helpers
 
             throw new InvalidCastException($"No se puede convertir el resultado en el índice {index} al tipo {typeof(TResult).Name}.");
         }
+
+        /// <inheritdoc/>
+        public IEnumerable<TResult> GetResultUnsafe<TResult>(int index = 0)
+        {
+            ValidateIndex(index);
+
+            var result = _results[index];
+
+            if (result is IEnumerable<TResult> typedResult)
+                return typedResult;
+
+            throw new InvalidCastException($"No se puede convertir el resultado en el índice {index} al tipo {typeof(TResult).Name}. Use GetResultUnsafe solo con resultados mapeados mediante delegado (WithResult).");
+        }
         internal void SetParams(IDaoParameterCollection parameters = null)
         {
             if (parameters != null && parameters.Count > 0)

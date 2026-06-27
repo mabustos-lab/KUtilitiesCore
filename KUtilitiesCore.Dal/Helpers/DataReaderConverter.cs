@@ -74,6 +74,17 @@ namespace KUtilitiesCore.Dal.Helpers
             return this;
         }
 
+        /// <inheritdoc/>
+        public IDataReaderConverter WithResult<TResult>(Func<DataTable, IEnumerable<TResult>> mapper)
+        {
+            if (mapper == null)
+                throw new ArgumentNullException(nameof(mapper), "El delegado de mapeo no puede ser nulo.");
+
+            _mappingStrategies.Enqueue(new DelegateMappingStrategy<TResult>(mapper));
+            _useDefaultDataTable = false;
+            return this;
+        }
+
         /// <summary>
         /// Establece los parámetros utilizados para la consulta, que se pasarán al ReaderResultSet.
         /// </summary>
