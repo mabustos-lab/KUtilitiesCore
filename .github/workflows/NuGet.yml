@@ -87,7 +87,7 @@ jobs:
         uses: NuGet/login@v1
         id: login
         with:
-          user: mabustos-lab # NOTA: Asegúrate de que este sea tu usuario u organización configurado en NuGet.org
+          user: mabustos # NOTA: Asegúrate de que este sea tu usuario u organización configurado en NuGet.org
 
       - name: Push NuGet packages
         run: |
