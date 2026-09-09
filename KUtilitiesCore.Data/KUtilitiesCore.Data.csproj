@@ -16,7 +16,7 @@
 		<None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
