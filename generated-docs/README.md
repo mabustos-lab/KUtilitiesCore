@@ -31,8 +31,8 @@ El proyecto está dividido en módulos especializados para permitir un consumo s
 
 ## 🛠️ Instalación
 ### Prerrequisitos
-- .NET 8.0 SDK (para la mayoría de los módulos)
-- .NET Framework 4.8 (soporte legado en algunos módulos como MVVM y Encryption)
+- .NET 10 SDK (la solución fija la banda 10.x mediante `global.json`)
+- Windows para los módulos WinForms (`KUtilitiesCore.Data.Win`) y para DPAPI (`KUtilitiesCore.Encryption`)
 
 ### Build
 ```bash

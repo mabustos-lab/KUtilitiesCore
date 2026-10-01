@@ -24,7 +24,7 @@ Entorno: SDKs 8.0.300/8.0.425 y 10.0.200/10.0.401 instalados; no existe `global.
 **Goals:**
 
 - Ejecutar el salto completo a net10 de forma **incremental y verificable por capas**, respetando la cadena de dependencias para mantener la solución compilable en cada punto de control.
-- Dejar el repositorio en estado "0 warnings, 0 errores" bajo los analizadores del SDK 10.
+- Dejar el repositorio en estado "0 errores, 0 advertencias nuevas respecto de la línea base" bajo los analizadores del SDK 10 (decisión de PO confirmada durante la ejecución: la deuda preexistente de 712 warnings —sobre todo CS1591, docs XML faltantes— queda fuera de alcance y se atiende en un cambio aparte).
 - Dejar resuelta la fricción de tooling local (SDK resuelto = 10.x garantizado por `global.json`).
 
 **Non-Goals:**
@@ -111,7 +111,7 @@ AGENTS.md (tabla de proyectos, notas de pruebas y arquitectura) y README raíz s
 ## Risks / Trade-offs
 
 - [Breaking changes del salto 8→10 (dos LTS de distancia)] → Migración por capas con build+test en cada punto de control; los fallos se manifiestan en la capa más cercana a su causa.
-- [Warnings nuevos de analizadores del SDK 10 bloquean el gate "0 warnings"] → Capa de remediación explícita tras el flip de TFMs; presupuesto de tiempo para investigar cada warning nuevo; si un warning es un falso positivo estable, evaluar pragma puntual documentado — nunca `NoWarn` global.
+- [Warnings nuevos de analizadores del SDK 10 bloquean el gate "0 warnings"] → Capa de remediación explícita tras el flip de TFMs; presupuesto de tiempo para investigar cada warning nuevo; si un warning es un falso positivo estable, evaluar pragma puntual documentado — nunca `NoWarn` global. **Nota de ejecución (PO)**: la línea base ya contiene 712 warnings preexistentes (predominan CS1591 y CS86xx); el gate se define como "0 errores y 0 advertencias nuevas respecto de la línea base" y la deuda preexistente queda como cambio aparte.
 - [Compatibilidad de `Moq`/`MSTest`/`SqlClient` con net10] → Regla D4: se conservan y, si generan advertencias o fallos, se sube versión como parte de la remediación de esa capa, aislada por proyecto de tests.
 - [`MVVMTests.EventCommandBinder` ya sufrió incompatibilidad previa con el SDK 10 (commit `3230c99`, fix aplicado)] → Validación específica de ese proyecto en su capa; su configuración `UseMicrosoftTestingPlatform` ya fue ajustada en su momento.
 - [`System.ComponentModel.DataAnnotations` in-box cambia el namespace efectivo frente al package `Annotations`] → Antes de eliminar el package en Core/MVVM, verificar con grep qué namespaces consume el código (`System.ComponentModel.DataAnnotations` vs `System.ComponentModel.Annotations`); ajustar `using` solo si difieren.
@@ -124,7 +124,7 @@ AGENTS.md (tabla de proyectos, notas de pruebas y arquitectura) y README raíz s
 1. Rama dedicada (`feature/migrate-to-dotnet10`) — sin `global.json` previo que complique el cambio.
 2. `global.json` + limpieza previa (HintPath muerto de Http, PropertyGroups WarningLevel net48 de Core) — la solución sigue compilando en SDK 8/10.
 3. Flip de TFMs capa por capa (D3), con build completo al final de cada capa.
-4. Remediación de warnings hasta 0.
+4. Remediación de warnings nuevos hasta 0 (respecto de la línea base).
 5. Suite completa de tests en verde.
 6. Actualización de documentación (D7).
 7. Estrategia de rollback: cada capa es un commit atómico; revertir el commit de la capa restaura el estado previo. El estado completo previo al salto queda en la rama principal (merge solo al final).

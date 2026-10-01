@@ -24,8 +24,8 @@ rules:
   # Rules for implementation tasks
   tasks:
     - Break tasks into small, atomic chunks.
-    - Follow TDD: write failing tests before implementation code.
-    - Verify all changes using `dotnet build KUtilitiesCore.sln` and `dotnet test KUtilitiesCore.sln`.
+    - "Follow TDD: write failing tests before implementation code."
+    - Verify all changes using `dotnet build KUtilitiesCore.sln` and `dotnet test --solution KUtilitiesCore.sln` (MTP experience under SDK 10).
     - For specific projects, use targeted tests (e.g., `dotnet test KUtilitiesCore.DataAccessTests`).
 
   # Rules for implementation plans and specs

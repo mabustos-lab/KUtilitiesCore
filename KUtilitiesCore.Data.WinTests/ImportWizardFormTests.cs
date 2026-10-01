@@ -2,6 +2,7 @@
 using KUtilitiesCore.Data.ImportDefinition;
 using KUtilitiesCore.Data.Win.Importer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.ComponentModel;
 using System.Data;
 
 using System.Windows.Forms;
@@ -15,6 +16,7 @@ namespace KUtilitiesCore.Data.WinTests
         {
             private FieldDefinitionCollection _testFields;
 
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public DataTable MockDataTableToReturn { get; set; }
             public string LastMessageShown { get; private set; }
             public MessageBoxIcon LastMessageIcon { get; private set; }

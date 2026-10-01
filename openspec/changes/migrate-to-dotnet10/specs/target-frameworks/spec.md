@@ -31,11 +31,11 @@ Ningún proyecto de la solución DEBERÁ (MUST) declarar `net48` como target, ni
 - **THEN** no existe ninguna condición de compilación ni paquete exclusivo de `net48` en la solución
 
 ### Requirement: Construcción limpia bajo el SDK de .NET 10
-La solución completa DEBERÁ (SHALL) compilar con el SDK de .NET 10 produciendo cero advertencias y cero errores en todos los targets, manteniendo el gate de verificación del repositorio ("build warnings = verificación").
+La solución completa DEBERÁ (SHALL) compilar con el SDK de .NET 10 produciendo cero errores y **cero advertencias nuevas** respecto de la línea base capturada antes del salto (712 warnings preexistentes registrados en la línea base; la deuda de advertencias preexistente queda fuera del alcance de este cambio y se atiende en un cambio aparte).
 
-#### Scenario: Build de la solución sin warnings
+#### Scenario: Build de la solución sin warnings nuevos
 - **WHEN** se ejecuta `dotnet build KUtilitiesCore.sln` con el SDK 10 en configuración Debug y Release
-- **THEN** la compilación de todos los proyectos y targets finaliza con 0 errores y 0 advertencias, incluyendo las advertencias introducidas por los analizadores nuevos del SDK 10 remediadas en el código
+- **THEN** la compilación de todos los proyectos y targets finaliza con 0 errores y sin advertencias nuevas respecto de la línea base; las advertencias introducidas por los analizadores nuevos del SDK 10 se remedian en el código
 
 ### Requirement: Suite de pruebas en verde sobre los targets nuevos
 Los 8 proyectos de pruebas DEBERÁN (SHALL) ejecutarse y pasar en su totalidad sobre los targets migrados: los 6 proyectos `net8.0` pasan a `net10.0`, `Data.WinTests` a `net10.0-windows`, y los 2 proyectos heredados `net48` (`KUtilitiesCore.MVVMTests`, `KUtilitiesCore.GitHubUpdaterTests`) pasan a `net10.0` manteniendo su framework de pruebas y su cobertura de casos.
