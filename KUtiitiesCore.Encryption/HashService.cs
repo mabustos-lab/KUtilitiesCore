@@ -41,9 +41,9 @@ namespace KUtilitiesCore.Encryption
             int maximumSaltLength, bool UseSaltHashOrder = true, int Iterations = 10000)
         {
             byte[] salt = SaltGenerator.GetSalt(maximumSaltLength);
-            var pbkdf2 = new Rfc2898DeriveBytes(ValueToEncrypt, salt, Iterations, HashAlgorithmName.SHA256);
-            //el hash tiene una longitud fija de 20 bytes
-            byte[] hash = pbkdf2.GetBytes(20);
+            // Deriva 20 bytes con PBKDF2 (equivalente al constructor histórico + GetBytes(20),
+            // pero sin la API obsoleta SYSLIB0060 del runtime moderno).
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(ValueToEncrypt, salt, Iterations, HashAlgorithmName.SHA256, 20);
             //Para almacenar el valor hash ValueToEncrypt + sal
             byte[] hashBytes = new byte[20 + salt.Length];
             //copiar Salt + Hash, el orden puede variar
@@ -76,9 +76,8 @@ namespace KUtilitiesCore.Encryption
             byte[] hashBytes = Convert.FromBase64String(HashedString);
             byte[] salt = new byte[maximumSaltLength];
             Array.Copy(hashBytes, UseSaltHashOrder ? 0 : 20, salt, 0, maximumSaltLength);
-            var pbkdf2 = new Rfc2898DeriveBytes(NoEncrypedString, salt, Iterations, HashAlgorithmName.SHA256);
-            //El hash tiene 20 bytes de longitud fija.
-            byte[] hash = pbkdf2.GetBytes(20);
+            // Deriva 20 bytes con PBKDF2 (API moderna en lugar del constructor obsoleto SYSLIB0060).
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(NoEncrypedString, salt, Iterations, HashAlgorithmName.SHA256, 20);
             if (UseSaltHashOrder)
             {
                 return hashBytes.Skip(maximumSaltLength).SequenceEqual(hash);

@@ -23,7 +23,7 @@ Las 12 librerías y 8 proyectos de tests de la solución están anclados a runti
 
 ### New Capabilities
 
-- `target-frameworks`: Contrato de frameworks objetivo de la solución — define la matriz de TFMs soportados por cada proyecto (`net10.0` / `net10.0-windows` / `netstandard2.0` / `netstandard2.1`), la eliminación de `net48`/`net8.0`, el gate de build limpio (0 warnings) y la validación de la suite de tests sobre los targets nuevos.
+- `target-frameworks`: Contrato de frameworks objetivo de la solución — define la matriz de TFMs soportados por cada proyecto (`net10.0` / `net10.0-windows` / `netstandard2.0` / `netstandard2.1`), la eliminación de `net48`/`net8.0`, el gate de build limpio (0 errores y 0 advertencias nuevas respecto de la línea base; la deuda preexistente de warnings queda fuera de alcance) y la validación de la suite de tests sobre los targets nuevos.
 
 ### Modified Capabilities
 

@@ -7,6 +7,7 @@ using System;
 using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
+using System.ComponentModel;
 
 namespace KUtilitiesCore.Data.Win.Importer
 {
@@ -47,11 +48,13 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// <summary>
         /// Establece si la ventana se cerrara cuando la importación esta completada y validada correctamente.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool AutoCloseOnSuccess { get; set; } = true;
 
         /// <summary>
         /// Establece el nombre del archivo que se desea importar.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FileName
         {
             get => txtFilePath.Text; set
@@ -65,6 +68,7 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// <summary>
         /// Datos cargados de la fuente de datos.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public System.Data.DataTable LoadedDataTable
         {
             get => loadedDataTable;
