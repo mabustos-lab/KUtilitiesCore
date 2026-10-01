@@ -1,0 +1,52 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Tech stack: C# / .NET (Multi-target: net10.0, netstandard2.0, netstandard2.1).
+  Domain: Suite of core utility libraries providing base functionality for .NET applications (Encryption, MVVM, DataAccess, DAL, EF Core, HTTP, Logging, GitHubUpdater).
+  Architecture: Based on SOLID principles. Uses an abstraction-first approach where `KUtilitiesCore.DataAccess` defines interfaces implemented by multiple providers (`Dal`, `EfCore`, `Http`).
+  Conventions: 
+    - Code identifiers (classes, methods, variables) must be in English following Microsoft naming conventions (PascalCase / camelCase / _camelCase).
+    - ALL documentation, XML doc comments (`/// <summary>`), and technical artifacts must be written in SPANISH.
+    - Nullable reference types: Inconsistent across projects; match the existing project setting (e.g., `KUtilitiesCore.Dal` uses `Nullable disable`, others use `Nullable enable`).
+  Workflow: TDD (Test-Driven Development) is required. Interfaces and contracts must be defined and documented before implementation.
+
+# Per-artifact rules (optional)
+rules:
+  # Global: apply basic project standards to all artifacts
+  _global:
+    - Follow SOLID principles to ensure maintainability and extensibility.
+    - Documentation and XML comments MUST be in Spanish; code MUST be in English.
+    - Refer to AGENTS.md as the authoritative source for build/test commands and project structure.
+    - Touch only what the task needs—no drive-by refactors or reformatting.
+
+  # Rules for implementation tasks
+  tasks:
+    - Break tasks into small, atomic chunks.
+    - Follow TDD: write failing tests before implementation code.
+    - Verify all changes using `dotnet build KUtilitiesCore.sln` and `dotnet test KUtilitiesCore.sln`.
+    - For specific projects, use targeted tests (e.g., `dotnet test KUtilitiesCore.DataAccessTests`).
+
+  # Rules for implementation plans and specs
+  spec:
+    - |
+      Implementation plans must follow a structured template including:
+      1. Header (Ticket ID/Feature name).
+      2. Overview (SOLID application).
+      3. Architecture Context (Impacted layers/interfaces).
+      4. Implementation Steps (starting with "Step 0: Create Feature Branch").
+      5. Implementation Order.
+      6. Testing Checklist (Edge cases: concurrency, empty/large data sets, error paths).
+      7. Exception/Error Model.
+      8. Dependencies.
+      9. Verification Steps.
+
+  # Library-specific implementation rules
+  library:
+    - Ensure target compatibility (net10.0) where required.
+    - XML doc comments should explain the "purpose" and "why", not just "what" the code does.
+    - Include `<example>` tags in XML documentation for public APIs when usage is non-obvious.
+    - Respect project-specific Nullable settings.
+    - Avoid `InternalsVisibleTo`; keep internal types managed via public gateways (e.g., `DaoContext`).
+

@@ -46,6 +46,10 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 - **Specify before coding**: Define the intent and interface contract before implementing. Document key decisions and rejected alternatives in XML doc comments or commit messages.
 - **TDD**: Write tests before implementation code. Validate edge cases — concurrency, error paths, empty/large data sets.
 - **Small, reusable modules**: Prefer small focused types over monolithic classes. Follow existing patterns (e.g. `IMappingStrategy` strategy pattern, `DataReaderConverter` fluent builder).
+- **Type safety** → All code must be fully typed.
+- **Gradual changes** → Opt for incremental changes rather than major refactorings.
+- **Questioning assumptions** → Always check implicit inferences.
+- **Pattern detection** → Identify and highlight repeated code.
 
 ## Conventions
 
@@ -55,7 +59,8 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 - **NuGet packages**: All use `GenerateDocumentationFile=True`. No `Directory.Build.props` or `Directory.Packages.props` — each `.csproj` manages its own package versions.
 - **Encryption project dir typo**: The Encryption project folder is `KUtiitiesCore.Encryption` (triple 'i'). All references must use this exact path.
 - **XML doc comments**: Explain *purpose* and *why*, not *what* the code does. Include usage examples for public APIs (`<example>` tag) when the usage pattern is non-obvious.
-- **Naming**: Follow standard C# conventions. Interface prefix `I`, `PascalCase` for public members, `_camelCase` for private fields.
+- **Naming**: Variables, functions and classes in English, following Microsoft standards. Interface prefix `I`, `PascalCase` for public members, `_camelCase` for private fields.
+- Ensure compliance with the **SOLID** principles and good engineering practice.
 
 ## Testing
 
@@ -79,3 +84,8 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 - `DataReaderConverter` is a fluent builder: `.Create().WithResult<T>().WithResult<T>(mapper).WithDefaultDataTable()`.
 - `KUtilitiesCore.DataAccess` is the abstraction layer (netstandard2.1). Concrete implementations (`Dal`, `EfCore`, `Http`) are separate projects targeting net8.0+.
 - Offline `SPHelper/` and `Paging/` folders in `Dal`/`DataAccess` are excluded from compile (`<Compile Remove>`).
+
+## Specific rules
+For detailed rules and guidelines specific to the various areas of the project, see:
+
+- [OpenSpec Tasks Mandatory Steps](./openspec-tasks-mandatory-steps.md) - Checklist and mandatory implementation guidelines for creating or updating OpenSpec `tasks.md` files
