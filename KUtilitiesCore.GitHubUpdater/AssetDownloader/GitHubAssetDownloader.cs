@@ -29,7 +29,7 @@ namespace KUtilitiesCore.GitHubUpdater.AssetDownloader
         /// <summary>
         /// Evento que se dispara para reportar el progreso y estado de la descarga.
         /// </summary>
-        public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+        public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
         /// <summary>
         /// Invoca el evento <see cref="DownloadProgress"/> con el progreso, estado y excepción (si existe).
