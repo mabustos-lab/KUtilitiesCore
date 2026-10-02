@@ -10,8 +10,8 @@ namespace KUtilitiesCore.Dal.Helpers
         /// <summary>
         /// Parametros usados para obtener el resulset.
         /// </summary>
-        /// <remarks>Todos los parametros motrados tanto de entrada como salda.</remarks>
-        public IReadOnlyDictionary<string, object> ParamsUsed { get; }
+        /// <remarks>Todos los parametros motrados tanto de entrada como salda. El valor puede ser null.</remarks>
+        public IReadOnlyDictionary<string, object?> ParamsUsed { get; }
         /// <summary>
         /// Indica si la colección de conjuntos de resultados contiene algún conjunto de resultados.
         /// </summary>

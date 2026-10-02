@@ -395,7 +395,7 @@ namespace KUtilitiesCore.MVVM.Messaging
             {
                 // Ejecutar en ThreadPool para no bloquear el hilo actual si Cleanup es largo.
                 // El lock dentro de Cleanup manejará la concurrencia.
-                ThreadPool.QueueUserWorkItem(state => ((Messenger)state).Cleanup(), this);
+                ThreadPool.QueueUserWorkItem(_ => Cleanup());
                 Interlocked.Exchange(ref _modificationsSinceLastCleanup, 0);
             }
         }

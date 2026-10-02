@@ -12,8 +12,17 @@ using System.Windows.Forms;
 
 namespace KUtilitiesCore.Data.Win.Importer
 {
+    /// <summary>
+    /// Control de configuración para archivos Excel: muestra las hojas del libro y permite
+    /// indicar si la primera fila es cabecera. El asistente de importación lo hospeda
+    /// cuando el archivo seleccionado es .xlsx o .xls.
+    /// </summary>
     public partial class ExcelConfigControl : UserControl, IImportConfigControl
     {
+        /// <summary>
+        /// Inicializa el control y enlaza los cambios de sus elementos con
+        /// <see cref="OptionsChanged"/>.
+        /// </summary>
         public ExcelConfigControl()
         {
             InitializeComponent();
@@ -24,8 +33,10 @@ namespace KUtilitiesCore.Data.Win.Importer
         {
             OptionsChanged?.Invoke(this, EventArgs.Empty);
         }
-        public event EventHandler OptionsChanged;
+        /// <inheritdoc/>
+        public event EventHandler? OptionsChanged;
 
+        /// <inheritdoc/>
         public IParsingOptions GetParsingOptions()
         {
             return new ExcelParsingOptions

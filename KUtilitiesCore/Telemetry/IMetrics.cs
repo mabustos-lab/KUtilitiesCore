@@ -21,7 +21,7 @@ namespace KUtilitiesCore.Telemetry
         /// <param name="metricName">Nombre de la métrica a registrar.</param>
         /// <param name="value">Valor numérico de la métrica.</param>
         /// <param name="tags">Diccionario opcional de tags para categorizar la métrica.</param>
-        void TrackMetric(string metricName, double value, IDictionary<string, string> tags = null);
+        void TrackMetric(string metricName, double value, IDictionary<string, string>? tags = null);
 
         /// <summary>
         /// Registra el tiempo de ejecución de una operación.

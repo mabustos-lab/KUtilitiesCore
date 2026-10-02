@@ -13,9 +13,17 @@ using System.Windows.Forms;
 
 namespace KUtilitiesCore.Data.Win.Importer
 {
+    /// <summary>
+    /// Control de configuración para archivos de texto delimitados (CSV/TSV/PSV).
+    /// Permite elegir separador, codificación y presencia de cabecera; el asistente de
+    /// importación lo hospeda cuando el archivo seleccionado no es Excel.
+    /// </summary>
     public partial class CsvConfigControl : UserControl, IImportConfigControl
     {
 
+        /// <summary>
+        /// Inicializa el control y precarga las opciones de separador y codificación.
+        /// </summary>
         public CsvConfigControl()
         {
             InitializeComponent();
@@ -24,22 +32,25 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         #region Events
 
-        public event EventHandler OptionsChanged;
+        /// <inheritdoc/>
+        public event EventHandler? OptionsChanged;
 
         #endregion Events
 
         #region Methods
 
+        /// <inheritdoc/>
         public IParsingOptions GetParsingOptions()
         {
             return new TextFileParsingOptions
             {
-                Separator = cboDelimiter.SelectedValue?.ToString(),
+                Separator = cboDelimiter.SelectedValue?.ToString() ?? ",",
                 Encoding = (Encoding)(cboEncoding.SelectedValue ?? Encoding.UTF8),
                 HasHeader = chkHasHeader.Checked
             };
         }
 
+        /// <inheritdoc/>
         public void Initialize(string fileName)
         {
             if (string.IsNullOrEmpty(fileName)) return;

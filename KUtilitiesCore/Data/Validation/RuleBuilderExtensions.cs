@@ -159,9 +159,22 @@ namespace KUtilitiesCore.Data.Validation
             // Añadir más reemplazos si es necesario ({PropertyValue}, etc.)
         }
 
+        /// <summary>
+        /// Validador que exige que el valor de la propiedad sea estrictamente menor
+        /// que el valor de comparación indicado.
+        /// </summary>
+        /// <typeparam name="T">Tipo del objeto que se está validando.</typeparam>
+        /// <typeparam name="TProperty">Tipo de la propiedad validada.</typeparam>
         public class LessThanValidator<T, TProperty> : IPropertyValidator<T, TProperty>
         {
-
+            /// <summary>
+            /// Inicializa el validador con el valor de comparación.
+            /// </summary>
+            /// <param name="valueToCompare">Valor contra el que se comparará la propiedad.</param>
+            /// <exception cref="ArgumentException">
+            /// Se produce cuando el tipo de la propiedad es nullable; las comparaciones
+            /// de rango no admiten valores nulos.
+            /// </exception>
             public LessThanValidator(TProperty valueToCompare)
             {
                 if (typeof(TProperty).IsValueType && Nullable.GetUnderlyingType(typeof(TProperty)) != null)
@@ -169,12 +182,20 @@ namespace KUtilitiesCore.Data.Validation
                 ValueToCompare = valueToCompare;
             }
 
-            // Propiedad pública para placeholder {ComparisonValue}
+            /// <summary>
+            /// Valor contra el que se compara la propiedad; se expone para sustituir
+            /// el placeholder {ComparisonValue} en los mensajes de error.
+            /// </summary>
             public TProperty ValueToCompare { get; }
 
-            // Mensaje por defecto que usa los placeholders internos
+            /// <summary>
+            /// Mensaje de error por defecto con placeholders que se resuelven al crear el fallo.
+            /// </summary>
             public string GetErrorMessage(ValidationContext<T> context, TProperty value) => "'{PropertyName}' debe ser menor que {ComparisonValue}.";
 
+            /// <summary>
+            /// Determina si el valor de la propiedad es menor que <see cref="ValueToCompare"/>.
+            /// </summary>
             public bool IsValid(ValidationContext<T> context, TProperty value)
             {
                 return Comparer.Default.Compare(value, ValueToCompare) < 0;

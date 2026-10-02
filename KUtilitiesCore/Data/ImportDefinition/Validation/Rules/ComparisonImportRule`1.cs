@@ -12,16 +12,38 @@ namespace KUtilitiesCore.Data.ImportDefinition.Validation.Rules
     {
         private readonly T _valueToCompare;
         private readonly ComparisonOperator _op;
-        /// <inheritdoc/>
-        public enum ComparisonOperator { GreaterThan, LessThan, GreaterThanOrEqual, LessThanOrEqual, Equal, NotEqual }
+        /// <summary>
+        /// Operadores de comparación soportados por la regla.
+        /// </summary>
+        public enum ComparisonOperator
+        {
+            /// <summary>El valor debe ser mayor que el comparador.</summary>
+            GreaterThan,
+            /// <summary>El valor debe ser menor que el comparador.</summary>
+            LessThan,
+            /// <summary>El valor debe ser mayor o igual que el comparador.</summary>
+            GreaterThanOrEqual,
+            /// <summary>El valor debe ser menor o igual que el comparador.</summary>
+            LessThanOrEqual,
+            /// <summary>El valor debe ser exactamente igual al comparador.</summary>
+            Equal,
+            /// <summary>El valor debe ser distinto del comparador.</summary>
+            NotEqual
+        }
 
+        /// <summary>
+        /// Inicializa la regla con el valor de comparación y el operador a aplicar.
+        /// </summary>
+        /// <param name="valueToCompare">Valor contra el que se compara el dato importado.</param>
+        /// <param name="op">Operador de comparación a aplicar.</param>
+        /// <param name="errorMessage">Mensaje de error; si es <c>null</c> se genera uno descriptivo.</param>
         public ComparisonImportRule(T valueToCompare, ComparisonOperator op, string? errorMessage = null) : base(errorMessage)
         {
             _valueToCompare = valueToCompare;
             _op = op;
         }
         /// <inheritdoc/>
-        public override IEnumerable<ValidationFailure> Validate(object value, string fieldName)
+        public override IEnumerable<ValidationFailure> Validate(object? value, string fieldName)
         {
             if (value == null) yield break;
 

@@ -26,7 +26,7 @@ namespace KUtilitiesCore.GitHubUpdater
         /// <summary>
         /// Evento que se dispara para reportar el progreso y estado de la descarga de la actualización.
         /// </summary>
-        public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
+        public event EventHandler<DownloadProgressEventArgs>? DownloadProgress;
 
         /// <summary>
         /// Inicializa una nueva instancia del administrador de actualizaciones de GitHub.

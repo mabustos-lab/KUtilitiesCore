@@ -23,10 +23,23 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         #region Constructors
 
+        /// <summary>
+        /// Inicializa la definición del campo a partir de los metadatos de una propiedad.
+        /// </summary>
+        /// <param name="fieldProperty">Propiedad de la que se extraen nombre, tipo y atributos.</param>
         public FieldDefinitionItem(PropertyInfo fieldProperty) : base(fieldProperty)
         {
         }
 
+        /// <summary>
+        /// Inicializa la definición del campo con valores explícitos.
+        /// </summary>
+        /// <param name="fieldName">Nombre interno o técnico del campo.</param>
+        /// <param name="displayName">Nombre para mostrar; si está vacío se usa <paramref name="fieldName"/>.</param>
+        /// <param name="sourceColumnName">Columna de origen; si está vacía se usa <paramref name="displayName"/>.</param>
+        /// <param name="description">Descripción del campo en pantalla.</param>
+        /// <param name="fieldType">Tipo de dato esperado; si es <c>null</c> se usa <see cref="string"/>.</param>
+        /// <param name="allowNull">Indica si el campo acepta valores nulos.</param>
         public FieldDefinitionItem(string fieldName, string displayName = "", string sourceColumnName = "",
             string description = "", Type? fieldType = null, bool allowNull = false)
             : base(fieldName, displayName, sourceColumnName, description, fieldType, allowNull)
@@ -49,6 +62,10 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         #region Methods
 
+        /// <summary>
+        /// Crea una copia profunda de la definición, incluyendo reglas de validación y valor por defecto.
+        /// </summary>
+        /// <returns>Nueva instancia equivalente a la actual.</returns>
         public FieldDefinitionItem Clone()
         {
             var clone = new FieldDefinitionItem(FieldName, DisplayName, SourceColumnName, Description, TargetType, AllowNull)

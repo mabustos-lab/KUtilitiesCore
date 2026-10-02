@@ -18,6 +18,10 @@ using SqlErrorAlias = Microsoft.Data.SqlClient.SqlError;
 
 namespace KUtilitiesCore.Dal.SQLLog
 {
+    /// <summary>
+    /// Adjunta logging de mensajes SQL a una SqlConnection, capturando eventos InfoMessage y
+    /// StateChange y enviándolos al delegado configurado según las opciones de filtrado.
+    /// </summary>
     public class SqlConnectionLogger : IDisposable
     {
         private readonly SqlConnectionAlias _connection;
@@ -30,7 +34,7 @@ namespace KUtilitiesCore.Dal.SQLLog
 
         private SqlConnectionLogger(SqlConnectionAlias connection,
             Action<SqlLogEntry> logAction,
-            SqlLoggingOptions options)
+            SqlLoggingOptions? options = null)
         {
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _logAction = logAction;
@@ -46,9 +50,16 @@ namespace KUtilitiesCore.Dal.SQLLog
             connection.StateChange += OnStateChange;
         }
 
+        /// <summary>
+        /// Adjunta el logger a la conexión especificada. Al disponer el objeto retornado,
+        /// el logging se desasocia de la conexión.
+        /// </summary>
+        /// <param name="connection">Conexión SQL a la que se adjunta el logging.</param>
+        /// <param name="logAction">Delegado que recibe cada entrada de log capturada.</param>
+        /// <param name="options">Opciones de filtrado; null aplica las opciones predeterminadas.</param>
         public static IDisposable Attach(SqlConnectionAlias connection,
             Action<SqlLogEntry> logAction,
-            SqlLoggingOptions options = null)
+            SqlLoggingOptions? options = null)
         {
             return new SqlConnectionLogger(connection, logAction, options);
         }
@@ -167,6 +178,10 @@ namespace KUtilitiesCore.Dal.SQLLog
                 entry.Message.ToLower().Contains(m.ToLower()));
         }
 
+        /// <summary>
+        /// Desasocia los eventos de la conexión y registra un mensaje final de cierre si
+        /// la información de conexión está habilitada.
+        /// </summary>
         public void Dispose()
         {
             try
@@ -200,9 +215,15 @@ namespace KUtilitiesCore.Dal.SQLLog
         }
     }
 
+    /// <summary>
+    /// Implementación de <see cref="IDisposable"/> que no realiza ninguna acción, utilizada
+    /// como valor de retorno neutro cuando una operación no requiere limpieza de recursos.
+    /// </summary>
     public class NullDisposable : IDisposable
     {
+        /// <summary>Instancia única compartida, ya que el tipo no tiene estado.</summary>
         public static readonly NullDisposable Instance = new NullDisposable();
+        /// <summary>No realiza ninguna acción.</summary>
         public void Dispose() { }
     }
 }

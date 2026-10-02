@@ -16,7 +16,7 @@ namespace KUtilitiesCore.Dal.Helpers
         private readonly Queue<IMappingStrategy> _mappingStrategies;
         private readonly TranslateOptions _translateOptions;
         private bool _useDefaultDataTable;
-        private IDaoParameterCollection _parametersUsed; // To store parameters to be passed to ReaderResultSet
+        private IDaoParameterCollection? _parametersUsed; // To store parameters to be passed to ReaderResultSet
 
         #endregion Fields
 
@@ -33,11 +33,21 @@ namespace KUtilitiesCore.Dal.Helpers
 
         #region Methods
 
+        /// <summary>
+        /// Crea una instancia vacía de <see cref="IDataReaderConverter"/> lista para configurar
+        /// mediante los métodos <c>WithResult</c> y <c>WithDefaultDataTable</c>.
+        /// </summary>
+        /// <returns>Una nueva instancia del conversor sin estrategias configuradas.</returns>
         public static IDataReaderConverter Create()
         {
             return new DataReaderConverter();
         }
 
+        /// <summary>
+        /// Crea una instancia preconfigurada con la tabla de datos predeterminada
+        /// (<see cref="WithDefaultDataTable"/>), útil cuando solo se requiere el DataTable crudo.
+        /// </summary>
+        /// <returns>Una nueva instancia del conversor con la estrategia predeterminada aplicada.</returns>
         public static IDataReaderConverter GetDefault()
         {
             var converter = new DataReaderConverter();
@@ -89,7 +99,7 @@ namespace KUtilitiesCore.Dal.Helpers
         /// Establece los parámetros utilizados para la consulta, que se pasarán al ReaderResultSet.
         /// </summary>
         /// <param name="parameters">La recopilación de parámetros.</param>
-        internal void SetParametersUsed(IDaoParameterCollection parameters = null)
+        internal void SetParametersUsed(IDaoParameterCollection? parameters = null)
         {
             _parametersUsed = parameters;
         }

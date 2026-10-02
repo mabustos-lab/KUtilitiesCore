@@ -81,7 +81,8 @@ namespace KUtilitiesCore.GitHubUpdater
                 if (!string.IsNullOrWhiteSpace(_info.UpdateChannel))
                 {
                     filteredReleases = filteredReleases.Where(
-                        r => r.TagName.IndexOf(_info.UpdateChannel, StringComparison.OrdinalIgnoreCase) >= 0);
+                        r => !string.IsNullOrEmpty(r.TagName)
+                            && r.TagName.IndexOf(_info.UpdateChannel, StringComparison.OrdinalIgnoreCase) >= 0);
                 }
 
                 // El ordenamiento por versión se delega ahora al Manager, aquí devolvemos la más reciente por fecha de publicación/creación

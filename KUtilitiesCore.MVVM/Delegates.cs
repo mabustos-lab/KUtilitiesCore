@@ -11,7 +11,7 @@ namespace KUtilitiesCore.MVVM
     /// Delegado invocado cuando una propiedad esta apunto de ser modificado
     /// permite alterar el comportamiento de la modificación o cancelar el cambio
     /// </summary>
-    /// <typeparam name="TProperty"></typeparam>
-    /// <param name="args"></param>
+    /// <param name="sender">Objeto que origina el cambio de propiedad.</param>
+    /// <param name="args">Argumentos del cambio, permiten alterar o cancelar la modificación.</param>
     public delegate void OnPropertyChangingDelegate(object sender, PropertyChangingEventArgs args);
 }

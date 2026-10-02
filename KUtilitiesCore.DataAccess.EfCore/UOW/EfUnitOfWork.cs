@@ -12,17 +12,19 @@ namespace KUtilitiesCore.DataAccess.EfCore.UOW
     public class EfUnitOfWork : IUnitOfWork
     {
         private readonly DbContext _context;
-        private Hashtable _repositories;
+        private readonly Hashtable _repositories = new();
         private bool _disposed;
 
+        /// <summary>
+        /// Inicializa el Unit of Work con el contexto de EF Core indicado, que será
+        /// compartido por todos los repositorios que cree.
+        /// </summary>
+        /// <param name="context">Contexto de EF Core que gestiona las transacciones y el seguimiento de cambios.</param>
         public EfUnitOfWork(DbContext context) { _context = context; }
-        
+
         /// <inheritdoc/>
         public IRepository<T> Repository<T>() where T : class
         {
-            if(_repositories == null)
-                _repositories = new Hashtable();
-
             var type = typeof(T).Name;
 
             if(!_repositories.ContainsKey(type))

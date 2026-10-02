@@ -16,6 +16,11 @@ namespace KUtilitiesCore.Data.DataAnnotations
     public class DisplayNameLocalizedAttribute : DisplayNameAttribute
     {
         #region Constructors
+        /// <summary>
+        /// Inicializa el atributo con el nombre para mostrar literal o la clave de
+        /// recurso a localizar, según se configure <see cref="ResourceType"/>.
+        /// </summary>
+        /// <param name="diplayName">Nombre para mostrar literal o clave de recurso.</param>
         public DisplayNameLocalizedAttribute(string diplayName) : base(diplayName)
         {
         }
@@ -31,6 +36,11 @@ namespace KUtilitiesCore.Data.DataAnnotations
         #endregion Properties
 
         #region Methods
+        /// <summary>
+        /// Resuelve el nombre para mostrar final: si <see cref="ResourceType"/> está definido,
+        /// busca la clave en el recurso; en caso contrario devuelve el nombre literal.
+        /// </summary>
+        /// <returns>El nombre para mostrar localizado o literal.</returns>
         public string GetDisplayName()
         {
             if(ResourceType is not null)

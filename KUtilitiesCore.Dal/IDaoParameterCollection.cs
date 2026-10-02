@@ -72,12 +72,14 @@ namespace KUtilitiesCore.Dal
         bool Contains(string parameterName);
 
         /// <summary>
-        /// Obtiene el valor del parametro.
+        /// Obtiene el valor del parámetro, convertido al tipo solicitado.
+        /// Puede devolver el valor por defecto del tipo (o una referencia nula para
+        /// tipos de referencia) si el parámetro no existe o el proveedor devolvió
+        /// <see langword="null"/>, por lo que el llamador debe validar el resultado.
         /// </summary>
-        /// <typeparam name="TValue">Especifica el tipo de conversion del objeto</typeparam>
-        /// <param name="parameterName">Nombre del parametro</param>
-        /// <returns></returns>
-        TValue GetParamValue<TValue>(string parameterName);
+        /// <typeparam name="TValue">Especifica el tipo de conversión del objeto.</typeparam>
+        /// <param name="parameterName">Nombre del parámetro.</param>
+        TValue? GetParamValue<TValue>(string parameterName);
 
         /// <summary>
         /// Elimina un parámetro por nombre.

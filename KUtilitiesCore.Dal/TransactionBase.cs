@@ -21,7 +21,7 @@ namespace KUtilitiesCore.Dal
         private readonly Guid _idTransaction;
         private bool _disposedValue;
         private bool _IsCommited;
-        private DbTransaction _transaction;
+        private DbTransaction? _transaction;
 
         #endregion Fields
 
@@ -68,7 +68,11 @@ namespace KUtilitiesCore.Dal
             GC.SuppressFinalize(this);
         }
 
-        public DbTransaction GetTransactionObject()
+        /// <summary>
+        /// Obtiene la transacción nativa de ADO.NET subyacente. Puede ser null tras un
+        /// Commit o Rollback, ya que la transacción se libera en esos puntos.
+        /// </summary>
+        public DbTransaction? GetTransactionObject()
         {
             return _transaction;
         }
@@ -95,6 +99,11 @@ namespace KUtilitiesCore.Dal
                 Debug.Fail($"Error al realizar Rollback en la Transacción ID: {_idTransaction}", ex.ToString());
             }
         }
+        /// <summary>
+        /// Libera la transacción subyacente, revirtiéndola si aún no fue confirmada
+        /// para evitar dejar la base de datos en un estado inconsistente.
+        /// </summary>
+        /// <param name="disposing">Indica si la liberación proviene de una llamada explícita a Dispose.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposedValue)

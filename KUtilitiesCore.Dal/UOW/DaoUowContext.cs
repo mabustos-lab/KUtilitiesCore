@@ -19,7 +19,7 @@ namespace KUtilitiesCore.Dal.UOW
 
         private readonly IDaoContext _context;
         private readonly IRepositoryProvider _DaoRepositoryProvider;
-        private ITransaction _transaction;
+        private ITransaction? _transaction;
         private bool disposedValue;
         private bool isTransactionCreated;
 
@@ -27,6 +27,12 @@ namespace KUtilitiesCore.Dal.UOW
 
         #region Public Constructors
 
+        /// <summary>
+        /// Inicializa el contexto de unidad de trabajo con el proveedor de repositorios y el
+        /// contexto de acceso a datos que compartirán todas las operaciones transaccionales.
+        /// </summary>
+        /// <param name="provider">Proveedor que resuelve las instancias de los repositorios.</param>
+        /// <param name="context">Contexto de acceso a datos sobre el que se administran las transacciones.</param>
         public DaoUowContext(IRepositoryProvider provider, IDaoContext context)
 
         {
@@ -45,7 +51,7 @@ namespace KUtilitiesCore.Dal.UOW
         public IRepositoryProvider DaoRepositoryProvider => _DaoRepositoryProvider;
 
         /// <inheritdoc/>
-        public ITransaction Transaction
+        public ITransaction? Transaction
         {
             get
             {
@@ -62,6 +68,9 @@ namespace KUtilitiesCore.Dal.UOW
 
         #region Public Methods
 
+        /// <summary>
+        /// Libera la transacción activa y el contexto de acceso a datos asociado.
+        /// </summary>
         public void Dispose()
         {
             // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
@@ -69,6 +78,9 @@ namespace KUtilitiesCore.Dal.UOW
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Revierte la transacción activa, si existe, y libera sus recursos.
+        /// </summary>
         public void Rollback()
         {
             if (Transaction != null)
@@ -96,6 +108,11 @@ namespace KUtilitiesCore.Dal.UOW
 
         #region Protected Methods
 
+        /// <summary>
+        /// Libera la transacción activa y el contexto subyacente cuando la liberación
+        /// proviene de una llamada explícita a <see cref="Dispose()"/>.
+        /// </summary>
+        /// <param name="disposing">Indica si la llamada proviene de Dispose() y no del finalizador.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)

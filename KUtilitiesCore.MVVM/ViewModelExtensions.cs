@@ -51,6 +51,9 @@ namespace KUtilitiesCore.MVVM
             if (!(source is ISupportParentViewModel parentViewModel))
                 throw new ViewModelSourceException("El objeto no implementa ISupportParentViewModel.");
 
+            if (parentViewModel.ParentViewModel is null)
+                throw new ViewModelSourceException("El ViewModel padre no está inicializado.");
+
             return (T)parentViewModel.ParentViewModel;
         }
 
@@ -146,7 +149,7 @@ namespace KUtilitiesCore.MVVM
             onPropertyChanged?.Invoke();
         }
 
-        private static MethodInfo GetMethodCore(Type sourceType, string memberName)
+        private static MethodInfo? GetMethodCore(Type sourceType, string memberName)
         {
             var methodInfo = sourceType.GetMethod(
                 memberName,

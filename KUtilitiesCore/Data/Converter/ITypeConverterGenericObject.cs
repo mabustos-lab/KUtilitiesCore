@@ -1,5 +1,10 @@
 ﻿namespace KUtilitiesCore.Data.Converter
 {
+    /// <summary>
+    /// Extiende <see cref="ITypeConverter"/> para convertidores que devuelven el
+    /// resultado de la conversión como <see cref="object"/> genérico, permitiendo
+    /// reutilizarlos cuando el tipo destino no se conoce en tiempo de compilación.
+    /// </summary>
     public interface ITypeConverterGenericObject : ITypeConverter
     {
         /// <summary>

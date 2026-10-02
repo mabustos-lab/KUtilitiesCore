@@ -4,7 +4,7 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>disable</Nullable>
+		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<Title>KUtilitiesCore.Dal</Title>
 		<Description>Capa de acceso a datos con soporte para Unit of Work e inserciones masivas.</Description>

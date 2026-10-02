@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones de reflexión y análisis sobre <see cref="Type"/>.
+    /// </summary>
     public static class TypeExt
     {
         #region Methods

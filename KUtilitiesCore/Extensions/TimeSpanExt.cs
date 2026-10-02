@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones para dar formato legible a intervalos de tiempo.
+    /// </summary>
     public static class TimeSpanExt
     {
         /// <summary>

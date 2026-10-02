@@ -11,6 +11,12 @@ using System.ComponentModel;
 
 namespace KUtilitiesCore.Data.Win.Importer
 {
+    /// <summary>
+    /// Asistente WinForms de importación de datos: guía al usuario en la selección del
+    /// archivo, la configuración del análisis (CSV/Excel), el mapeo de columnas y la
+    /// validación, dejando el resultado en <see cref="ResultData"/> cuando todos los
+    /// datos son válidos.
+    /// </summary>
     public partial class ImportWizardForm : Form
     {
         #region Fields
@@ -20,17 +26,24 @@ namespace KUtilitiesCore.Data.Win.Importer
         private readonly ImportManager _importManager;
 
         // Estado Lógico
-        private IImportConfigControl currentConfigControl;
+        private IImportConfigControl? currentConfigControl;
 
-        private string currentExtFile;
+        private string? currentExtFile;
 
-        private System.Data.DataTable loadedDataTable;
+        private System.Data.DataTable? loadedDataTable;
 
         #endregion Fields
 
         #region Constructors
 
-        public ImportWizardForm(FieldDefinitionCollection fieldDefinitions, ImportManager importManager = null)
+        /// <summary>
+        /// Inicializa el asistente con las definiciones de campos destino y, opcionalmente,
+        /// un <see cref="ImportManager"/> ya configurado; si no se proporciona se crea uno
+        /// interno.
+        /// </summary>
+        /// <param name="fieldDefinitions">Definiciones de campos que regirán el mapeo y la validación.</param>
+        /// <param name="importManager">Gestor de importación a utilizar; si es <c>null</c> se instancia uno nuevo.</param>
+        public ImportWizardForm(FieldDefinitionCollection fieldDefinitions, ImportManager? importManager = null)
         {
             InitializeComponent();
 
@@ -69,7 +82,7 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// Datos cargados de la fuente de datos.
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public System.Data.DataTable LoadedDataTable
+        public System.Data.DataTable? LoadedDataTable
         {
             get => loadedDataTable;
             protected set
@@ -100,10 +113,15 @@ namespace KUtilitiesCore.Data.Win.Importer
                 ShowMessage("Seleccione un archivo primero.", "Aviso", MessageBoxIcon.Warning);
                 return;
             }
+            if (currentConfigControl is null)
+            {
+                ShowMessage("No hay configuración de importación disponible.", "Aviso", MessageBoxIcon.Warning);
+                return;
+            }
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                IDataSourceReader reader = null;
+                IDataSourceReader? reader = null;
                 var options = currentConfigControl.GetParsingOptions();
 
                 if (currentExtFile == ".xlsx" || currentExtFile == ".xls")
@@ -157,6 +175,13 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// </summary>
         protected virtual void ImportData()
         {
+            var sourceTable = LoadedDataTable;
+            if (sourceTable is null)
+            {
+                ShowMessage("No hay datos cargados para importar.", "Aviso", MessageBoxIcon.Warning);
+                return;
+            }
+
             // 1. Construir colección de definiciones activas con el mapeo actualizado
 
             var activeDefinitions = new FieldDefinitionCollection();
@@ -203,7 +228,7 @@ namespace KUtilitiesCore.Data.Win.Importer
             try
             {
                 _importManager.SetMapping(activeDefinitions);
-                _importManager.ReadData(LoadedDataTable);
+                _importManager.ReadData(sourceTable);
                 
                 ValidateData();
                 OnProcessImportFinished();
@@ -221,12 +246,15 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// </summary>
         protected virtual void OnLoadedDataSource()
         {
-            dgvPreview.DataSource = LoadedDataTable;
+            var table = loadedDataTable;
+            if (table is null) return;
+
+            dgvPreview.DataSource = table;
             ResultData = null;
 
             PopulateMappingGrid();
             btnImport.Enabled = true;
-            tsslCount.Text = $"Filas cargadas: {LoadedDataTable.Rows.Count:N0}";
+            tsslCount.Text = $"Filas cargadas: {table.Rows.Count:N0}";
         }
 
         /// <summary>
@@ -241,6 +269,13 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
         }
 
+        /// <summary>
+        /// Muestra un mensaje al usuario; se declara virtual para que pruebas y
+        /// derivaciones puedan capturarlo en lugar de presentar un diálogo modal.
+        /// </summary>
+        /// <param name="message">Texto del mensaje.</param>
+        /// <param name="caption">Título de la ventana.</param>
+        /// <param name="msgIcon">Icono que refleja la severidad del mensaje.</param>
         protected virtual void ShowMessage(string message, string caption, MessageBoxIcon msgIcon)
         {
             MessageBox.Show(
@@ -263,7 +298,9 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         private void cbFilterHasError_CheckedChanged(object sender, EventArgs e)
         {
-            FilterHasErrors(LoadedDataTable, dgvPreview, cbFilterHasError.Checked);
+            var table = loadedDataTable;
+            if (table is null) return;
+            FilterHasErrors(table, dgvPreview, cbFilterHasError.Checked);
         }
 
         private void dgvPreview_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -305,8 +342,8 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         private void OnDispose()
         {
-            LoadedDataTable.Dispose();
-            ResultData.Dispose();
+            loadedDataTable?.Dispose();
+            ResultData?.Dispose();
             if (_importManager != null)
                 _importManager.Dispose();
         }
@@ -316,32 +353,30 @@ namespace KUtilitiesCore.Data.Win.Importer
             // Lógica para detectar el tipo de archivo y cambiar el modo automáticamente
             currentExtFile = Path.GetExtension(txtFilePath.Text).ToLower();
             btnLoadData.Enabled = false;
-            if (currentExtFile == ".xlsx" || currentExtFile == ".xls")
-            {
-                SourceTypeUpdate("Excel");
-            }
-            else
-            {
-                // Asumimos CSV/Texto para .csv, .tsv, .psv, .txt
-                SourceTypeUpdate("CSV");
-            }
+            var configControl = currentExtFile == ".xlsx" || currentExtFile == ".xls"
+                ? SourceTypeUpdate("Excel")
+                : SourceTypeUpdate("CSV");
+            currentConfigControl = configControl;
 
             // Forzamos actualización de UI para asegurar que el control se ha creado
             Application.DoEvents();
 
             // Ahora inicializamos el control con la ruta del archivo (esto puede preconfigurar delimitadores)
-            currentConfigControl.Initialize(txtFilePath.Text);
+            configControl.Initialize(txtFilePath.Text);
             btnLoadData.Enabled = true;
         }
 
         private void PopulateMappingGrid()
         {
+            var table = loadedDataTable;
+            if (table is null) return;
+
             dgvMapping.Rows.Clear();
 
             // Obtener columnas del DataTable cargado
             var sourceColumns = new List<string> { "(Ignorar)" };
 
-            foreach (DataColumn col in LoadedDataTable.Columns)
+            foreach (DataColumn col in table.Columns)
             {
                 sourceColumns.Add(col.ColumnName);
             }
@@ -384,23 +419,31 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
         }
 
-        private void SourceTypeUpdate(string sourceTypeTagSelected)
+        /// <summary>
+        /// Crea el control de configuración adecuado para el tipo de fuente indicado,
+        /// lo hospeda en el panel de configuración y lo devuelve al llamador.
+        /// </summary>
+        /// <param name="sourceTypeTagSelected">Etiqueta del tipo de fuente ("Excel" o "CSV").</param>
+        /// <returns>Control de configuración recién creado y ya agregado a la UI.</returns>
+        private IImportConfigControl SourceTypeUpdate(string sourceTypeTagSelected)
         {
             if (string.IsNullOrEmpty(sourceTypeTagSelected))
                 throw new ArgumentNullException(nameof(sourceTypeTagSelected));
             pnlConfig.Controls.Clear();
+            IImportConfigControl configControl;
             if (sourceTypeTagSelected.Equals("csv", StringComparison.InvariantCultureIgnoreCase))
             {
-                currentConfigControl = new CsvConfigControl();
+                configControl = new CsvConfigControl();
             }
             else
             {
-                currentConfigControl = new ExcelConfigControl();
+                configControl = new ExcelConfigControl();
             }
 
-            var ctrl = (Control)currentConfigControl;
+            var ctrl = (Control)configControl;
             ctrl.Dock = DockStyle.Fill;
             pnlConfig.Controls.Add(ctrl);
+            return configControl;
         }
 
         private void ValidateData()

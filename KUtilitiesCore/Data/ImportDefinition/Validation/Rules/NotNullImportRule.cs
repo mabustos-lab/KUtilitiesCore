@@ -9,9 +9,13 @@ namespace KUtilitiesCore.Data.ImportDefinition.Validation.Rules
     /// </summary>
     public class NotNullImportRule : ImportValidationRuleBase
     {
+        /// <summary>
+        /// Inicializa la regla con un mensaje de error opcional.
+        /// </summary>
+        /// <param name="errorMessage">Mensaje personalizado; si es <c>null</c> se usa el mensaje por defecto.</param>
         public NotNullImportRule(string? errorMessage = null) : base(errorMessage) { }
         /// <inheritdoc/>
-        public override IEnumerable<ValidationFailure> Validate(object value, string fieldName)
+        public override IEnumerable<ValidationFailure> Validate(object? value, string fieldName)
         {
             if (value == null || value is string s && string.IsNullOrWhiteSpace(s))
             {

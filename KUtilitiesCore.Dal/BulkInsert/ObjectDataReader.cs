@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -9,18 +9,24 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Dal.BulkInsert
 {
     /// <summary>
-    /// Convierte una secuencia IEnumerable<T> en un IDataReader.
+    /// Convierte una secuencia IEnumerable&lt;T&gt; en un IDataReader.
     /// Esto permite hacer "Streaming" de datos a SqlBulkCopy sin cargar todo en memoria (DataTable).
     /// </summary>
     /// <typeparam name="T">El tipo de objeto a leer.</typeparam>
     public class ObjectDataReader<T> : IDataReader
     {
-        private IEnumerator<T> _enumerator;
+        private IEnumerator<T>? _enumerator;
         private readonly PropertyInfo[] _properties;
         private readonly Dictionary<string, int> _nameToIndex;
-        private T _current;
+        private T? _current;
         private bool _isClosed = false;
 
+        /// <summary>
+        /// Crea un lector que expone la colección indicada como un <see cref="IDataReader"/>,
+        /// leyendo los valores por reflexión de las propiedades públicas de
+        /// <typeparamref name="T"/> para su uso en inserción masiva.
+        /// </summary>
+        /// <param name="data">Colección de objetos a exponer como filas.</param>
         public ObjectDataReader(IEnumerable<T> data)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
@@ -49,6 +55,8 @@ namespace KUtilitiesCore.Dal.BulkInsert
         public bool Read()
         {
             if (_isClosed) throw new ObjectDisposedException(nameof(ObjectDataReader<T>));
+            // Tras Dispose el enumerador se anula; se protege el acceso con la misma semántica.
+            if (_enumerator is null) throw new ObjectDisposedException(nameof(ObjectDataReader<T>));
 
             bool hasMore = _enumerator.MoveNext();
             if (hasMore)
@@ -208,11 +216,11 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// <inheritdoc/>
         public byte GetByte(int i) => Convert.ToByte(GetValue(i));
         /// <inheritdoc/>
-        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length) => 0;
+        public long GetBytes(int i, long fieldOffset, byte[]? buffer, int bufferoffset, int length) => 0;
         /// <inheritdoc/>
         public char GetChar(int i) => Convert.ToChar(GetValue(i));
         /// <inheritdoc/>
-        public long GetChars(int i, long fieldOffset, char[] buffer, int bufferoffset, int length) => 0;
+        public long GetChars(int i, long fieldOffset, char[]? buffer, int bufferoffset, int length) => 0;
         /// <inheritdoc/>
         public string GetDataTypeName(int i) => _properties[i].PropertyType.Name;
         /// <inheritdoc/>
@@ -223,7 +231,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
         public Type GetFieldType(int i) => _properties[i].PropertyType;
 
         /// <inheritdoc/>
-        public IDataReader GetData(int i) => null; // No soportamos nested readers
+        public IDataReader GetData(int i) => throw new NotSupportedException("No se soportan lectores de datos anidados."); // No soportamos nested readers
         /// <inheritdoc/>
         public int Depth => 0;
         /// <inheritdoc/>

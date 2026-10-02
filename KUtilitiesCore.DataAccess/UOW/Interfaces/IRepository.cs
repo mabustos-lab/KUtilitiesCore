@@ -1,6 +1,7 @@
 ﻿using KUtilitiesCore.DataAccess.UOW.Specifications;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,10 +18,20 @@ namespace KUtilitiesCore.DataAccess.UOW.Interfaces
         /// <summary>
         /// Obtiene una única entidad que cumpla con la especificación.
         /// </summary>
+        /// <remarks>
+        /// El resultado puede ser <see langword="null"/> cuando ninguna entidad cumple la especificación;
+        /// se anota con <see cref="MaybeNullAttribute"/> porque este contrato vive en un contexto de nulabilidad deshabilitado.
+        /// </remarks>
+        [return: MaybeNull]
         T GetFirstOrDefault(ISpecification<T> spec) ;
         /// <summary>
         /// Obtiene una única entidad asíncronamente basada en la especificación.
         /// </summary>
+        /// <remarks>
+        /// El resultado puede ser <see langword="null"/> cuando ninguna entidad cumple la especificación;
+        /// se anota con <see cref="MaybeNullAttribute"/> porque este contrato vive en un contexto de nulabilidad deshabilitado.
+        /// </remarks>
+        [return: MaybeNull]
         Task<T> GetFirstOrDefaultAsync(ISpecification<T> spec) ;
         /// <summary>
         /// Obtiene una lista de entidades basada en la especificación.

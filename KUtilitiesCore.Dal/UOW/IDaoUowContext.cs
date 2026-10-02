@@ -23,7 +23,7 @@ namespace KUtilitiesCore.Dal.UOW
         /// <summary>
         /// La transacción activa actual. Puede ser null si no se ha iniciado una transacción explícita.
         /// </summary>
-        ITransaction Transaction { get; }
+        ITransaction? Transaction { get; }
         /// <summary>
         /// Expone el acceso a las instancias de los repositorion en el UOW
         /// </summary>
@@ -33,6 +33,9 @@ namespace KUtilitiesCore.Dal.UOW
 
         #region Methods
 
+        /// <summary>
+        /// Revierte la transacción activa, si existe, y libera sus recursos.
+        /// </summary>
         void Rollback();
 
         #endregion Methods

@@ -7,6 +7,11 @@ using System.Text;
 
 namespace KUtilitiesCore.Data.DataExporter
 {
+    /// <summary>
+    /// Utilidades de exportación de DataTable a archivos CSV delimitados,
+    /// respetando el formato y las exclusiones de columnas configurados
+    /// mediante las extensiones de <see cref="DataTable"/>.
+    /// </summary>
     public static class ExportToCsv
     {
         /// <summary>
@@ -104,7 +109,7 @@ namespace KUtilitiesCore.Data.DataExporter
             if (value is DateTime dateTime)
                 return FormatDateTime(dateTime);
 
-            return value.ToString();
+            return value.ToString() ?? string.Empty;
         }
 
         private static string FormatDateTime(DateTime dateTime)

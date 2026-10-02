@@ -24,9 +24,9 @@ namespace KUtilitiesCore.Dal
 
         /// <summary>
         /// Delegado que se invoca inmediatamente después de abrir la conexión. Permite ejecutar
-        /// lógica personalizada (ej. sp_set_session_context).
+        /// lógica personalizada (ej. sp_set_session_context). Puede ser null si no se configura.
         /// </summary>
-        Action<ISqlExecutorContext> OnConnectionOpened { get; set; }
+        Action<ISqlExecutorContext>? OnConnectionOpened { get; set; }
 
         /// <summary>
         /// Crea una nueva colección de parámetros para comandos SQL.
@@ -42,8 +42,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="commandType">Tipo de comando (Texto, Procedimiento almacenado, etc.).</param>
         /// <param name="transaction">Transacción opcional en la que ejecutar el comando.</param>
         /// <returns>Número de filas afectadas.</returns>
-        int ExecuteNonQuery(string sql, IDaoParameterCollection parameters = null,
-                           CommandType commandType = CommandType.Text, ITransaction transaction = null);
+        int ExecuteNonQuery(string sql, IDaoParameterCollection? parameters = null,
+                           CommandType commandType = CommandType.Text, ITransaction? transaction = null);
 
         /// <summary>
         /// Ejecuta asincrónicamente un comando SQL que no retorna resultados.
@@ -54,8 +54,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="transaction">Transacción opcional.</param>
         /// <param name="cancellationToken">Token de cancelación.</param>
         /// <returns>Número de filas afectadas.</returns>
-        Task<int> ExecuteNonQueryAsync(string sql, IDaoParameterCollection parameters = null,
-                                      CommandType commandType = CommandType.Text, ITransaction transaction = null,
+        Task<int> ExecuteNonQueryAsync(string sql, IDaoParameterCollection? parameters = null,
+                                      CommandType commandType = CommandType.Text, ITransaction? transaction = null,
                                       CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -66,9 +66,12 @@ namespace KUtilitiesCore.Dal
         /// <param name="parameters">Colección de parámetros para el comando.</param>
         /// <param name="commandType">Tipo de comando.</param>
         /// <param name="transaction">Transacción opcional.</param>
-        /// <returns>Valor escalar obtenido de la consulta.</returns>
-        TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null);
+        /// <returns>
+        /// Valor escalar obtenido de la consulta; puede ser <c>null</c> (o el valor por defecto)
+        /// cuando la consulta no retorna filas o el valor es <see cref="DBNull"/>.
+        /// </returns>
+        TResult? Scalar<TResult>(string sql, IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null);
 
         /// <summary>
         /// Ejecuta asincrónicamente una consulta SQL y retorna el primer valor de la primera fila
@@ -80,9 +83,12 @@ namespace KUtilitiesCore.Dal
         /// <param name="commandType">Tipo de comando.</param>
         /// <param name="transaction">Transacción opcional.</param>
         /// <param name="cancellationToken">Token de cancelación.</param>
-        /// <returns>Valor escalar obtenido de la consulta.</returns>
-        Task<TResult> ScalarAsync<TResult>(string sql, IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null,
+        /// <returns>
+        /// Valor escalar obtenido de la consulta; puede ser <c>null</c> (o el valor por defecto)
+        /// cuando la consulta no retorna filas o el valor es <see cref="DBNull"/>.
+        /// </returns>
+        Task<TResult?> ScalarAsync<TResult>(string sql, IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null,
                                           CancellationToken cancellationToken = default);
 
     }

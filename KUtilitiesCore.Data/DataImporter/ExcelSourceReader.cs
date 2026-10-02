@@ -21,13 +21,13 @@ namespace KUtilitiesCore.Data.DataImporter
         private readonly ICellValueConverter _cellConverter;
         private readonly ExcelParsingOptions _options;
 
-        private IExcelWorkbookReader _workbookReader;
+        private IExcelWorkbookReader? _workbookReader;
         private bool _disposed;
 
         /// <inheritdoc/>
         public string FilePath { get; set; }
         /// <inheritdoc/>
-        public string SheetName { get; set; }
+        public string? SheetName { get; set; }
         /// <inheritdoc/>
         public bool HasHeader { get; set; } = true;
         /// <inheritdoc/>
@@ -40,10 +40,10 @@ namespace KUtilitiesCore.Data.DataImporter
         /// </summary>
         public ExcelSourceReader(
             string filePath,
-            IExcelWorkbookReaderFactory workbookFactory = null,
-            IDiskFileReader fileReader = null,
-            ICellValueConverter cellConverter = null,
-            ExcelParsingOptions options = null)
+            IExcelWorkbookReaderFactory? workbookFactory = null,
+            IDiskFileReader? fileReader = null,
+            ICellValueConverter? cellConverter = null,
+            ExcelParsingOptions? options = null)
         {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             _workbookFactory = workbookFactory ?? CreateDefaultFactory();
@@ -55,19 +55,18 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <inheritdoc/>
         public IReadOnlyList<string> GetSheets()
         {
-            EnsureWorkbookOpen();
-            return _workbookReader.GetSheetNames();
+            return GetWorkbookReader().GetSheetNames();
         }
         /// <inheritdoc/>
         public IReadOnlyList<SheetInfo> GetSheetInfo()
         {
-            EnsureWorkbookOpen();
+            var workbookReader = GetWorkbookReader();
             var sheets = new List<SheetInfo>();
-            var sheetNames = _workbookReader.GetSheetNames();
+            var sheetNames = workbookReader.GetSheetNames();
 
             for (int i = 0; i < sheetNames.Count; i++)
             {
-                var worksheet = _workbookReader.GetWorksheet(sheetNames[i]);
+                var worksheet = workbookReader.GetWorksheet(sheetNames[i]);
                 sheets.Add(new SheetInfo
                 {
                     Name = worksheet.Name,
@@ -83,7 +82,6 @@ namespace KUtilitiesCore.Data.DataImporter
         public DataTable ReadData()
         {
             ValidatePreconditions();
-            EnsureWorkbookOpen();
 
             IExcelWorksheetReader worksheetReader = GetWorksheetReader();
             DataTable dataTable = new DataTable(worksheetReader.Name);
@@ -110,32 +108,40 @@ namespace KUtilitiesCore.Data.DataImporter
                 throw new System.IO.FileNotFoundException($"El archivo no existe: {FilePath}", FilePath);
         }
 
-        private void EnsureWorkbookOpen()
+        /// <summary>
+        /// Obtiene el lector del libro de trabajo, abriéndolo en diferido la primera vez que se
+        /// solicita. Al retornar siempre una instancia no nula, el análisis de flujo del compilador
+        /// puede garantizar la seguridad de las llamadas posteriores sin supresiones.
+        /// </summary>
+        private IExcelWorkbookReader GetWorkbookReader()
         {
-            if (_workbookReader != null)
-                return;
-
-            using var stream = _fileReader.OpenRead(FilePath);
-            _workbookReader = _workbookFactory.CreateFromStream(stream, leaveOpen: false);
+            if (_workbookReader is null)
+            {
+                using var stream = _fileReader.OpenRead(FilePath);
+                _workbookReader = _workbookFactory.CreateFromStream(stream, leaveOpen: false);
+            }
+            return _workbookReader;
         }
 
         private IExcelWorksheetReader GetWorksheetReader()
         {
+            var workbookReader = GetWorkbookReader();
+
             if (!string.IsNullOrEmpty(SheetName))
             {
-                if (!_workbookReader.ContainsSheet(SheetName))
+                if (!workbookReader.ContainsSheet(SheetName))
                 {
                     if (_options.ThrowOnMissingSheet)
                         throw new ArgumentException($"La hoja '{SheetName}' no existe en el archivo");
 
                     // Si no existe y no se debe lanzar excepción, usar la primera hoja
-                    return _workbookReader.GetFirstWorksheet();
+                    return workbookReader.GetFirstWorksheet();
                 }
-                return _workbookReader.GetWorksheet(SheetName);
+                return workbookReader.GetWorksheet(SheetName);
             }
 
             // Si no se especificó hoja, usar la primera
-            return _workbookReader.GetFirstWorksheet();
+            return workbookReader.GetFirstWorksheet();
         }
 
         private IEnumerable<IExcelRow> ReadWorksheetRows(IExcelWorksheetReader worksheet)
@@ -189,7 +195,7 @@ namespace KUtilitiesCore.Data.DataImporter
 
             foreach (var cell in headerRow.Cells)
             {
-                string headerName = _cellConverter.ConvertToString(cell);
+                string? headerName = _cellConverter.ConvertToString(cell);
 
                 if (string.IsNullOrEmpty(headerName))
                     headerName = $"Column{columnIndex}";
@@ -237,7 +243,7 @@ namespace KUtilitiesCore.Data.DataImporter
                 if (columnIndex >= headers.Count)
                     break;
 
-                string value = _cellConverter.ConvertToString(cell);
+                string? value = _cellConverter.ConvertToString(cell);
                 dataRow[columnIndex] = string.IsNullOrEmpty(value) ? DBNull.Value : value;
                 columnIndex++;
             }
@@ -258,12 +264,20 @@ namespace KUtilitiesCore.Data.DataImporter
             return new ClosedXmlWorkbookReaderFactory();
         }
 
+        /// <summary>
+        /// Libera el lector del libro de Excel y todos los recursos administrados del lector.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Libera los recursos administrados (el lector del libro y su stream) cuando
+        /// <paramref name="disposing"/> es <c>true</c>.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> si se invoca desde Dispose; <c>false</c> si viene del finalizador.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -290,7 +304,7 @@ namespace KUtilitiesCore.Data.DataImporter
             _options = options;
         }
 
-        public string ConvertToString(IExcelCell cell)
+        public string? ConvertToString(IExcelCell cell)
         {
             if (cell == null || cell.IsEmpty)
                 return _options.TreatEmptyAsNull ? null : string.Empty;

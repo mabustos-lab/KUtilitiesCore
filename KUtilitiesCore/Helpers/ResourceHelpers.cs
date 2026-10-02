@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Helpers
 {
+    /// <summary>
+    /// Ayudantes para acceder a recursos localizados de un proyecto a partir del
+    /// tipo que los representa.
+    /// </summary>
     public class ResourceHelpers
     {
         /// <summary>

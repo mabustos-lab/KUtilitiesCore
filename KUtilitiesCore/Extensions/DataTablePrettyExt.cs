@@ -74,7 +74,10 @@ namespace KUtilitiesCore.Extensions
                 // Revisamos los datos para ver si hay algo más largo
                 foreach (DataRow row in table.Rows)
                 {
-                    string cellValue = row[col] != DBNull.Value ? row[col].ToString() : "NULL";
+                    // El indexer de DataRow devuelve object?: se captura en una local
+                    // para que el patrón de nullabilidad aplique a la misma referencia.
+                    var cell = row[col];
+                    string cellValue = cell is DBNull or null ? "NULL" : cell.ToString() ?? string.Empty;
                     if (cellValue.Length > maxLength)
                     {
                         maxLength = cellValue.Length;
@@ -105,7 +108,8 @@ namespace KUtilitiesCore.Extensions
                 StringBuilder rowLine = new StringBuilder();
                 foreach (var col in columns)
                 {
-                    string cellValue = row[col] != DBNull.Value ? row[col].ToString() : "NULL";
+                    var cell = row[col];
+                    string cellValue = cell is DBNull or null ? "NULL" : cell.ToString() ?? string.Empty;
 
                     // Alineación: Números a la derecha, texto a la izquierda (Opcional, aquí todo a la derecha para simplicidad)
                     // Usamos PadRight para mantener la estructura de columnas

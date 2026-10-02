@@ -26,6 +26,10 @@ namespace KUtilitiesCore.Data.DataImporter
 
         #region Constructors
 
+        /// <summary>
+        /// Inicializa el gestor de importación con las colecciones de definiciones, el resultado
+        /// de validación y los DataTables de origen y destino vacíos.
+        /// </summary>
         public ImportManager()
         {
             ColumnDefinitions = new FieldDefinitionCollection();
@@ -57,6 +61,9 @@ namespace KUtilitiesCore.Data.DataImporter
 
         #region Methods
 
+        /// <summary>
+        /// Libera el DataSource, el origen de datos crudo y el resto de recursos administrados.
+        /// </summary>
         public void Dispose()
         {
             // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
@@ -148,7 +155,7 @@ namespace KUtilitiesCore.Data.DataImporter
                 foreach (var col in ColumnDefinitions)
                 {
                     // Busqueda por case-insensitive
-                    DataColumn dtColumn = _rawDataSource.Columns
+                    var dtColumn = _rawDataSource.Columns
                         .Cast<DataColumn>()
                         .FirstOrDefault(
                             x => string.Equals(
@@ -224,6 +231,10 @@ namespace KUtilitiesCore.Data.DataImporter
             return allRowsValid && ValidationErrors.IsValid;
         }
 
+        /// <summary>
+        /// Libera los DataTables de origen y destino cuando <paramref name="disposing"/> es <c>true</c>.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> si se invoca desde Dispose; <c>false</c> si viene del finalizador.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -332,7 +343,7 @@ namespace KUtilitiesCore.Data.DataImporter
             foreach (var def in ColumnDefinitions)
             {
                 string value = row[def.FieldName]?.ToString() ?? string.Empty;
-                DataColumn dcSource = _rawDataSource.Columns
+                var dcSource = _rawDataSource.Columns
                     .Cast<DataColumn>()
                     .FirstOrDefault(
                         x => x.ColumnName.Equals(def.SourceColumnName, StringComparison.InvariantCultureIgnoreCase));
@@ -378,14 +389,21 @@ namespace KUtilitiesCore.Data.DataImporter
                 }
                 else
                 {
-                    RunBusinessRules(def, def.TypeConverter.TryConvert(value),rowIndex);
+                    // TypeConverter es null-safe: IsValidValueType ya exige un convertidor válido
+                    // para llegar a esta rama, pero se usa ?. por si el contrato cambia.
+                    RunBusinessRules(def, def.TypeConverter?.TryConvert(value),rowIndex);
                 }
             }
 
             return rowValid;
         }
 
-        private void RunBusinessRules(IFieldDefinitionItem definition, object convertedValue, int currentRowIndex)
+        /// <summary>
+        /// Ejecuta las reglas de negocio configuradas para el campo contra el valor ya convertido.
+        /// El valor puede ser <c>null</c> cuando el convertidor no logró convertir; las reglas
+        /// deciden si lo aceptan o lo reportan como fallo.
+        /// </summary>
+        private void RunBusinessRules(IFieldDefinitionItem definition, object? convertedValue, int currentRowIndex)
         {
             if (definition.ValidationRules != null && definition.ValidationRules.Count > 0)
             {
