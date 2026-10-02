@@ -19,6 +19,12 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
         /// <inheritdoc/>
         public int ColumnCount => _worksheet.ColumnsUsed().Count();
 
+        /// <summary>
+        /// Inicializa el lector asegurando una hoja válida de ClosedXML;
+        /// la hoja no puede ser <c>null</c>.
+        /// </summary>
+        /// <param name="worksheet">Hoja de ClosedXML que se adapta.</param>
+        /// <exception cref="ArgumentNullException">Si <paramref name="worksheet"/> es <c>null</c>.</exception>
         public ClosedXmlWorksheetReader(IXLWorksheet worksheet)
         {
             _worksheet = worksheet ?? throw new ArgumentNullException(nameof(worksheet));

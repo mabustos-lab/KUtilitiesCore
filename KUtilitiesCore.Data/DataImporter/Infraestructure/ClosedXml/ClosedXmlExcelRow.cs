@@ -17,6 +17,11 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
         /// <inheritdoc/>
         public bool IsEmpty => _row.IsEmpty();
 
+        /// <summary>
+        /// Envuelve una fila de ClosedXML para exponer sus celdas usadas
+        /// a través de la abstracción <see cref="IExcelRow"/>.
+        /// </summary>
+        /// <param name="row">Fila de ClosedXML que se adapta.</param>
         public ClosedXmlExcelRow(IXLRow row)
         {
             _row = row;

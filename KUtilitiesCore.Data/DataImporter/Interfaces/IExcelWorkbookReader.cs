@@ -139,7 +139,10 @@ namespace KUtilitiesCore.Data.DataImporter.Interfaces
         /// Convierte el valor de una celda a string
         /// </summary>
         /// <param name="cell">Celda a convertir</param>
-        /// <returns>Valor convertido a string</returns>
-        string ConvertToString(IExcelCell cell);
+        /// <returns>
+        /// Valor convertido a string. Puede retornar <c>null</c> cuando la celda está vacía y la
+        /// opción TreatEmptyAsNull está activa; los consumidores deben validar el resultado.
+        /// </returns>
+        string? ConvertToString(IExcelCell cell);
     }
 }

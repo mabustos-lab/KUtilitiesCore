@@ -12,7 +12,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <summary>
         /// Crea un lector de Excel básico
         /// </summary>
-        public static IExcelSourceReader Create(string filePath, string sheetName = null)
+        public static IExcelSourceReader Create(string filePath, string? sheetName = null)
         {
             var options = new ExcelParsingOptions();
             if (!string.IsNullOrEmpty(sheetName))
@@ -35,8 +35,8 @@ namespace KUtilitiesCore.Data.DataImporter
         /// Crea un lector de Excel con opciones específicas
         /// </summary>
         public static IExcelSourceReader CreateWithOptions(string filePath,
-            ExcelParsingOptions options, IExcelWorkbookReaderFactory workbookFactory = null,
-            IDiskFileReader diskFileReader=null, ICellValueConverter cellValueConverter = null)
+            ExcelParsingOptions options, IExcelWorkbookReaderFactory? workbookFactory = null,
+            IDiskFileReader? diskFileReader = null, ICellValueConverter? cellValueConverter = null)
         {
             return new ExcelSourceReader(filePath, workbookFactory, diskFileReader, cellValueConverter, options);
         }
@@ -44,7 +44,7 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <summary>
         /// Crea un lector de Excel sin encabezado
         /// </summary>
-        public static IExcelSourceReader CreateWithoutHeader(string filePath, string sheetName = null)
+        public static IExcelSourceReader CreateWithoutHeader(string filePath, string? sheetName = null)
         {
             var options = new ExcelParsingOptions
             {

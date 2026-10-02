@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>disable</Nullable>
+		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<Title>KUtilitiesCore.Data</Title>
 		<Description>Utilidades para importación y exportación de datos en formatos CSV y Excel.</Description>

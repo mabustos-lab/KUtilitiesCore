@@ -42,7 +42,7 @@ namespace KUtilitiesCore.Data.DataImporter.Infrastructure
                 headerProcessed = true;
             }
 
-            string line;
+            string? line;
             while ((line = reader.ReadLine()) != null)
             {
                 if (options.IgnoreEmptyLines && string.IsNullOrWhiteSpace(line))
