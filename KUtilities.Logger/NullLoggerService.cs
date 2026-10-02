@@ -22,7 +22,7 @@ namespace KUtilitiesCore.Logger
         /// <inheritdoc/>
         public bool IsEnabled(LogLevel logLevel) => false;
         /// <inheritdoc/>
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
         /// <inheritdoc/>
         public void LogTrace(string message, EventId? eventId, params object[] args) { }
         /// <inheritdoc/>

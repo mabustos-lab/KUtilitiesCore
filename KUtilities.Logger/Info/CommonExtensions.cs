@@ -7,6 +7,10 @@ using System.Text;
 
 namespace KUtilitiesCore.Logger.Info
 {
+    /// <summary>
+    /// Extensiones comunes para enriquecer la información de los logs:
+    /// identificación de excepciones mediante hash y firmas cortas de tipos y métodos.
+    /// </summary>
     public static class CommonExtensions
     {
         #region Methods

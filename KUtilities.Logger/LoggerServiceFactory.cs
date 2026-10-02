@@ -138,6 +138,11 @@ namespace KUtilitiesCore.Logger
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Libera los recursos administrados cuando es llamado desde <see cref="Dispose()"/>;
+        /// las clases derivadas pueden sobrescribirlo para liberar recursos propios.
+        /// </summary>
+        /// <param name="disposing"><see langword="true"/> cuando la liberación es explícita.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)

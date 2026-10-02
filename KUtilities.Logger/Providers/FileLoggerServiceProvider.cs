@@ -35,6 +35,11 @@ namespace KUtilitiesCore.Logger.Providers
             return new FileLogger<TCategoryName>(_options);
         }
 
+        /// <summary>
+        /// Libera los recursos administrados cuando es llamado desde <see cref="Dispose()"/>;
+        /// las clases derivadas pueden sobrescribirlo para liberar recursos propios.
+        /// </summary>
+        /// <param name="disposing"><see langword="true"/> cuando la liberación es explícita.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -57,6 +62,10 @@ namespace KUtilitiesCore.Logger.Providers
         //     Dispose(disposing: false);
         // }
 
+        /// <summary>
+        /// Libera los recursos del proveedor; delega en <see cref="Dispose(bool)"/>
+        /// siguiendo el patrón Dispose estándar.
+        /// </summary>
         public void Dispose()
         {
             // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".
