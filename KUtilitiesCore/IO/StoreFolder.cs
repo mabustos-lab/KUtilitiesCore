@@ -8,6 +8,10 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.IO
 {
+    /// <summary>
+    /// Utilidades de acceso a carpetas especiales y almacenamiento aislado
+    /// (<see cref="System.IO.IsolatedStorage"/>).
+    /// </summary>
     public static class StoreFolder
     {
         /// <summary>

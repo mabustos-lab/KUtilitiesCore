@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +19,10 @@ using Newtonsoft.Json.Serialization;
 
 namespace KUtilitiesCore.Extensions.Serialization
 {
+    /// <summary>
+    /// Utilidades de serialización y deserialización a JSON y XML, con soporte de
+    /// opciones predefinidas para escenarios comunes.
+    /// </summary>
     public static class Utilities
     {
 #if NET6_0_OR_GREATER
@@ -166,7 +170,7 @@ namespace KUtilitiesCore.Extensions.Serialization
         /// </summary>
         /// <typeparam name="T">El tipo del objeto a serializar. Debe ser serializable en XML.</typeparam>
         /// <param name="obj">El objeto a serializar.</param>
-        /// <param name="omitXmlDeclaration">Indica si se debe omitir la declaración XML (<?xml version="1.0"...?>).</param>
+        /// <param name="omitXmlDeclaration">Indica si se debe omitir la declaración XML (<c>&lt;?xml version="1.0"...?&gt;</c>).</param>
         /// <param name="namespaces">Espacios de nombres XML a utilizar durante la serialización.</param>
         /// <returns>Una cadena que representa el objeto en formato XML.</returns>
         /// <exception cref="ArgumentNullException">Si el objeto es null.</exception>

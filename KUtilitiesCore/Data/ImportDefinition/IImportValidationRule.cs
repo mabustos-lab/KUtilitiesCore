@@ -16,9 +16,12 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <summary>
         /// Valida un valor específico contra la regla de negocio.
         /// </summary>
-        /// <param name="value">El valor ya convertido (strongly-typed) a validar.</param>
+        /// <param name="value">
+        /// El valor ya convertido (strongly-typed) a validar. Puede ser <c>null</c> cuando el
+        /// convertidor no logró convertir el valor; las reglas deciden si lo aceptan o fallan.
+        /// </param>
         /// <param name="fieldName">El nombre del campo o columna que se está validando (para mensajes de error).</param>
         /// <returns>Una colección de fallos de validación. Si es válida, retorna una colección vacía.</returns>
-        IEnumerable<ValidationFailure> Validate(object value, string fieldName);
+        IEnumerable<ValidationFailure> Validate(object? value, string fieldName);
     }
 }

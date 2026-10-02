@@ -30,14 +30,30 @@
 
         #region Properties
 
+        /// <summary>
+        /// Indica que existe una regla activa de valores permitidos.
+        /// </summary>
         public override bool HasRule => true;
+
+        /// <summary>
+        /// Fecha máxima permitida (inclusive); null si no hay límite superior.
+        /// </summary>
         public DateTime? MaxDate { get; }
+
+        /// <summary>
+        /// Fecha mínima permitida (inclusive); null si no hay límite inferior.
+        /// </summary>
         public DateTime? MinDate { get; }
 
         #endregion Properties
 
         #region Methods
 
+        /// <summary>
+        /// Construye una descripción legible del rango de fechas permitido para
+        /// mostrarla en mensajes de error.
+        /// </summary>
+        /// <returns>Descripción del rango permitido según los límites definidos.</returns>
         public override string GetAllowedDescription()
         {
             if (MinDate.HasValue && MaxDate.HasValue)
@@ -49,6 +65,14 @@
             return "cualquier fecha";
         }
 
+        /// <summary>
+        /// Valida una fecha encapsulada en <see cref="object"/>, previa comprobación de tipo.
+        /// </summary>
+        /// <param name="value">Fecha a validar.</param>
+        /// <returns><c>true</c> si la fecha está dentro del rango permitido.</returns>
+        /// <exception cref="ArgumentException">
+        /// Se produce cuando <paramref name="value"/> no es de tipo <see cref="DateTime"/>.
+        /// </exception>
         public override bool IsAllowed(object value)
         {
             if (value is not DateTime dateTimeValue)
@@ -56,6 +80,12 @@
             return IsAllowed(dateTimeValue);
         }
 
+        /// <summary>
+        /// Determina si la fecha está dentro del rango permitido, comparando por fecha
+        /// (sin componente horario).
+        /// </summary>
+        /// <param name="value">Fecha a validar.</param>
+        /// <returns><c>true</c> si la fecha está dentro del rango.</returns>
         public bool IsAllowed(DateTime value)
         {
             bool minOk = !MinDate.HasValue || value.Date >= MinDate.Value.Date;

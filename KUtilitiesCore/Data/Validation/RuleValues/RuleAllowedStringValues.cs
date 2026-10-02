@@ -14,6 +14,9 @@ namespace KUtilitiesCore.Data.Validation.RuleValues
         private readonly StringComparison _comparisonType;
         private readonly bool _ignoreAcents;
 
+        /// <summary>
+        /// Indica si el valor validado puede ser null o una cadena vacía.
+        /// </summary>
         public bool AllowNull { get; }
 
         #endregion Fields
@@ -25,6 +28,7 @@ namespace KUtilitiesCore.Data.Validation.RuleValues
         /// </summary>
         /// <param name="allowedValues">La colección de cadenas permitidas.</param>
         /// <param name="comparisonType">El tipo de comparación a usar (por defecto: OrdinalIgnoreCase).</param>
+        /// <param name="allowNull">Si es True permite que el valor validado sea Null.</param>
         /// <param name="ignoreAcents">Si es True normaliza las cadenas de Texto ignorando los acentos.</param>
         public RuleAllowedStringValues(IEnumerable<string> allowedValues,
             StringComparison comparisonType = StringComparison.OrdinalIgnoreCase, bool allowNull = false, bool ignoreAcents = false)
@@ -43,17 +47,33 @@ namespace KUtilitiesCore.Data.Validation.RuleValues
 
         #region Properties
 
+        /// <summary>
+        /// Indica que existe una regla activa de valores permitidos.
+        /// </summary>
         public override bool HasRule => true;
 
         #endregion Properties
 
         #region Methods
 
+        /// <summary>
+        /// Construye una descripción legible de la lista de valores permitidos para
+        /// mostrarla en mensajes de error.
+        /// </summary>
+        /// <returns>Descripción de los valores permitidos.</returns>
         public override string GetAllowedDescription()
         {
             return $"uno de [{string.Join(", ", _allowedValues.Select(v => $"'{v}'"))}]";
         }
 
+        /// <summary>
+        /// Valida una cadena encapsulada en <see cref="object"/>, previa comprobación de tipo.
+        /// </summary>
+        /// <param name="value">Cadena a validar.</param>
+        /// <returns><c>true</c> si la cadena pertenece al conjunto permitido.</returns>
+        /// <exception cref="ArgumentException">
+        /// Se produce cuando <paramref name="value"/> no es de tipo <see cref="string"/>.
+        /// </exception>
         public override bool IsAllowed(object value)
         {
             if (value is not string strValue)
@@ -61,6 +81,15 @@ namespace KUtilitiesCore.Data.Validation.RuleValues
             return IsAllowed(strValue);
         }
 
+        /// <summary>
+        /// Determina si la cadena pertenece al conjunto permitido, aplicando la
+        /// normalización de acentos y el comparador configurados.
+        /// </summary>
+        /// <param name="value">Cadena a validar.</param>
+        /// <returns>
+        /// <c>true</c> si la cadena está permitida; las cadenas vacías se rigen por
+        /// <see cref="AllowNull"/>.
+        /// </returns>
         public bool IsAllowed(string value)
         {
             if (string.IsNullOrEmpty(value))

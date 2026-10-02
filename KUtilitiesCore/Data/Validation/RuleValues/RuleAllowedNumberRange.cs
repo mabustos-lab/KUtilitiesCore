@@ -1,7 +1,7 @@
 ﻿namespace KUtilitiesCore.Data.Validation.RuleValues
 {
     /// <summary> Implementación genérica de IAllowedValue para un rango numérico. </summary>
-    /// <typeparam name="TNum">El tipo numérico (debe implementar IComparable<TNum>).</typeparam>
+    /// <typeparam name="TNum">El tipo numérico (debe implementar IComparable&lt;TNum&gt;).</typeparam>
     public class RuleAllowedNumberRange<TNum> : BaseRuleValue, IRuleAllowedValue<TNum> where TNum : struct, IComparable<TNum>
     {
         #region Constructors
@@ -29,14 +29,30 @@
 
         #region Properties
 
+        /// <summary>
+        /// Indica que existe una regla activa de valores permitidos.
+        /// </summary>
         public override bool HasRule => true;
+
+        /// <summary>
+        /// Valor máximo permitido (inclusive); null si no hay límite superior.
+        /// </summary>
         public TNum? MaxValue { get; }
+
+        /// <summary>
+        /// Valor mínimo permitido (inclusive); null si no hay límite inferior.
+        /// </summary>
         public TNum? MinValue { get; }
 
         #endregion Properties
 
         #region Methods
 
+        /// <summary>
+        /// Construye una descripción legible del rango numérico permitido para
+        /// mostrarla en mensajes de error.
+        /// </summary>
+        /// <returns>Descripción del rango permitido según los límites definidos.</returns>
         public override string GetAllowedDescription()
         {
             string minStr = MinValue?.ToString() ?? "-inf";
@@ -51,6 +67,14 @@
             return "cualquier número";
         }
 
+        /// <summary>
+        /// Valida un número encapsulado en <see cref="object"/>, previa comprobación de tipo.
+        /// </summary>
+        /// <param name="value">Número a validar.</param>
+        /// <returns><c>true</c> si el número está dentro del rango permitido.</returns>
+        /// <exception cref="ArgumentException">
+        /// Se produce cuando <paramref name="value"/> no es de tipo <typeparamref name="TNum"/>.
+        /// </exception>
         public override bool IsAllowed(object value)
         {
             if (value is not TNum tnumValue)
@@ -58,6 +82,12 @@
             return IsAllowed(tnumValue);
         }
 
+        /// <summary>
+        /// Determina si el número está dentro del rango permitido, comparando con los
+        /// límites definidos a través de <see cref="IComparable{T}"/>.
+        /// </summary>
+        /// <param name="value">Número a validar.</param>
+        /// <returns><c>true</c> si el número está dentro del rango.</returns>
         public bool IsAllowed(TNum value)
         {
             bool minOk = !MinValue.HasValue || value.CompareTo(MinValue.Value) >= 0;

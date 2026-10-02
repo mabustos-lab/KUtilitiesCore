@@ -15,13 +15,16 @@ namespace KUtilitiesCore.Data.Validation.Core
     {
         #region Constructors
 
+        /// <summary>
+        /// Inicializa un fallo genérico con el mensaje de error indicado.
+        /// </summary>
+        /// <param name="errorMessage">Mensaje de error descriptivo.</param>
         public GenericFailure(string errorMessage) : base(errorMessage)
         {
         }
 
         #endregion Constructors
     }
-
     /// <summary>
     /// Representa el fallo de validación de una propiedad específica. Contiene metadatos detallados
     /// sobre qué falló y por qué.
@@ -31,6 +34,13 @@ namespace KUtilitiesCore.Data.Validation.Core
     {
         #region Constructors
 
+        /// <summary>
+        /// Inicializa un fallo de validación con metadatos de fila y valor intentado.
+        /// </summary>
+        /// <param name="propertyName">Nombre de la propiedad que falló la validación.</param>
+        /// <param name="error">Mensaje de error descriptivo.</param>
+        /// <param name="idxRow">Índice de la fila en la fuente de datos; -1 si no aplica.</param>
+        /// <param name="attemptedValue">Valor que se intentó asignar; si es <c>null</c> se usa <see cref="string.Empty"/>.</param>
         public ValidationFailure(string propertyName, string error, int idxRow, object? attemptedValue = null)
                     : base(error)
         {
@@ -56,14 +66,14 @@ namespace KUtilitiesCore.Data.Validation.Core
         public object AttemptedValue { get; set; }
 
         /// <summary>
-        /// Estado o severidad personalizada (opcional).
+        /// Estado o severidad personalizada (opcional). Puede ser <c>null</c> si no se asigna.
         /// </summary>
-        public object CustomState { get; set; }
+        public object? CustomState { get; set; }
 
         /// <summary>
-        /// Código de error personalizado (opcional).
+        /// Código de error personalizado (opcional). Puede ser <c>null</c> si no se asigna.
         /// </summary>
-        public string ErrorCode { get; set; }
+        public string? ErrorCode { get; set; }
 
         /// <summary>
         /// Establece el indice dde la fila del error.
@@ -79,6 +89,9 @@ namespace KUtilitiesCore.Data.Validation.Core
 
         #region Methods
 
+        /// <summary>
+        /// Retorna una representación textual del fallo para logs y depuración.
+        /// </summary>
         public override string ToString()
         {
             return $"Propiedad: {PropertyName ?? "<Objeto>"}{(IndexRow>=0?$"[Index: {IndexRow}]:" :"")} Error: {ErrorMessage} Valor: '{(AttemptedValue??"<null>")}'";
@@ -96,6 +109,10 @@ namespace KUtilitiesCore.Data.Validation.Core
     {
         #region Constructors
 
+        /// <summary>
+        /// Inicializa el fallo con el mensaje de error.
+        /// </summary>
+        /// <param name="errorMessage">Mensaje de error descriptivo.</param>
         protected ValidationFailureBase(string errorMessage)
         {
             ErrorMessage = errorMessage;
@@ -114,6 +131,9 @@ namespace KUtilitiesCore.Data.Validation.Core
 
         #region Methods
 
+        /// <summary>
+        /// Retorna el mensaje de error del fallo.
+        /// </summary>
         public override string ToString()
         {
             return ErrorMessage;

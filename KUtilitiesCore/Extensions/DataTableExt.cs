@@ -1,4 +1,4 @@
-﻿using KUtilitiesCore.Data.Converter;
+using KUtilitiesCore.Data.Converter;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +10,10 @@ using System.Xml.Linq;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones de utilidad para manipular y transformar <see cref="DataTable"/>,
+    /// incluyendo metadatos de columnas orientados a exportación.
+    /// </summary>
     public static class DataTableExt
     {
 
@@ -124,7 +128,7 @@ namespace KUtilitiesCore.Extensions
         /// <returns>Un <see cref="XDocument"/> que representa el contenido del <see cref="DataTable"/>.</returns>
         /// <exception cref="ArgumentNullException">Se lanza si <paramref name="dataTable"/> es <c>null</c>.</exception>
         /// <remarks>
-        /// El documento XML tendrá una declaración XML `<?xml version="1.0" encoding="utf-8"?>`.
+        /// El documento XML tendrá una declaración XML <c>&lt;?xml version="1.0" encoding="utf-8"?&gt;</c>.
         /// Cada <see cref="DataRow"/> en el <see cref="DataTable"/> se convierte en un elemento XML. El nombre de este elemento
         /// se toma de <see cref="DataTable.TableName"/>; si <see cref="DataTable.TableName"/> está vacío o es nulo, se usa "Row".
         /// Cada <see cref="DataColumn"/> en una fila se convierte en un elemento XML secundario, donde el nombre del elemento es

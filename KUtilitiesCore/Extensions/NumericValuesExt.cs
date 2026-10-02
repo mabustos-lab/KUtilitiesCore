@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones para validar y transformar valores numéricos y colecciones de números.
+    /// </summary>
     public static class NumericValuesExt
     {
         #region Methods

@@ -37,6 +37,10 @@ namespace KUtilitiesCore.Data.ValidationAttributes
         /// </summary>
         public bool AllowedEquality { get; }
 
+        /// <summary>
+        /// Indica que la validación requiere el contexto completo, pues debe reflexionar
+        /// sobre la instancia para obtener el valor de la propiedad de comparación.
+        /// </summary>
         public override bool RequiresValidationContext => true;
 
         private void SetErrorMessage(bool allowedEqualit)
