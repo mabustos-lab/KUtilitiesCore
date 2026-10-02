@@ -12,6 +12,12 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	    <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DataImporter\Helpers\**" />
+    <EmbeddedResource Remove="DataImporter\Helpers\**" />
+    <None Remove="DataImporter\Helpers\**" />
+  </ItemGroup>
   <ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
@@ -20,9 +26,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DataImporter\Helpers\" />
   </ItemGroup>
 
 </Project>
