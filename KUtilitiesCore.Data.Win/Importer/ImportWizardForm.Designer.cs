@@ -383,7 +383,9 @@
         private Button btnImport;
         private DataGridViewTextBoxColumn DestinationField;
         private DataGridViewComboBoxColumn SourceColumn;
+        /// <summary>Grid donde el usuario mapea las columnas de origen con los campos destino.</summary>
         protected DataGridView dgvMapping;
+        /// <summary>Grid de previsualización de los datos cargados de la fuente seleccionada.</summary>
         protected DataGridView dgvPreview;
         private CheckBox cbFilterHasError;
     }

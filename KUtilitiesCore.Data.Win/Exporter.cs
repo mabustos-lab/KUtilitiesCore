@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Data.Win
 {
+    /// <summary>
+    /// Punto de entrada de exportación de datos en entornos WinForms: muestra el diálogo
+    /// "Guardar como", resuelve el formato por extensión y delega en los exportadores de
+    /// <c>KUtilitiesCore.Data</c>. Centraliza aquí la interacción con el usuario para que las
+    /// librerías de exportación permanezcan independientes de la UI.
+    /// </summary>
     public static class Exporter
     {
         /// <summary>
