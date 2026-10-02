@@ -58,7 +58,7 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 ## Conventions
 
 - **Language**: Code documentation and XML doc comments are in **Spanish**.
-- **Nullable**: Inconsistent across projects — `KUtilitiesCore.Dal` and `KUtilitiesCore.Data` use `Nullable disable`, most others use `Nullable enable`. Match the existing project setting.
+- **Nullable**: All library projects use `Nullable enable` (Dal and Data were flipped in the `eliminate-build-warnings` change) except `KUtilitiesCore.DataAccess` and `KUtilitiesCore.DataAccess.Http`, which keep `Nullable disable` (oblivious contracts, netstandard2.1; their warnings were docs-only/zero). Test projects are mixed. Match the existing project setting.
 - **No `InternalsVisibleTo`**: Internal types in `Dal` (e.g. `IMappingStrategy`) are consumed via `DaoContext.ExecuteReaderCore` which is public. Tests cannot reference internals directly.
 - **NuGet packages**: All use `GenerateDocumentationFile=True`. No `Directory.Build.props` or `Directory.Packages.props` — each `.csproj` manages its own package versions.
 - **Encryption project dir typo**: The Encryption project folder is `KUtiitiesCore.Encryption` (triple 'i'). All references must use this exact path.

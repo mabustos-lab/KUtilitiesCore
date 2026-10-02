@@ -9,7 +9,7 @@ context: |
   Conventions: 
     - Code identifiers (classes, methods, variables) must be in English following Microsoft naming conventions (PascalCase / camelCase / _camelCase).
     - ALL documentation, XML doc comments (`/// <summary>`), and technical artifacts must be written in SPANISH.
-    - Nullable reference types: Inconsistent across projects; match the existing project setting (e.g., `KUtilitiesCore.Dal` uses `Nullable disable`, others use `Nullable enable`).
+    - Nullable reference types: all library projects use `Nullable enable` (Dal and Data flipped in the eliminate-build-warnings change) except `KUtilitiesCore.DataAccess`/`DataAccess.Http` which keep `Nullable disable` (oblivious contracts, docs-only/zero warnings); match the existing project setting.
   Workflow: TDD (Test-Driven Development) is required. Interfaces and contracts must be defined and documented before implementation.
 
 # Per-artifact rules (optional)
