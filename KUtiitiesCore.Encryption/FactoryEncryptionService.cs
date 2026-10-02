@@ -4,15 +4,19 @@ using System.Security.Cryptography;
 
 namespace KUtilitiesCore.Encryption
 {
+    /// <summary>
+    /// Punto de entrada único para obtener instancias de los servicios de hash y encriptación,
+    /// de modo que el consumidor no dependa de las implementaciones concretas.
+    /// </summary>
     public static class FactoryEncryptionService
     {
         /// <summary>
         /// Crea el servicio para generar un Hash de contraseña con sal aleatoria
         /// </summary>
-        /// <param name = "useSaltHashOrder" > Indica si se debe usar el orden Sal-Hash o Hashy-Salt</param>
+        /// <param name = "useSaltHashOrder" > Indica si se debe usar el orden Sal-Hash o Hash-Salt</param>
         /// <param name="maximumSaltLength">Tamaño en Bytes de la Sal</param>
-        /// <param name="Iterations">Número de iteraciones para derivar la clave</param>
-        /// <returns></returns>
+        /// <param name="iterations">Número de iteraciones para derivar la clave</param>
+        /// <returns>Una instancia de <see cref="IHashService"/> lista para usar.</returns>
         public static IHashService GetHashServise(bool useSaltHashOrder = true, int maximumSaltLength = 32, int iterations = 10000)
         {
             return new HashService(useSaltHashOrder, maximumSaltLength, iterations);
@@ -20,7 +24,7 @@ namespace KUtilitiesCore.Encryption
         /// <summary>
         /// Implementación básica de IEncryptionService.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Una instancia de <see cref="IEncryptionService"/> basada en Base64.</returns>
         public static IEncryptionService GetBase64EncryptionService()
         {
             return new Base64EncryptionService();
@@ -29,7 +33,7 @@ namespace KUtilitiesCore.Encryption
         /// <summary>
         /// Implementación Data Protection API
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Una instancia de <see cref="IEncryptionService"/> basada en DPAPI.</returns>
         public static IEncryptionService GetDPAPIEncryptionService(DataProtectionScope scope= DataProtectionScope.CurrentUser)
         {
             return new DPAPIEncryptServise() {Scope = scope };
@@ -39,7 +43,7 @@ namespace KUtilitiesCore.Encryption
         /// Servicio de encriptación usando AES.
         /// </summary>
         /// <param name="key">La clave debe tener 16, 24 o 32 bytes para AES (128, 192 o 256 bits)</param>
-        /// <returns></returns>
+        /// <returns>Una instancia de <see cref="IEncryptionService"/> basada en AES.</returns>
         public static IEncryptionService GetAesEncryptionService(string key)
         {
             return new AesEncryptionService(key);

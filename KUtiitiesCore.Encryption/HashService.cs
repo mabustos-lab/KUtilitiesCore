@@ -12,8 +12,8 @@ namespace KUtilitiesCore.Encryption
     /// </remarks>
     /// <param name="useSaltHashOrder">Indica si se debe usar el orden Sal-Hash o Hashy-Salt</param>
     /// <param name="maximumSaltLength">Tamaño en Bytes de la Sal</param>
-    /// <param name="Iterations">Número de iteraciones para derivar la clave</param>
-    sealed class HashService(bool useSaltHashOrder = true, int maximumSaltLength = 32, int iterations = 10000) : IHashService
+        /// <param name="iterations">Número de iteraciones para derivar la clave</param>
+        sealed class HashService(bool useSaltHashOrder = true, int maximumSaltLength = 32, int iterations = 10000) : IHashService
     {
         private readonly bool _useSaltHashOrder = useSaltHashOrder;
         private readonly int _maximumSaltLength = maximumSaltLength;
