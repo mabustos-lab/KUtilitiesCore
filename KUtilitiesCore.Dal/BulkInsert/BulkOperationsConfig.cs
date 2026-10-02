@@ -15,6 +15,14 @@ namespace KUtilitiesCore.Dal.BulkInsert
     {
         #region Constructors
 
+        /// <summary>
+        /// Inicializa la configuración de la operación masiva fijando la tabla destino.
+        /// El resto de propiedades conservan sus valores por defecto.
+        /// </summary>
+        /// <param name="destinationTableName">Nombre de la tabla destino en la base de datos.</param>
+        /// <exception cref="ArgumentNullException">
+        /// Se lanza si <paramref name="destinationTableName"/> es nulo o vacío.
+        /// </exception>
         public BulkOperationsConfig(string destinationTableName)
         {
             if (string.IsNullOrEmpty(destinationTableName))
@@ -60,7 +68,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// (Para BulkUpdate/BulkDelete) Nombre de la columna que actúa como clave primaria o
         /// identificador único para las cláusulas WHERE.
         /// </summary>
-        public string KeyColumnNameForUpdateDelete { get; set; }
+        public string KeyColumnNameForUpdateDelete { get; set; } = string.Empty;
 
         #endregion Properties
     }

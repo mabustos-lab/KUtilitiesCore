@@ -24,7 +24,7 @@ namespace KUtilitiesCore.Dal.Helpers
     {
         private readonly TranslateOptions _options;
 
-        public ObjectMappingStrategy(TranslateOptions options = null)
+        public ObjectMappingStrategy(TranslateOptions? options = null)
         {
             _options = options ?? new TranslateOptions();
         }

@@ -22,8 +22,13 @@ namespace KUtilitiesCore.Dal.UOW
         private readonly Dictionary<Type, Type> _customRepositories = [];
 
         private bool _disposed;
-        private Hashtable _repositories;
+        private readonly Hashtable _repositories = new();
 
+        /// <summary>
+        /// Inicializa la unidad de trabajo creando el contexto transaccional que envolverá
+        /// a todos los repositorios que resuelva esta instancia.
+        /// </summary>
+        /// <param name="context">Contexto de acceso a datos sobre el que se administrarán las transacciones.</param>
         public DaoUnitOfWork(IDaoContext context)
         {
             UowContext = new DaoUowContext(this, context);
@@ -86,9 +91,6 @@ namespace KUtilitiesCore.Dal.UOW
         /// <inheritdoc/>
         public IRepository<T> Repository<T>() where T : class
         {
-            if (_repositories == null)
-                _repositories = new Hashtable();
-
             var type = typeof(T).Name;
 
             if (!_repositories.ContainsKey(type))
@@ -100,27 +102,30 @@ namespace KUtilitiesCore.Dal.UOW
                 {
                     var customRepoType = _customRepositories[typeof(T)];
                     // Instanciamos usando el constructor validado previamente
-                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
+                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext)
+                        ?? throw new InvalidOperationException(
+                            $"No se pudo crear la instancia del repositorio '{customRepoType.Name}'.");
                 }
                 else
                 {
                     // 2. Fallback al genérico (DefaultDaoRepository)
                     var repositoryType = typeof(DefaultDaoRepository<>);
-                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext);
+                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext)
+                        ?? throw new InvalidOperationException(
+                            $"No se pudo crear la instancia del repositorio para '{typeof(T).Name}'.");
                 }
 
                 _repositories.Add(type, repositoryInstance);
             }
 
-            return (IRepository<T>)_repositories[type];
+            var storedRepository = _repositories[type]
+                ?? throw new InvalidOperationException($"No se encontró el repositorio registrado para '{type}'.");
+            return (IRepository<T>)storedRepository;
         }
 
         /// <inheritdoc/>
         public TRepo RawRepository<TRepo>() where TRepo : IRawRepository
         {
-            if (_repositories == null)
-                _repositories = new Hashtable();
-
             var type = typeof(TRepo);
             if (!_repositories.ContainsKey(type))
             {
@@ -131,7 +136,9 @@ namespace KUtilitiesCore.Dal.UOW
                 {
                     var customRepoType = _customRepositories[typeof(TRepo)];
                     // Instanciamos usando el constructor validado previamente
-                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
+                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext)
+                        ?? throw new InvalidOperationException(
+                            $"No se pudo crear la instancia del repositorio '{customRepoType.Name}'.");
                 }
                 else
                 {
@@ -144,7 +151,9 @@ namespace KUtilitiesCore.Dal.UOW
                 _repositories.Add(type, repositoryInstance);
             }
 
-            return (TRepo)_repositories[type];
+            var storedRepository = _repositories[type]
+                ?? throw new InvalidOperationException($"No se encontró el repositorio registrado para '{type.Name}'.");
+            return (TRepo)storedRepository;
         }
 
         /// <inheritdoc/>

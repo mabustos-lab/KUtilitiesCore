@@ -29,6 +29,11 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
 
         #region Constructors
 
+        /// <summary>
+        /// Crea un constructor de conexiones seguras a partir de una cadena de conexión
+        /// existente, de la que se extraen servidor, catálogo y credenciales.
+        /// </summary>
+        /// <param name="connectionString">Cadena de conexión de origen.</param>
         public SecureConnectionBuilder(string connectionString) : this(null, string.Empty)
         {
             SetCnnStringProperties(connectionString);
@@ -50,7 +55,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// <param name="filePath">
         /// Ruta del archivo de configuración. Si es vacío, se utiliza la ruta predeterminada.
         /// </param>
-        public SecureConnectionBuilder(Encryption.IEncryptionService encryptionService, string filePath = "")
+        public SecureConnectionBuilder(Encryption.IEncryptionService? encryptionService, string filePath = "")
         {
             Reset();
             encryptionService ??= Encryption.FactoryEncryptionService.GetAesEncryptionService("@!KUtilities0000");
@@ -102,7 +107,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
             if (string.IsNullOrWhiteSpace(_filePath))
                 throw new InvalidOperationException("La ruta del archivo de configuración no está especificada.");
 
-            string directory = Path.GetDirectoryName(_filePath);
+            string? directory = Path.GetDirectoryName(_filePath);
             if (string.IsNullOrWhiteSpace(directory))
                 throw new InvalidOperationException("No se pudo determinar el directorio del archivo de configuración.");
 
@@ -188,7 +193,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// <returns>Cadena JSON con los valores cifrados.</returns>
         private string EncryptAndSerialize()
         {
-            string res = null;
+            string? res = null;
             try
             {
                 foreach (var property in new[]

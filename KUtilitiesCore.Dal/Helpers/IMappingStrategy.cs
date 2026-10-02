@@ -13,7 +13,7 @@ namespace KUtilitiesCore.Dal.Helpers
         /// Maps the provided DataTable (representing a single result set) to an object.
         /// </summary>
         /// <param name="dataTable">The DataTable containing the result set data.</param>
-        /// <returns>An object representing the mapped result set (e.g., List<T>).</returns>
+        /// <returns>An object representing the mapped result set (e.g., List&lt;T&gt;).</returns>
         object Map(DataTable dataTable);
     }
 }

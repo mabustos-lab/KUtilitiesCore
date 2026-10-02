@@ -28,8 +28,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="transaction">La transacción asociada al comando, si existe.</param>
         /// <returns>Un nuevo objeto <see cref="DbCommand"/>.</returns>
         DbCommand CreateCommand(string sql,
-            IDaoParameterCollection parameters = null, 
-            CommandType commandType = CommandType.Text, ITransaction transaction = null);
+            IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null);
 
         /// <summary>
         /// Crea un generador de comandos para construir automáticamente comandos de inserción,
@@ -52,8 +52,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="transaction">La transacción asociada, si existe.</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
-            IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null);
+            IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null);
 
 
         /// <summary>
@@ -71,8 +71,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         Task<IReaderResultSet> ExecuteReaderAsync(string sql, IDataReaderConverter translate,
-            IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null,
+            IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="parameters">La colección de parámetros para la consulta SQL.</param>
         /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
         /// <param name="transaction">La transacción asociada, si existe.</param>
-        void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null);
+        void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null);
         /// <summary>
         /// Ejecuta una consulta SELECT y rellena un DataSet con la información de manera asyncrona.
         /// </summary>
@@ -100,8 +100,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
         /// <param name="transaction">La transacción asociada, si existe.</param>
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
-        Task FillDataSetAsync(string sql, DataSet ds, string tableName,IDaoParameterCollection parameters = null,
-            CommandType commandType = CommandType.Text, ITransaction transaction = null,
+        Task FillDataSetAsync(string sql, DataSet ds, string tableName,IDaoParameterCollection? parameters = null,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null,
             CancellationToken cancellationToken = default);
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.
@@ -114,8 +114,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="commandType">El tipo de comando (Texto, Stored Procedure, etc.).</param>
         /// <param name="transaction">La transacción asociada, si existe.</param>
         /// <returns>El número de filas afectadas por la actualización.</returns>
-        int UpdateDataSet(DataSet ds, string selectCommandText, string tableName, 
-            CommandType commandType = CommandType.Text, ITransaction transaction = null);
+        int UpdateDataSet(DataSet ds, string selectCommandText, string tableName,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null);
         /// <summary>
         /// Actualiza los cambios realizados en el DataSet para una tabla determinada.
         /// </summary>
@@ -128,8 +128,8 @@ namespace KUtilitiesCore.Dal
         /// <param name="transaction">La transacción asociada, si existe.</param>
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
         /// <returns>El número de filas afectadas por la actualización.</returns>
-        Task<int> UpdateDataSetAsync(DataSet ds, string selectCommandText, string tableName, 
-            CommandType commandType = CommandType.Text, ITransaction transaction = null,
+        Task<int> UpdateDataSetAsync(DataSet ds, string selectCommandText, string tableName,
+            CommandType commandType = CommandType.Text, ITransaction? transaction = null,
             CancellationToken cancellationToken = default);
     }
 }

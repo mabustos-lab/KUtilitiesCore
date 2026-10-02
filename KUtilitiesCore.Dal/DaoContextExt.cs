@@ -23,7 +23,7 @@ namespace KUtilitiesCore.Dal
         /// </summary>
         public static IDisposable EnableSqlLogging<TDbConnection>(this TDbConnection connection,
             Action<SqlLogEntry> logAction,
-            SqlLoggingOptions options = null)
+            SqlLoggingOptions? options = null)
             where TDbConnection : DbConnection
         {
             if (connection is SqlConnection sqlConn)
@@ -46,6 +46,7 @@ namespace KUtilitiesCore.Dal
         /// <summary>
         /// Obtiene el nombre del servidor publicado asociado al contexto de datos.
         /// </summary>
+        /// <param name="context">Contexto de ejecución SQL cuya conexión se usará.</param>
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
         /// <returns>El nombre del servidor publicado como una cadena.</returns>
         public static async Task<string> GetPublishedServerNameAsync<TDAO>(this TDAO context,
@@ -53,12 +54,14 @@ namespace KUtilitiesCore.Dal
         {
             if (context.Connection.State != ConnectionState.Open)
                 await context.Connection.OpenAsync(cancellationToken);
-            return await context.ScalarAsync<string>("SELECT PUBLISHINGSERVERNAME() as Servername");
+            return await context.ScalarAsync<string>("SELECT PUBLISHINGSERVERNAME() as Servername")
+                ?? throw new InvalidOperationException("El servidor no devolvió un nombre de servidor publicado.");
         }
 
         /// <summary>
         /// Obtiene la fecha y hora actual del servidor.
         /// </summary>
+        /// <param name="context">Contexto de ejecución SQL cuya conexión se usará.</param>
         /// <param name="cancellationToken">Token para cancelar la operación asíncrona.</param>
         /// <returns>Un <see cref="DateTime"/> que representa la fecha y hora actual del servidor.</returns>
         public static async Task<DateTime> GetServerDateTimeAsync<TDAO>(this TDAO context,
