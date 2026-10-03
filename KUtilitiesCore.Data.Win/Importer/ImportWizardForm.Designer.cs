@@ -314,10 +314,11 @@
             this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancelar";
             this.btnCancel.UseVisualStyleBackColor = true;
-            // 
+            //
             // btnImport
-            // 
-            this.btnImport.DialogResult = System.Windows.Forms.DialogResult.OK;
+            //
+            // Sin DialogResult: el cierre del formulario lo decide el código
+            // (ImportData) según el resultado de la validación, nunca el botón.
             this.btnImport.Enabled = false;
             this.btnImport.Location = new System.Drawing.Point(814, 9);
             this.btnImport.Name = "btnImport";
@@ -331,6 +332,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            // ESC cancela con el resultado nativo de Windows (DialogResult.Cancel).
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(982, 653);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panelActions);
@@ -376,11 +379,15 @@
         private TabPage tabErrors;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel tsslCount;
-        private DataGridView dgvErrors;
+        /// <summary>Grid con el detalle de los errores de validación detectados.</summary>
+        protected DataGridView dgvErrors;
         private Panel panelActions;
-        private ToolStripStatusLabel tsslWarning;
-        private Button btnCancel;
-        private Button btnImport;
+        /// <summary>Etiqueta de la barra de estado donde persisten los avisos y errores de importación.</summary>
+        protected ToolStripStatusLabel tsslWarning;
+        /// <summary>Botón que cancela el asistente; retorna el resultado nativo de cancelación de Windows.</summary>
+        protected Button btnCancel;
+        /// <summary>Botón que dispara la importación; el cierre del formulario lo decide el código, no el Designer.</summary>
+        protected Button btnImport;
         private DataGridViewTextBoxColumn DestinationField;
         private DataGridViewComboBoxColumn SourceColumn;
         /// <summary>Grid donde el usuario mapea las columnas de origen con los campos destino.</summary>

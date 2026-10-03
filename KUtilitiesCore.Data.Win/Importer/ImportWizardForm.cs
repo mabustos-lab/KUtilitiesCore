@@ -171,7 +171,11 @@ namespace KUtilitiesCore.Data.Win.Importer
         }
 
         /// <summary>
-        /// Importamos el los datos cargados al DataTable final
+        /// Importa los datos cargados al DataTable final. El cierre del formulario
+        /// lo decide exclusivamente este método según el resultado de la validación:
+        /// con éxito cierra con <see cref="DialogResult.OK"/> (si
+        /// <see cref="AutoCloseOnSuccess"/>); con errores permanece abierto para que
+        /// el usuario corrija los datos.
         /// </summary>
         protected virtual void ImportData()
         {
@@ -182,63 +186,160 @@ namespace KUtilitiesCore.Data.Win.Importer
                 return;
             }
 
-            // 1. Construir colección de definiciones activas con el mapeo actualizado
-
-            var activeDefinitions = new FieldDefinitionCollection();
-
-            foreach (DataGridViewRow row in dgvMapping.Rows)
-            {
-                // Recuperamos la definición original desde el Tag
-                var originalDef = row.Tag as FieldDefinitionItem;
-                string selectedSourceCol = row.Cells[1].Value?.ToString()!;
-
-                if (originalDef != null)
-                {
-                    if (selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
-                    {
-                        originalDef.SourceColumnName = selectedSourceCol;
-                    }
-                    else
-                    {
-                        // Si se ignora, asignamos un nombre ficticio para que el ImportManager no encuentre
-                        // la columna en el DataTable y el valor extraído sea null.
-                        // (Asumiendo que ImportManager maneja columnas faltantes retornando null/default)
-                        originalDef.SourceColumnName = originalDef.DisplayName;
-                    }
-                    activeDefinitions.Add(originalDef);
-                }
-
-                //    if (originalDef != null && selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
-                //{
-                //    // Actualizamos la propiedad SourceColumnName del objeto definición. Esto le
-                //    // indica al ImportManager exactamente qué columna del DataTable debe leer para
-                //    // este campo.
-                //    // NOTA: Esto modifica la instancia en memoria. Si se desea preservar la
-                //    // configuración original intacta para reutilización futura sin estos cambios,
-                //    // se debería clonar el objeto aquí. Dado el contexto de UI, modificar la
-                //    // instancia para alinearla con la selección del usuario es el comportamiento esperado.
-                //    originalDef.SourceColumnName = selectedSourceCol;
-
-                //    activeDefinitions.Add(originalDef);
-                //}
-                //originalDef.AllowNull
-            }
-
-            // 2. Ejecutar ImportManager
+            var activeDefinitions = BuildActiveDefinitions();
             try
             {
                 _importManager.SetMapping(activeDefinitions);
                 _importManager.ReadData(sourceTable);
-                
-                ValidateData();
+                _importManager.ValidateDataTypes();
+
+                // El proceso se notifica antes de decidir el cierre para que derivaciones
+                // puedan abortar (lanzando una excepción) si su lógica lo requiere.
                 OnProcessImportFinished();
+
+                if (_importManager.ValidationErrors.IsValid)
+                {
+                    ResultData = _importManager.DataSource;
+                    RefreshErrorsGrid();
+                    tsslWarning.Visible = false;
+                    if (AutoCloseOnSuccess)
+                    {
+                        // Cierre automático silencioso: la ventana desaparece cuando los
+                        // datos quedaron correctamente importados.
+                        DialogResult = DialogResult.OK;
+                        Close();
+                    }
+                    else
+                    {
+                        ShowMessage(
+                            "Importación completada y validada correctamente.",
+                            "Éxito",
+                            MessageBoxIcon.Information);
+                    }
+                }
+                else
+                {
+                    ResultData = null;
+                    ShowMessage(
+                        $"Se encontraron {_importManager.ValidationErrors.Errors.Count} errores de validación.",
+                        "Errores",
+                        MessageBoxIcon.Warning);
+                    RefreshErrorsGrid();
+                    tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
+                    tsslWarning.Visible = true;
+                    tabControlResults.SelectedTab = tabControlResults.TabPages[1];
+
+                    // No cerramos el form para permitir correcciones
+                    DialogResult = DialogResult.None;
+                }
             }
             catch (Exception ex)
             {
                 ShowMessage($"Error crítico en el proceso de importación: {ex.Message}",
                     "Error Crítico", MessageBoxIcon.Error);
-                this.DialogResult = DialogResult.None;
+
+                // El fallo queda registrado persistentemente en la barra de estado; un
+                // MessageBox es transitorio y se descarta con un clic, el aviso no.
+                tsslWarning.Text = "Error crítico en la importación, favor de verificar.";
+                tsslWarning.Visible = true;
+                DialogResult = DialogResult.None;
             }
+        }
+
+        /// <summary>
+        /// Revalida silenciosamente los datos tras una edición en el grid de
+        /// previsualización: refresca el grid de errores y el aviso de la barra de
+        /// estado sin mostrar diálogos, sin cambiar de pestaña y sin cerrar el
+        /// formulario, para no interrumpir al usuario mientras corrige celda por celda.
+        /// </summary>
+        protected virtual void RevalidateAfterEdit()
+        {
+            var sourceTable = LoadedDataTable;
+            if (sourceTable is null) return;
+
+            var activeDefinitions = BuildActiveDefinitions();
+            try
+            {
+                _importManager.SetMapping(activeDefinitions);
+                _importManager.ReadData(sourceTable);
+                _importManager.ValidateDataTypes();
+                OnProcessImportFinished();
+
+                if (_importManager.ValidationErrors.IsValid)
+                {
+                    ResultData = _importManager.DataSource;
+                    RefreshErrorsGrid();
+                    tsslWarning.Visible = false;
+                }
+                else
+                {
+                    ResultData = null;
+                    RefreshErrorsGrid();
+                    tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
+                    tsslWarning.Visible = true;
+                }
+            }
+            catch
+            {
+                // La revalidación por edición es de fondo: solo deja el aviso persistente;
+                // el diagnóstico detallado se reserva para el botón Importar.
+                tsslWarning.Text = "Error crítico en la importación, favor de verificar.";
+                tsslWarning.Visible = true;
+            }
+        }
+
+        /// <summary>
+        /// Construye la colección de definiciones activas a partir del mapeo actual
+        /// del grid de mapeo; punto único de traducción entre la UI y el ImportManager.
+        /// </summary>
+        private FieldDefinitionCollection BuildActiveDefinitions()
+        {
+            var activeDefinitions = new FieldDefinitionCollection();
+            foreach (DataGridViewRow row in dgvMapping.Rows)
+            {
+                var originalDef = row.Tag as FieldDefinitionItem;
+                string selectedSourceCol = row.Cells[1].Value?.ToString()!;
+
+                if (originalDef is null) continue;
+
+                if (selectedSourceCol != "(Ignorar)" && !string.IsNullOrEmpty(selectedSourceCol))
+                {
+                    originalDef.SourceColumnName = selectedSourceCol;
+                }
+                else
+                {
+                    // Nombre ficticio: el ImportManager no encontrará la columna y el
+                    // valor extraído será null (equivale a ignorar el campo).
+                    originalDef.SourceColumnName = originalDef.DisplayName;
+                }
+                activeDefinitions.Add(originalDef);
+            }
+            return activeDefinitions;
+        }
+
+        /// <summary>
+        /// Volca los errores de validación actuales al grid de errores; con validación
+        /// exitosa el grid queda vacío, de modo que la UI nunca muestra errores obsoletos.
+        /// </summary>
+        private void RefreshErrorsGrid()
+        {
+            dgvErrors.DataSource = null;
+            dgvErrors.DataSource = _importManager.ValidationErrors.Errors
+                .Select(
+                    err =>
+                    {
+                        var failure = err as ValidationFailure;
+                        return new
+                        {
+                            // Convertimos a string para asegurar consistencia de tipo en la
+                            // lista anónima (int vs string "-")
+                            Fila = failure != null ? failure.IndexRow.ToString() : "-",
+                            Campo = failure != null ? failure.PropertyName : "General",
+                            Mensaje = err.ErrorMessage,
+                            ValorIntentado = failure != null ? failure.AttemptedValue : null
+                        };
+                    })
+                .ToList();
         }
 
         /// <summary>
@@ -305,7 +406,9 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         private void dgvPreview_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            ImportData();
+            // La edición del preview solo revalida en silencio; la decisión de cerrar
+            // corresponde exclusivamente al botón Importar.
+            RevalidateAfterEdit();
         }
 
         private void FilterHasErrors(DataTable dt, DataGridView dgv, bool showErrorOnly)
@@ -444,57 +547,6 @@ namespace KUtilitiesCore.Data.Win.Importer
             ctrl.Dock = DockStyle.Fill;
             pnlConfig.Controls.Add(ctrl);
             return configControl;
-        }
-
-        private void ValidateData()
-        {
-            _importManager.ValidateDataTypes();
-            if (_importManager.ValidationErrors.IsValid)
-            {
-                // Éxito
-                ResultData = _importManager.DataSource;
-                ShowMessage(
-                    "Importación completada y validada correctamente.",
-                    "Éxito",
-                    MessageBoxIcon.Information);
-                if (AutoCloseOnSuccess)
-                {
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-            }
-            else
-            {
-                // Mostrar errores
-                ShowMessage(
-                    $"Se encontraron {_importManager.ValidationErrors.Errors.Count} errores de validación.",
-                    "Errores",
-                    MessageBoxIcon.Warning);
-
-                // Llenar grid de errores
-                dgvErrors.DataSource = null;
-                dgvErrors.DataSource = _importManager.ValidationErrors.Errors
-                    .Select(
-                        err =>
-                        {
-                            var failure = err as ValidationFailure;
-                            return new
-                            {
-                                // Convertimos a string para asegurar consistencia de tipo en la
-                                // lista anónima (int vs string "-")
-                                Fila = failure != null ? failure.IndexRow.ToString() : "-",
-                                Campo = failure != null ? failure.PropertyName : "General",
-                                Mensaje = err.ErrorMessage,
-                                ValorIntentado = failure != null ? failure.AttemptedValue : null
-                            };
-                        })
-                    .ToList();
-
-                tabControlResults.SelectedTab = tabControlResults.TabPages[1]; // Ir a tab errores
-
-                // No cerramos el form para permitir correcciones
-                this.DialogResult = DialogResult.None;
-            }
         }
 
         #endregion Methods
