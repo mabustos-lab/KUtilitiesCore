@@ -15,8 +15,9 @@ namespace KUtilitiesCore.Data.Win.Importer
 {
     /// <summary>
     /// Control de configuración para archivos de texto delimitados (CSV/TSV/PSV).
-    /// Permite elegir separador, codificación y presencia de cabecera; el asistente de
-    /// importación lo hospeda cuando el archivo seleccionado no es Excel.
+    /// Permite elegir separador, codificación, presencia de cabecera, recorte de
+    /// espacios y el tratamiento de líneas vacías; el asistente de importación lo
+    /// hospeda cuando el archivo seleccionado no es Excel.
     /// </summary>
     public partial class CsvConfigControl : UserControl, IImportConfigControl
     {
@@ -46,7 +47,9 @@ namespace KUtilitiesCore.Data.Win.Importer
             {
                 Separator = cboDelimiter.SelectedValue?.ToString() ?? ",",
                 Encoding = (Encoding)(cboEncoding.SelectedValue ?? Encoding.UTF8),
-                HasHeader = chkHasHeader.Checked
+                HasHeader = chkHasHeader.Checked,
+                TrimValues = chkTrimValues.Checked,
+                IgnoreEmptyLines = chkIgnoreEmptyLines.Checked
             };
         }
 
@@ -85,12 +88,26 @@ namespace KUtilitiesCore.Data.Win.Importer
             cboDelimiter.SelectedIndexChanged += (a, b) => OnOptionsChanged();
             cboEncoding.SelectedIndexChanged += (a, b) => OnOptionsChanged();
             chkHasHeader.CheckedChanged += (a, b) => OnOptionsChanged();
+            chkTrimValues.CheckedChanged += (a, b) => OnOptionsChanged();
+            chkIgnoreEmptyLines.CheckedChanged += (a, b) => OnOptionsChanged();
         }
 
         private void OnOptionsChanged()
         {
             OptionsChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        /// <summary>
+        /// Fija el estado de "Quitar espacios en los valores" para pruebas automatizadas.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void SetTrimValuesForTesting(bool value) => chkTrimValues.Checked = value;
+
+        /// <summary>
+        /// Fija el estado de "Ignorar líneas vacías" para pruebas automatizadas.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void SetIgnoreEmptyLinesForTesting(bool value) => chkIgnoreEmptyLines.Checked = value;
 
         #endregion Methods
     }
