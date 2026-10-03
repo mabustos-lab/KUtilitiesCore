@@ -78,6 +78,56 @@ public class ExternalDataService {
 }
 ```
 
+## 📥 Importación Multi-Fuente (`KUtilitiesCore.Data`)
+
+El orquestador `MultiSourceImportManager` procesa en una sola operación transaccional (todo-o-nada) N fuentes que comparten un mismo esquema (`FieldDefinitionCollection`), devolviendo un `DataSet` con un `DataTable` por fuente, identificado con su nombre de origen:
+
+```csharp
+using KUtilitiesCore.Data.DataImporter;
+using KUtilitiesCore.Data.ImportDefinition;
+using System.Data;
+
+// Esquema común: los nombres de columna de cada fuente se emparejan con los
+// DisplayName de forma insensible a mayúsculas, aunque el orden difiera.
+var mapping = new FieldDefinitionCollection();
+mapping.AddRange(new FieldDefinitionItem[]
+{
+    new FieldDefinitionItem("Name", "Nombre"),
+    new FieldDefinitionItem("Edad", "Edad", fieldType: typeof(int))
+});
+
+using var manager = new MultiSourceImportManager(mapping);
+manager.AddSource(CsvSourceReaderFactory.Create("ventas.csv"), "VentasCSV");
+manager.AddSource(ExcelSourceReaderFactory.Create("ventas.xlsx", "Datos"), "VentasExcel");
+
+try
+{
+    // O la variante cancelable: await manager.ImportAsync(cancellationToken);
+    DataSet resultado = manager.Import();
+    DataTable? ventasCsv = resultado.Tables["VentasCSV"];
+}
+catch (MultiSourceImportException ex)
+{
+    // Agrega los fallos de TODAS las fuentes fallidas; nada parcial se expone.
+    foreach (var fallo in ex.Failures)
+    {
+        Console.WriteLine($"Fuente fallida: {fallo.SourceName}");
+        if (fallo.ReadException is not null)
+        {
+            Console.WriteLine($"  Causa de lectura: {fallo.ReadException.Message}");
+        }
+        else
+        {
+            foreach (var error in fallo.ValidationErrors)
+            {
+                // Índice de fila relativo a la fuente fallida.
+                Console.WriteLine($"  Fila {error.IndexRow}: {error.ErrorMessage}");
+            }
+        }
+    }
+}
+```
+
 ## 🎨 Uso en App MVVM
 
 Para aprovechar el sistema de comandos basado en expresiones de `KUtilitiesCore.MVVM`:
