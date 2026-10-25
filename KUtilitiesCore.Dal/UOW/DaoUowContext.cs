@@ -5,14 +5,21 @@ using System.Linq;
 
 namespace KUtilitiesCore.Dal.UOW
 {
-    /// <resumen>
-    /// Proporciona un contexto de unidad de trabajo para operaciones de acceso a datos, gestionando transacciones y acceso al repositorio dentro de un
-    /// único ámbito.
-    /// </resumen>
-    /// <remarks>DaoUowContext coordina la vida útil de un contexto de acceso a datos y sus repositorios asociados,
-    /// lo que permite operaciones transaccionales en múltiples repositorios. Implementa IDisposable para
-    /// garantizar que los recursos se liberen cuando se complete la unidad de trabajo. Esta clase se utiliza normalmente para agrupar
-    /// operaciones de datos relacionadas en una única transacción, lo que garantiza la coherencia y la atomicidad.</remarks>
+    /// <summary>
+    /// Proporciona un contexto de unidad de trabajo para operaciones de acceso a datos,
+    /// manteniendo el contexto de datos, el proveedor de repositorios y la transacción
+    /// registrada dentro de un único ámbito.
+    /// </summary>
+    /// <remarks>
+    /// DaoUowContext coordina la vida útil de un contexto de acceso a datos y sus
+    /// repositorios asociados, lo que permite compartir una transacción entre múltiples
+    /// repositorios. Implementa IDisposable para liberar los recursos al completar la
+    /// unidad de trabajo. Este contexto nunca abre transacciones implícitas: la
+    /// transacción solo existe si el consumidor la crea y la registra explícitamente
+    /// (p. ej. mediante <see cref="DaoUnitOfWork.BeginTransaction"/>), de modo que la
+    /// coherencia y la atomicidad de un grupo de operaciones son responsabilidad del
+    /// consumidor, que debe enlistar cada operación en dicha transacción.
+    /// </remarks>
     public class DaoUowContext : IDaoUowContext, IDisposable
     {
         #region Fields
@@ -21,7 +28,6 @@ namespace KUtilitiesCore.Dal.UOW
         private readonly IRepositoryProvider _DaoRepositoryProvider;
         private ITransaction? _transaction;
         private bool disposedValue;
-        private bool isTransactionCreated;
 
         #endregion Fields
 
@@ -55,10 +61,13 @@ namespace KUtilitiesCore.Dal.UOW
         {
             get
             {
-                if (isTransactionCreated)
+                // Verificación de vitalidad (design D4): si el consumidor finalizó la
+                // transacción registrada fuera del UoW (Commit/Rollback/Dispose), la
+                // referencia interna queda obsoleta y se anula para no exponerla.
+                if (_transaction is TransactionBase baseTransaction
+                    && baseTransaction.GetTransactionObject() == null)
                 {
-                    _transaction = _context.BeginTransaction();
-                    isTransactionCreated = true;
+                    _transaction = null;
                 }
                 return _transaction;
             }
@@ -94,14 +103,24 @@ namespace KUtilitiesCore.Dal.UOW
 
         #region Internal Methods
 
+        /// <summary>
+        /// Registra una transacción explícita como la transacción activa del UoW.
+        /// El getter <see cref="Transaction"/> es pasivo: solo devuelve lo registrado aquí,
+        /// jamás abre transacciones por su cuenta.
+        /// </summary>
+        /// <param name="transaction">La transacción a registrar.</param>
+        internal void RegisterTransaction(ITransaction transaction)
+        {
+            _transaction = transaction;
+        }
+
+        /// <summary>
+        /// Libera la transacción registrada y anula la referencia, de forma idempotente.
+        /// </summary>
         internal void DisposeTransaction()
         {
-            if (_transaction != null)
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-            isTransactionCreated = true;
+            _transaction?.Dispose();
+            _transaction = null;
         }
 
         #endregion Internal Methods

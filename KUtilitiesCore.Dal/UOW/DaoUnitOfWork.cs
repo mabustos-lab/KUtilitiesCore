@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Data;
 using System.Threading.Tasks;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.Dal;
@@ -156,7 +157,42 @@ namespace KUtilitiesCore.Dal.UOW
             return (TRepo)storedRepository;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Abre una transacción explícita sobre el contexto del UoW y la registra en su estado,
+        /// de modo que los repositorios resueltos la compartan y que <see cref="SaveChanges"/>/
+        /// <see cref="Rollback"/> actúen sobre ella.
+        /// </summary>
+        /// <param name="isolationLevel">Nivel de aislamiento de la transacción (por defecto ReadCommitted).</param>
+        /// <returns>La transacción creada y registrada en el UoW.</returns>
+        /// <example>
+        /// Patrón de uso con confirmación explícita. Las operaciones aceptan la transacción
+        /// por parámetro opcional; si no se llama a <see cref="ITransaction.Commit"/>,
+        /// la liberación de la transacción revierte automáticamente los cambios:
+        /// <code>
+        /// var context = new DaoContext(connectionBuilder);
+        /// using var unitOfWork = new DaoUnitOfWork(context);
+        /// using (var transaction = unitOfWork.BeginTransaction())
+        /// {
+        ///     context.ExecuteNonQuery(sql, parameters, transaction: transaction);
+        ///     transaction.Commit(); // sin esta llamada, Dispose revierte los cambios
+        /// }
+        /// </code>
+        /// </example>
+        public ITransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+        {
+            var transaction = UowContext.Context.BeginTransaction(isolationLevel);
+            ((DaoUowContext)UowContext).RegisterTransaction(transaction);
+            return transaction;
+        }
+
+        /// <summary>
+        /// Confirma la transacción registrada en el UoW cuando existe y está viva.
+        /// </summary>
+        /// <returns>
+        /// 1 si confirmó la transacción registrada; 0 cuando no hay ninguna transacción
+        /// registrada (las operaciones ejecutadas sin enlistar operan en autocommit y no
+        /// requieren confirmación).
+        /// </returns>
         public int SaveChanges()
         {
             try
@@ -181,7 +217,8 @@ namespace KUtilitiesCore.Dal.UOW
             }
         }
         /// <summary>
-        /// Revierte todos los cambios realizados en la UOW actual.
+        /// Revierte la transacción registrada en el UoW, si existe y está viva, y deja el UoW
+        /// sin transacción registrada. Sin transacción registrada es un no-op silencioso.
         /// </summary>
         public void Rollback()
         {
@@ -193,9 +230,14 @@ namespace KUtilitiesCore.Dal.UOW
         }
 
         /// <summary>
-        /// En el contexto de ADO.NET/Dal, SaveChanges generalmente confirma la transacción abierta.
-        /// Si no hay transacción explícita y las operaciones fueron atómicas, no hace nada.
+        /// Confirma de forma asíncrona la transacción registrada en el UoW cuando existe y
+        /// está viva, delegando en <see cref="SaveChanges"/>.
         /// </summary>
+        /// <returns>
+        /// 1 si confirmó la transacción registrada; 0 cuando no hay ninguna transacción
+        /// registrada (las operaciones ejecutadas sin enlistar operan en autocommit y no
+        /// requieren confirmación).
+        /// </returns>
         public async Task<int> SaveChangesAsync()
         {
             // Simulación asíncrona ya que IDAOContext suele ser síncrono en commits

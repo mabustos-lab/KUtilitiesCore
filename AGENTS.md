@@ -89,6 +89,13 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 - `KUtilitiesCore.DataAccess` is the abstraction layer (netstandard2.1). Concrete implementations (`Dal`, `EfCore`, `Http`) are separate projects targeting net10.0.
 - Offline `SPHelper/` and `Paging/` folders in `Dal`/`DataAccess` are excluded from compile (`<Compile Remove>`).
 
+### Dal UnitOfWork transaction contracts (dal-explicit-transactions)
+
+- The Dal UoW **never opens implicit transactions**: `DaoUowContext.Transaction` is a passive getter that returns only the transaction explicitly registered in the UoW (null otherwise), with a vitality check (D4) that nulls the reference if the consumer finished the tx outside the UoW (Commit/Rollback/Dispose).
+- `DaoUnitOfWork.BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)` is the explicit entry point: it delegates to `IDaoContext.BeginTransaction` (whose own default remains `Snapshot` — BulkOperationsService fallback depends on it) and registers the returned tx in the UoW so adopters see it. Note `IDaoContext.BeginTransaction` called directly on the context does NOT register in the UoW.
+- Contract: `SaveChanges` returns 1 only when a live registered tx exists (commits + clears it), else returns 0 silently (autocommit); `Rollback` reverts a live registered tx and leaves the UoW without one, silent no-op otherwise. Consumers enlist per-op via the optional `ITransaction?` parameter on `IDaoContext`/`ISqlExecutorContext` execute methods; a foreign tx (different connection) throws `DataAccessException` before executing.
+- `TransactionBase` Dispose without prior Commit triggers rollback (dispose→rollback semantics documented in `ITransaction`), so `using` blocks without `Commit()` revert automatically.
+
 ### ImportWizard / ImportManager contracts (importwizard-etl-improvements)
 
 - `ImportManager.ReadData(DataTable)` **adopts** the caller's table: no clone. The caller keeps ownership (disposes it); the manager paints validation errors (`SetColumnError`) directly on that table and never disposes it. `ValidateDataTypes()` returns `false` for zero-row tables, coherent with `ValidationErrors.IsValid`.
