@@ -89,6 +89,14 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 - `KUtilitiesCore.DataAccess` is the abstraction layer (netstandard2.1). Concrete implementations (`Dal`, `EfCore`, `Http`) are separate projects targeting net10.0.
 - Offline `SPHelper/` and `Paging/` folders in `Dal`/`DataAccess` are excluded from compile (`<Compile Remove>`).
 
+### ImportWizard / ImportManager contracts (importwizard-etl-improvements)
+
+- `ImportManager.ReadData(DataTable)` **adopts** the caller's table: no clone. The caller keeps ownership (disposes it); the manager paints validation errors (`SetColumnError`) directly on that table and never disposes it. `ValidateDataTypes()` returns `false` for zero-row tables, coherent with `ValidationErrors.IsValid`.
+- `ImportManager.CreateResultTable()` returns a **typed, caller-owned** projection (columns typed by `TargetType`, no `_RowIndex`/`_IsValid` control columns); `DataSource` stays all-string for UI error painting.
+- `ImportWizardForm.ResultData` is a typed projection built via `CreateResultTable()` and disposed by the wizard — safe for the consumer to read after the form is disposed. `ValidationFailure.PropertyName` carries the field's `FieldName`; the wizard's errors grid resolves `DisplayName` for display.
+- The wizard preview binds a `DataView` over the loaded table with a `_HasError` column (row filter `[_HasError] = true`); pending grid edits must be committed via `CurrencyManager.EndCurrentEdit()` before validation (`CommitPendingGridEdit`).
+- WinForms test seams follow the project pattern: `[EditorBrowsable(EditorBrowsableState.Never)]` hook methods on config controls + `TestableImportWizardForm` subclass in `KUtilitiesCore.Data.WinTests` (no `InternalsVisibleTo`).
+
 ## Specific rules
 For detailed rules and guidelines specific to the various areas of the project, see:
 

@@ -1,4 +1,5 @@
 ﻿using KUtilitiesCore.Data.DataImporter;
+using KUtilitiesCore.Data.DataImporter.Interfaces;
 using KUtilitiesCore.Data.ImportDefinition;
 using KUtilitiesCore.Data.Win.Importer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,6 +26,13 @@ namespace KUtilitiesCore.Data.WinTests
             /// <summary>Simula un fallo crítico dentro del pipeline de importación para probar el manejo de errores.</summary>
             [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public bool ThrowOnProcessFinished { get; set; }
+
+            /// <summary>
+            /// Cuando está activo, <see cref="CreateReader"/> devuelve un lector de pruebas
+            /// (stub) en lugar del lector real, sin tocar el sistema de archivos.
+            /// </summary>
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public bool UseStubReader { get; set; }
 
             public TestableImportWizardForm(FieldDefinitionCollection fields)
                 : base(fields, new ImportManager()) // Pasamos un ImportManager real o mock
@@ -72,6 +80,18 @@ namespace KUtilitiesCore.Data.WinTests
             {
                 LoadedDataTable = GetSampleWithErrorColumnDataTable();
             }
+            /// <summary>Tabla de origen vacía: solo encabezados (Nombre/Edad), sin filas (p. ej. CSV de solo encabezados).</summary>
+            public DataTable GetEmptyDataTable()
+            {
+                var dt = new DataTable();
+                dt.Columns.Add("Nombre", typeof(string));
+                dt.Columns.Add("Edad", typeof(string));
+                return dt;
+            }
+            public void SimulateEmptyLoadData()
+            {
+                LoadedDataTable = GetEmptyDataTable();
+            }
             public DataGridView GetGridPreview => this.dgvPreview;
             public DataGridView GetGridMapping => this.dgvMapping;
             public DataGridView GetGridErrors => this.dgvErrors;
@@ -82,9 +102,44 @@ namespace KUtilitiesCore.Data.WinTests
             {
                 LoadedDataTable = GetSampleDataTable();
             }
+
+            /// <summary>
+            /// Sustituye el lector real por el stub de pruebas cuando <see cref="UseStubReader"/> está activo,
+            /// permitiendo ejercitar la carga (incluida la asíncrona) sin depender de archivos físicos.
+            /// </summary>
+            protected override IDataSourceReader? CreateReader()
+            {
+                return UseStubReader ? new StubDataSourceReader(GetSampleDataTable) : base.CreateReader();
+            }
+
+            /// <summary>
+            /// Lector de pruebas: completa la lectura tras una breve espera para reproducir
+            /// una operación de E/S asíncrona que libera al llamador mientras el lector trabaja.
+            /// </summary>
+            private sealed class StubDataSourceReader : IDataSourceReader
+            {
+                private readonly Func<DataTable> _tableFactory;
+
+                public StubDataSourceReader(Func<DataTable> tableFactory) => _tableFactory = tableFactory;
+
+                public bool CanRead => true;
+
+                public DataTable ReadData() => _tableFactory();
+
+                public async Task<DataTable> ReadDataAsync()
+                {
+                    await Task.Delay(50).ConfigureAwait(false);
+                    return _tableFactory();
+                }
+            }
             public void SimulateCorrectingMapping()
             {
                 dgvMapping.Rows[1].Cells[1].Value = "Columna1";
+            }
+            /// <summary>Simula que el usuario cambia el mapeo de una columna origen en el grid de mapeo.</summary>
+            public void SimulateMappingChange()
+            {
+                SimulateCorrectingMapping();
             }
             public void SimulateImport()
             {
@@ -94,6 +149,16 @@ namespace KUtilitiesCore.Data.WinTests
             public void SimulateCellEditRevalidation()
             {
                 RevalidateAfterEdit();
+            }
+            /// <summary>Invoca el filtrado solo-errores del preview como lo hace el checkbox correspondiente.</summary>
+            public void InvokeFilterHasErrors(bool showErrorOnly)
+            {
+                FilterHasErrors(LoadedDataTable!, dgvPreview, showErrorOnly);
+            }
+            /// <summary>Dispara el manejador de cambio de opciones de análisis como lo haría el control de configuración.</summary>
+            public void SimulateOptionsChanged()
+            {
+                OnConfigOptionsChanged(null, EventArgs.Empty);
             }
             public void ClearLastMessage()
             {
@@ -152,6 +217,39 @@ namespace KUtilitiesCore.Data.WinTests
                 Assert.AreEqual("Nombre", form.GetGridMapping.Rows[0].Cells[1].Value, "La columna 'Nombre' debería haberse mapeado automáticamente.");
             }
         }
+        [STATestMethod]
+        public async Task LoadDataAsync_ShouldLoad_WithoutBlockingCaller()
+        {
+            // La carga asíncrona debe liberar al llamador mientras el lector trabaja:
+            // el pipeline de UI (preview, mapeo, botones) se actualiza al completarse.
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ClearLastMessage();
+                form.ShowOpenDialogFile();
+                form.UseStubReader = true;
+
+                // Act
+                var loadTask = form.LoadDataAsync();
+                Assert.IsFalse(loadTask.IsCompleted,
+                    "La carga asíncrona no debe bloquear al llamador: la tarea debe seguir pendiente mientras el lector lee.");
+
+                // Bombeo de mensajes para que las continuaciones de UI (WinForms SynchronizationContext) se ejecuten.
+                while (!loadTask.IsCompleted)
+                {
+                    Application.DoEvents();
+                }
+
+                await loadTask;
+
+                // Assert
+                Assert.IsNull(form.LastMessageShown, "Una carga exitosa no debe mostrar diálogos de error.");
+                Assert.IsNotNull(form.LoadedDataTable, "El DataTable interno debería haberse llenado tras la carga asíncrona.");
+                Assert.HasCount(2, form.GetGridPreview.Rows, "El Grid de previsualización debería tener 2 filas.");
+                Assert.IsTrue(form.GetImportButton.Enabled, "Con filas cargadas el botón de importar debe habilitarse.");
+            }
+        }
         [TestMethod]
         public void Import_ShouldSucceed_WhenDataIsValid()
         {
@@ -173,6 +271,37 @@ namespace KUtilitiesCore.Data.WinTests
                 // Con autocierre el éxito NO debe mostrar MessageBox: el cierre es automático.
                 Assert.IsNull(form.LastMessageShown,
                     "Con AutoCloseOnSuccess activo no debe mostrarse diálogo de éxito; el cierre debe ser automático.");
+            }
+        }
+        [TestMethod]
+        public void Import_ResultData_ShouldBeTypedAndOwn_Table()
+        {
+            // El resultado debe ser una tabla propia y tipada: sin columnas de control
+            // del ImportManager y con los tipos de destino resueltos, de modo que el
+            // consumidor pueda usarla incluso después de que el asistente se disponga.
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ShowOpenDialogFile();
+                form.LoadData();
+                form.SimulateImport();
+
+                Assert.AreEqual(DialogResult.OK, form.DialogResult, "La importación con datos válidos debería cerrar con OK.");
+                var result = form.ResultData;
+                Assert.IsNotNull(result, "ResultData no debería ser nulo tras una importación exitosa.");
+                Assert.IsNull(result.Columns["_RowIndex"], "El resultado no debe exponer la columna de control '_RowIndex'.");
+                Assert.IsNull(result.Columns["_IsValid"], "El resultado no debe exponer la columna de control '_IsValid'.");
+                var ageColumn = result.Columns["Age"];
+                Assert.IsNotNull(ageColumn, "La columna 'Age' debería existir en el resultado tipado.");
+                Assert.AreEqual(typeof(int), ageColumn.DataType, "La columna 'Age' debe ser tipada (int), no string.");
+                Assert.AreEqual(30, result.Rows[0]["Age"], "El valor debería estar convertido al tipo de destino.");
+
+                // La tabla es propiedad del llamador: debe seguir siendo legible
+                // incluso después de disponer el asistente (que dispone sus recursos internos).
+                form.Dispose();
+                Assert.AreEqual(2, result.Rows.Count, "El resultado debe seguir siendo legible tras disponer el asistente.");
+                Assert.AreEqual(30, result.Rows[0]["Age"], "Los valores tipados deben conservarse tras disponer el asistente.");
             }
         }
         [TestMethod]
@@ -242,6 +371,34 @@ namespace KUtilitiesCore.Data.WinTests
             }
         }
         [TestMethod]
+        public void Import_EmptyFile_ShouldWarn_AndNotExposeErrorsGridNoise()
+        {
+            // Un origen sin filas no es un error de validación: el wizard debe
+            // avisar claramente ("no contiene filas") sin llenar la pestaña de
+            // errores con ruido de validación ni habilitar la importación.
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ShowOpenDialogFile();
+
+                // Cargar un origen sin filas (solo encabezados).
+                form.SimulateEmptyLoadData();
+                Assert.IsFalse(form.GetImportButton.Enabled,
+                    "Con cero filas cargadas el botón de importar debe permanecer deshabilitado.");
+
+                form.SimulateImport();
+
+                StringAssert.Contains(form.LastMessageShown, "no contiene filas");
+                Assert.AreEqual(MessageBoxIcon.Warning, form.LastMessageIcon,
+                    "El aviso de archivo sin filas debe mostrarse como advertencia.");
+                Assert.IsNull(form.ResultData, "No debe exponerse resultado para un origen vacío.");
+                Assert.AreNotEqual(DialogResult.OK, form.DialogResult, "El wizard no debe cerrarse con OK.");
+                Assert.AreEqual(0, form.GetGridErrors.Rows.Count,
+                    "El grid de errores no debe llenarse con ruido para un archivo sin filas.");
+            }
+        }
+        [TestMethod]
         public void Import_ShouldSucceed_WhenCorrectMapping()
         {
             // Arrange
@@ -266,6 +423,32 @@ namespace KUtilitiesCore.Data.WinTests
             }
         }
         [TestMethod]
+        public void BuildActiveDefinitions_ShouldNotMutate_OriginalDefinitions()
+        {
+            // Arrange: la colección original pertenece al consumidor del wizard; el
+            // mapeo activo debe ser una traducción interna, nunca un efecto lateral.
+            var defs = GetSampleDefinitions();
+            var originalAgeSource = defs["Age"].SourceColumnName;
+            var originalNameSource = defs["Name"].SourceColumnName;
+
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ShowOpenDialogFile();
+
+                // Carga con columna distinta y corrección del mapeo por el usuario:
+                // es el escenario que dispara la reasignación de SourceColumnName.
+                form.SimulateWithErrorColumnNameLoadData();
+                form.SimulateCorrectingMapping();
+                form.SimulateImport();
+
+                Assert.AreEqual(originalAgeSource, defs["Age"].SourceColumnName,
+                    "BuildActiveDefinitions no debe mutar la definición original: el consumidor reutiliza su colección (p. ej. en otra importación) y esperaría su configuración intacta.");
+                Assert.AreEqual(originalNameSource, defs["Name"].SourceColumnName,
+                    "BuildActiveDefinitions no debe mutar la definición original: el consumidor reutiliza su colección (p. ej. en otra importación) y esperaría su configuración intacta.");
+            }
+        }
+        [TestMethod]
         public void Import_ShouldShowErrors_WhenDataRuleIsInValid()
         {
             // Arrange
@@ -284,6 +467,26 @@ namespace KUtilitiesCore.Data.WinTests
                 Assert.IsNotNull(form.LastMessageShown);
                 StringAssert.Contains(form.LastMessageShown, "errores de validación");
                 Assert.AreEqual(MessageBoxIcon.Warning, form.LastMessageIcon);
+            }
+        }
+        [STATestMethod]
+        public void ErrorsGrid_ShouldShowDisplayName_ForFieldName()
+        {
+            // El usuario piensa en campos de negocio, no en identificadores internos:
+            // la columna "Campo" del grid de errores debe mostrar el DisplayName
+            // ("Edad"), nunca el FieldName ("Age") que usa la capa de validación.
+            var defs = GetSampleDefinitions(true);
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ShowOpenDialogFile();
+                form.LoadData();
+                form.SimulateImport();
+
+                Assert.HasCount(1, form.GetGridErrors.Rows,
+                    "Precondición: la regla LessThan(30) debe marcar exactamente la fila de 'Juan Perez' (30 años).");
+                Assert.AreEqual("Edad", form.GetGridErrors.Rows[0].Cells["Campo"].Value,
+                    "La columna Campo debe resolver el DisplayName del campo para el usuario final.");
             }
         }
         [STATestMethod]
@@ -499,6 +702,160 @@ namespace KUtilitiesCore.Data.WinTests
                 {
                     if (!form.IsDisposed) form.Close();
                 }
+            }
+        }
+        [STATestMethod]
+        public void FilterHasErrors_ShouldShowOnlyErrorRows_AndEditsPropagate()
+        {
+            // El filtro solo-errores debe ser una VISTA sobre la misma tabla (DataView):
+            // si se copian filas a una tabla temporal, las correcciones hechas en la
+            // vista filtrada nunca llegan a la tabla subyacente y se pierden al revalidar.
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ShowOpenDialogFile();
+                form.SimulateWithErrorLoadData();
+                form.SimulateImport(); // Falla: "25x" queda marcado con error en la tabla cargada.
+
+                Assert.IsTrue(form.LoadedDataTable!.Rows[1].HasErrors,
+                    "El error de validación debe quedar pintado sobre la tabla proporcionada.");
+                Assert.IsNull(form.ResultData, "Con errores de validación no debe exponerse resultado.");
+
+                // Act 1: activar el filtro deja visible únicamente la fila con error.
+                form.InvokeFilterHasErrors(true);
+                Assert.AreEqual(1, form.GetGridPreview.Rows.Count,
+                    "El filtro solo-errores debe mostrar únicamente las filas con error.");
+
+                // Act 2: el usuario corrige la celda DESDE la vista filtrada y se revalida en silencio.
+                form.GetGridPreview.Rows[0].Cells[1].Value = "25";
+                form.SimulateCellEditRevalidation();
+
+                Assert.IsFalse(form.LoadedDataTable.Rows[1].HasErrors,
+                    "La corrección hecha en la vista filtrada debe propagarse a la tabla subyacente.");
+                Assert.IsNotNull(form.ResultData,
+                    "Tras corregir desde la vista filtrada, la revalidación debe exponer el resultado.");
+                Assert.AreEqual(0, form.GetGridPreview.Rows.Count,
+                    "La fila corregida debe salir de la vista filtrada al dejar de tener errores.");
+
+                // Act 3: desactivar el filtro restaura la vista completa.
+                form.InvokeFilterHasErrors(false);
+                Assert.AreEqual(2, form.GetGridPreview.Rows.Count,
+                    "Sin filtro deben volver a verse todas las filas de la tabla cargada.");
+            }
+        }
+        [STATestMethod]
+        public void MappingChange_ShouldTrigger_SilentRevalidationPath()
+        {
+            // Cambiar el mapeo de una columna origen programa (no ejecuta) una
+            // revalidación silenciosa: sin diálogos y coalescida por el debounce.
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ClearLastMessage();
+                form.ShowOpenDialogFile();
+                form.SimulateWithErrorColumnNameLoadData(); // El mapeo de Edad queda "(Ignorar)".
+                try
+                {
+                    // Act: el usuario mapea Edad hacia "Columna1".
+                    form.SimulateMappingChange();
+
+                    Assert.IsNull(form.ResultData,
+                        "La revalidación debe diferirse: nada debe ejecutarse de inmediato al cambiar el mapeo.");
+
+                    // Esperar la ventana del debounce (400 ms) bombeando mensajes
+                    // para que el temporizador dispare la revalidación.
+                    var deadline = DateTime.UtcNow.AddSeconds(3);
+                    while (form.ResultData is null && DateTime.UtcNow < deadline)
+                    {
+                        Application.DoEvents();
+                        Thread.Sleep(25);
+                    }
+
+                    Assert.IsNotNull(form.ResultData,
+                        "El debounce debió ejecutar la revalidación y exponer el resultado del mapeo corregido.");
+                    Assert.IsNull(form.LastMessageShown,
+                        "La revalidación programada por cambio de mapeo debe ser silenciosa: sin diálogos.");
+                    Assert.HasCount(2, form.ResultData.Rows,
+                        "El mapeo corregido debe producir un resultado con todas las filas.");
+                }
+                finally
+                {
+                    if (!form.IsDisposed) form.Close();
+                }
+            }
+        }
+        [STATestMethod]
+        public void OptionsChanged_ShouldMarkDataStale_AndDisableImport()
+        {
+            // Cambiar opciones de análisis tras cargar datos marca los datos como
+            // obsoletos: se invalida el resultado y se exige recargar antes de
+            // importar (la recarga automática se descartó: pisaría ediciones sin aviso).
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.Show(); // La visibilidad de un ToolStripItem depende de su contenedor.
+                try
+                {
+                    form.ClearLastMessage();
+                    form.ShowOpenDialogFile();
+                    form.LoadData();
+                    // La revalidación silenciosa expone ResultData sin cerrar el formulario
+                    // (a diferencia de importar con AutoCloseOnSuccess).
+                    form.SimulateCellEditRevalidation();
+
+                    Assert.IsNotNull(form.ResultData,
+                        "Precondición: la revalidación con datos válidos debe exponer un resultado.");
+                    Assert.IsTrue(form.GetImportButton.Enabled,
+                        "Precondición: con datos cargados el botón de importar debe estar habilitado.");
+
+                    // Act: el usuario cambia una opción de análisis.
+                    form.SimulateOptionsChanged();
+
+                    Assert.IsFalse(form.GetImportButton.Enabled,
+                        "Tras un cambio de opciones los datos cargados son obsoletos: importar debe deshabilitarse.");
+                    Assert.IsTrue(form.GetWarningLabel.Visible,
+                        "El asistente debe avisar que la configuración cambió y hay que recargar los datos.");
+                    StringAssert.Contains(form.GetWarningLabel.Text, "recargue",
+                        "El aviso debe guiar al usuario a recargar los datos.");
+                    Assert.IsNull(form.ResultData,
+                        "El resultado previo fue construido con las opciones anteriores: debe invalidarse.");
+                }
+                finally
+                {
+                    if (!form.IsDisposed) form.Close();
+                }
+            }
+        }
+        [STATestMethod]
+        public void FileName_Empty_ShouldResetWizardState()
+        {
+            // Asignar un FileName vacío (el consumidor limpia la selección) devuelve
+            // al asistente a su estado inicial: sin preview, sin mapeo, sin
+            // resultado y sin botones activos.
+            var defs = GetSampleDefinitions();
+            using (var form = new TestableImportWizardForm(defs))
+            {
+                var handle = form.Handle; // Forzar inicialización de controles
+                form.ShowOpenDialogFile();
+                form.LoadData();
+                // La revalidación silenciosa expone ResultData sin cerrar el formulario.
+                form.SimulateCellEditRevalidation();
+
+                Assert.IsNotNull(form.ResultData, "Precondición: debe existir un resultado antes del reinicio.");
+                Assert.IsTrue(form.GetImportButton.Enabled, "Precondición: el botón de importar debe estar habilitado.");
+                Assert.AreNotEqual(0, form.GetGridPreview.Rows.Count, "Precondición: el preview debe tener filas.");
+
+                // Act: limpiar el archivo seleccionado.
+                form.FileName = string.Empty;
+
+                Assert.AreEqual(string.Empty, form.FileName, "La ruta debe quedar vacía.");
+                Assert.IsNull(form.ResultData, "El reinicio debe descartar el resultado previo.");
+                Assert.AreEqual(0, form.GetGridPreview.Rows.Count, "El preview debe quedar vacío.");
+                Assert.AreEqual(0, form.GetGridMapping.Rows.Count, "El mapeo debe quedar limpio.");
+                Assert.IsFalse(form.GetImportButton.Enabled, "Sin datos cargados no debe poder importarse.");
             }
         }
         [TestMethod]

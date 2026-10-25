@@ -62,7 +62,8 @@ namespace KUtilitiesCore.Data.DataImporter
         #region Methods
 
         /// <summary>
-        /// Libera el DataSource, el origen de datos crudo y el resto de recursos administrados.
+        /// Libera el DataTable de destino. El origen crudo es propiedad del llamador
+        /// (ver <see cref="ReadData(DataTable)"/>) y no se dispone aquí.
         /// </summary>
         public void Dispose()
         {
@@ -134,16 +135,24 @@ namespace KUtilitiesCore.Data.DataImporter
         }
 
         /// <summary>
-        /// Lee los datos de un datatable con todas las columnas tipo string
+        /// Lee los datos de la tabla provista por el llamador y la adopta como origen crudo,
+        /// sin clonar su contenido.
         /// </summary>
-        /// <param name="rawData"></param>
+        /// <remarks>
+        /// Semántica de propiedad: la tabla provista pertenece al llamador y esta clase no la
+        /// dispone. Los errores de validación se pintan directamente sobre ella (SetColumnError)
+        /// y los valores por defecto se aplican en el propio origen, de modo que la UI que
+        /// entregó la tabla refleja el estado real de cada celda. Se descartó el clon interno
+        /// anterior porque aislaba la tabla original: los errores quedaban pintados en una copia
+        /// que la UI nunca observaba, además de duplicar la memoria con archivos grandes.
+        /// </remarks>
+        /// <param name="rawData">Tabla de origen con columnas de texto, provista por el llamador.</param>
+        /// <exception cref="ArgumentNullException">Cuando <paramref name="rawData"/> es <c>null</c>.</exception>
         public void ReadData(DataTable rawData)
         {
-            _rawDataSource.Reset();
-            
-            _rawDataSource = rawData.Clone();
-            foreach (DataRow row in rawData.Rows)
-                _rawDataSource.ImportRow(row);
+            ArgumentNullException.ThrowIfNull(rawData);
+
+            _rawDataSource = rawData;
             ConfigurarDataTable();
             DataSource.Clear();
             int rowIndex = 0;
@@ -200,15 +209,21 @@ namespace KUtilitiesCore.Data.DataImporter
         /// Valida los tipos de datos en C# (Int, DateTime, etc.). Este método debe llamarse al
         /// cargar y cada vez que el usuario edite una celda en la UI.
         /// </summary>
-        /// <returns>True si todos los datos son válidos</returns>
+        /// <returns>
+        /// True si todos los datos son válidos; una tabla sin filas no es importable
+        /// y también devuelve <c>false</c>, manteniendo coherencia con
+        /// <see cref="ValidationResult.IsValid"/> para que UI y llamadores reaccionen igual.
+        /// </returns>
         public bool ValidateDataTypes()
         {
             ValidationErrors.Errors.Clear();
 
             if (DataSource.Rows.Count == 0)
             {
+                // Una tabla sin filas no es importable: el retorno debe ser coherente con
+                // ValidationErrors.IsValid para que la UI y los llamadores reaccionen igual.
                 ValidationErrors.AddErrorMessage("No hay datos para validar.");
-                return true;
+                return false;
             }
 
             bool allRowsValid = true;
@@ -232,7 +247,74 @@ namespace KUtilitiesCore.Data.DataImporter
         }
 
         /// <summary>
-        /// Libera los DataTables de origen y destino cuando <paramref name="disposing"/> es <c>true</c>.
+        /// Construye una tabla resultado nueva, tipada según el tipo destino de cada definición
+        /// y libre de las columnas de control (<c>_RowIndex</c>/<c>_IsValid</c>) del proceso interno.
+        /// El llamador es dueño de la tabla devuelta: puede disponerla sin afectar al manager.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="DataSource"/> mantiene todo como texto para pintar errores en la UI;
+        /// esta proyección tipada existe para que el consumidor reciba datos ya convertidos y
+        /// desacoplados del ciclo de validación/edición del asistente.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var manager = new ImportManager();
+        /// manager.SetMapping(mapping);
+        /// manager.ReadData(rawData);
+        /// if (manager.ValidateDataTypes())
+        /// {
+        ///     DataTable resultado = manager.CreateResultTable();
+        /// }
+        /// </code>
+        /// </example>
+        /// <returns>Una <see cref="DataTable"/> nueva con una columna tipada por campo.</returns>
+        public DataTable CreateResultTable()
+        {
+            var result = new DataTable();
+            foreach (var def in ColumnDefinitions)
+            {
+                result.Columns.Add(def.FieldName, def.TargetType ?? typeof(string));
+            }
+
+            foreach (DataRow sourceRow in DataSource.Rows)
+            {
+                DataRow targetRow = result.NewRow();
+                foreach (var def in ColumnDefinitions)
+                {
+                    targetRow[def.FieldName] = ResolveResultValue(def, sourceRow[def.FieldName]);
+                }
+                result.Rows.Add(targetRow);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Resuelve el valor final de una celda del resultado: convierte al tipo destino
+        /// mediante el convertidor de la definición, o degrada a DefaultValue/DBNull cuando
+        /// la celda está vacía y la definición lo permite.
+        /// </summary>
+        /// <param name="def">Definición del campo que gobierna conversión y valores por defecto.</param>
+        /// <param name="cellValue">Valor crudo de la celda (texto) en <see cref="DataSource"/>.</param>
+        /// <returns>Valor convertido, DefaultValue o <see cref="DBNull.Value"/>.</returns>
+        private static object ResolveResultValue(IFieldDefinitionItem def, object? cellValue)
+        {
+            bool isEmpty = cellValue == null
+                || cellValue == DBNull.Value
+                || (cellValue is string text && string.IsNullOrEmpty(text));
+
+            if (isEmpty)
+            {
+                return !def.AllowNull && def.DefaultValue != null ? def.DefaultValue : DBNull.Value;
+            }
+
+            return def.TypeConverter?.TryConvert(cellValue!.ToString() ?? string.Empty) ?? DBNull.Value;
+        }
+
+        /// <summary>
+        /// Libera el DataTable de destino cuando <paramref name="disposing"/> es <c>true</c>.
+        /// El origen crudo no se dispone: pertenece al llamador que lo entregó a
+        /// <see cref="ReadData(DataTable)"/>.
         /// </summary>
         /// <param name="disposing"><c>true</c> si se invoca desde Dispose; <c>false</c> si viene del finalizador.</param>
         protected virtual void Dispose(bool disposing)
@@ -242,7 +324,6 @@ namespace KUtilitiesCore.Data.DataImporter
                 if (disposing)
                 {
                     DataSource.Dispose();
-                    _rawDataSource.Dispose();
                 }
 
                 // TODO: liberar los recursos no administrados (objetos no administrados) y reemplazar el finalizador
@@ -361,7 +442,10 @@ namespace KUtilitiesCore.Data.DataImporter
 
                     string errMsg = $"El campo '{def.DisplayName}' es requerido.";
                     rowValid = false;
-                    ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex));
+                    // PropertyName identifica el campo de negocio (FieldName), no la columna
+                    // del archivo: la columna origen varía por archivo y pertenece al
+                    // transporte; el consumidor razona sobre el campo destino, estable.
+                    ValidationErrors.AddError(new ValidationFailure(def.FieldName, errMsg, rowIndex));
                     // validamos si existe esa columna en el DataSource
                     if (dcSource != null)
                         _rawDataSource.Rows[rowIndex].SetColumnError(def.SourceColumnName, errMsg);
@@ -382,7 +466,8 @@ namespace KUtilitiesCore.Data.DataImporter
                 {
                     string errMsg = $"Se esperaba un valor de tipo [{def.TargetType?.Name ?? "desconocido"}] para el valor '{value}'.";
                     rowValid = false;
-                    ValidationErrors.AddError(new ValidationFailure(def.SourceColumnName, errMsg, rowIndex, value));
+                    // Mismo contrato que el campo requerido: PropertyName = FieldName.
+                    ValidationErrors.AddError(new ValidationFailure(def.FieldName, errMsg, rowIndex, value));
                     if (dcSource != null)
                         _rawDataSource.Rows[rowIndex].SetColumnError(def.SourceColumnName, errMsg);
                     row.SetColumnError(def.FieldName, errMsg);

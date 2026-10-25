@@ -175,6 +175,7 @@
             this.dgvMapping.RowTemplate.Height = 24;
             this.dgvMapping.Size = new System.Drawing.Size(243, 422);
             this.dgvMapping.TabIndex = 0;
+            this.dgvMapping.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvMapping_CellValueChanged);
             // 
             // DestinationField
             // 
