@@ -66,6 +66,16 @@ Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server
 - **Naming**: Variables, functions and classes in English, following Microsoft standards. Interface prefix `I`, `PascalCase` for public members, `_camelCase` for private fields.
 - Ensure compliance with the **SOLID** principles and good engineering practice.
 
+## Commits & Pull Requests
+
+Commit and PR text is in **Spanish, without accents in subjects** (see git history: `importacion`, `anadir`). Style is Conventional-Commit-like with optional scope.
+
+- **Subject**: `type(scope): descripcion imperativa en minusculas` — types in use: `feat`, `fix`, `build`, `docs`; the scope is the affected project (`KUtilitiesCore.Dal`, `KUtilitiesCore.Data`, `KUtilitiesCore.Data.Win`, ...) or `openspec` for spec/archive bookkeeping.
+- **Body** (when the change warrants it): Spanish bullet list explaining what and why — areas touched, new behavior, key decisions; close with test results (suites run, counts, pre-existing failures) and documentation impact. Name the OpenSpec change when one exists.
+- **Per-change pattern**: two commits — first a `feat(<scope>)` commit with implementation + tests + `AGENTS.md` updates, then `docs(openspec): archivar cambio <name> y sincronizar specs` carrying the archived change folder and the synced main spec(s). Do not mix code and openspec bookkeeping in the same commit.
+- **PR**: created with GitHub CLI (`gh`), base = the integration branch (`Dev-NET10`), title `type: descripcion (<change-name>)` (e.g. `feat: transacciones explicitas en el Unit of Work de Dal (dal-explicit-transactions)`), body in Spanish with sections: Resumen (change + archive/spec paths), contract/behavior detail, Pruebas (suites + counts + pre-existing failures), Documentacion.
+- Never commit secrets, `.env`, or generated artifacts; do not force-push.
+
 ## Testing
 
 - **Framework**: MSTest 4.4.1 (Microsoft.NET.Test.Sdk 18.10.1) everywhere except `KUtilitiesCore.MVVMTests.EventCommandBinder` which uses xunit.v3 4.0.1 with Microsoft.Testing.Platform 2.4.1.
