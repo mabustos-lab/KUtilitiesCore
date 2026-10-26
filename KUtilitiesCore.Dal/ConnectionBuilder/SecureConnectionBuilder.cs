@@ -50,11 +50,21 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// Inicializa una nueva instancia de la clase <see cref="SecureConnectionBuilder"/>.
         /// </summary>
         /// <param name="encryptionService">
-        /// Servicio de cifrado a utilizar. Si es nulo, se utiliza el servicio AES por defecto.
+        /// Servicio de cifrado a utilizar. Si es nulo, se utiliza un servicio AES por defecto cuya
+        /// clave fija está compilada dentro del ensamblado, por lo que solo proporciona un nivel
+        /// de protección de ofuscación y no seguridad real. Para una protección genuina inyecte un
+        /// <see cref="Encryption.IEncryptionService"/> con una clave propia o, en Windows, use el
+        /// servicio DPAPI de <see cref="Encryption.FactoryEncryptionService"/> que delega la
+        /// protección de la clave al sistema operativo.
         /// </param>
         /// <param name="filePath">
         /// Ruta del archivo de configuración. Si es vacío, se utiliza la ruta predeterminada.
         /// </param>
+        /// <remarks>
+        /// El servicio AES por defecto existe únicamente como fallback de compatibilidad: una clave
+        /// compilada en el ensamblado puede extraerse con herramientas de desensamblado, de modo que
+        /// cualquier persona con acceso al binario podría descifrar el archivo de configuración.
+        /// </remarks>
         public SecureConnectionBuilder(Encryption.IEncryptionService? encryptionService, string filePath = "")
         {
             Reset();

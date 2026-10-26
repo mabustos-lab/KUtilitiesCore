@@ -33,6 +33,12 @@ namespace KUtilitiesCore.Encryption
         /// <summary>
         /// Implementación Data Protection API
         /// </summary>
+        /// <remarks>
+        /// Es la alternativa recomendada frente a servicios con claves fijas (como
+        /// <see cref="GetAesEncryptionService"/>) cuando el binario se distribuye: DPAPI delega al
+        /// sistema operativo la protección de la clave, de modo que el ciphertext no puede
+        /// descifrarse con el propio ensamblado.
+        /// </remarks>
         /// <returns>Una instancia de <see cref="IEncryptionService"/> basada en DPAPI.</returns>
         public static IEncryptionService GetDPAPIEncryptionService(DataProtectionScope scope= DataProtectionScope.CurrentUser)
         {
