@@ -71,7 +71,6 @@ namespace KUtilitiesCore.Data
         /// <summary>
         /// Agrega una nueva columna al <see cref="DataTable"/> con el tipo especificado.
         /// </summary>
-        /// <typeparam name="TType">Tipo de datos de la columna.</typeparam>
         /// <param name="dt"><see cref="DataTable"/> al que se agregará la columna.</param>
         /// <param name="dataType">Tipo de datos de la columna.</param>
         /// <param name="fieldName">Nombre del campo de la columna.</param>
@@ -130,6 +129,9 @@ namespace KUtilitiesCore.Data
 
             var column = dt.Columns[columnName];
 
+            if (column is null)
+                return string.Empty;
+
             if (column.ExtendedProperties.ContainsKey(ColumnDescriptionKey))
             {
                 // Obtiene el valor y lo convierte a string, manejando null
@@ -178,7 +180,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return string.Empty;
-            return dt.Columns[columnName].GetDisplayFormat();
+            return dt.Columns[columnName]?.GetDisplayFormat() ?? string.Empty;
         }
 
         /// <summary>
@@ -210,7 +212,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return 0;
-            return dt.Columns[columnName].GetXLColumnWidth();
+            return dt.Columns[columnName]?.GetXLColumnWidth() ?? 0;
         }
 
         /// <summary>
@@ -232,7 +234,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return string.Empty;
-            return dt.Columns[columnName].GetXLDisplayFormat();
+            return dt.Columns[columnName]?.GetXLDisplayFormat() ?? string.Empty;
         }
 
         /// <summary>
@@ -254,7 +256,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return false;
-            return dt.Columns[columnName].IsExcluded();
+            return dt.Columns[columnName]?.IsExcluded() ?? false;
         }
 
         /// <summary>
@@ -299,7 +301,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return;
-            dt.Columns[columnName].SetDisplayFormat(format);
+            dt.Columns[columnName]?.SetDisplayFormat(format);
         }
 
         /// <summary>
@@ -322,7 +324,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return;
-            dt.Columns[columnName].SetExcluded(exclude);
+            dt.Columns[columnName]?.SetExcluded(exclude);
         }
 
         /// <summary>
@@ -348,7 +350,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName) || width < 0)
                 return;
-            dt.Columns[columnName].SetXLColumnWidth(width);
+            dt.Columns[columnName]?.SetXLColumnWidth(width);
         }
 
         /// <summary>
@@ -426,7 +428,7 @@ namespace KUtilitiesCore.Data
         {
             if (dt == null || !dt.Columns.Contains(columnName))
                 return;
-            dt.Columns[columnName].SetXLDisplayFormat(format);
+            dt.Columns[columnName]?.SetXLDisplayFormat(format);
         }
 
     }

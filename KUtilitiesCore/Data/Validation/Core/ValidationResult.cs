@@ -22,8 +22,17 @@ namespace KUtilitiesCore.Data.Validation.Core
         /// </summary>
         public virtual bool IsValid => _errors.Count == 0;
 
+        /// <summary>
+        /// Inicializa un resultado de validación vacío (sin errores), listo para
+        /// acumular los fallos detectados durante la validación.
+        /// </summary>
         public ValidationResult() { _errors = new List<ValidationFailureBase>(); }
 
+        /// <summary>
+        /// Inicializa el resultado a partir de una colección de fallos existente,
+        /// descartando las entradas nulas para garantizar una lista de errores válida.
+        /// </summary>
+        /// <param name="failures">Colección de fallos de validación a copiar.</param>
         public ValidationResult(IEnumerable<ValidationFailureBase> failures)
         { _errors = failures.Where(failure => failure != null).ToList(); }
 

@@ -33,6 +33,8 @@
             this.cboEncoding = new System.Windows.Forms.ComboBox();
             this.lblEnc = new System.Windows.Forms.Label();
             this.chkHasHeader = new System.Windows.Forms.CheckBox();
+            this.chkTrimValues = new System.Windows.Forms.CheckBox();
+            this.chkIgnoreEmptyLines = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // cboDelimiter
@@ -83,6 +85,30 @@
             this.chkHasHeader.Text = "Tiene encabezados";
             this.chkHasHeader.UseVisualStyleBackColor = true;
             // 
+            // chkTrimValues
+            // 
+            this.chkTrimValues.AutoSize = true;
+            this.chkTrimValues.Checked = true;
+            this.chkTrimValues.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkTrimValues.Location = new System.Drawing.Point(8, 77);
+            this.chkTrimValues.Name = "chkTrimValues";
+            this.chkTrimValues.Size = new System.Drawing.Size(218, 20);
+            this.chkTrimValues.TabIndex = 3;
+            this.chkTrimValues.Text = "Quitar espacios en los valores";
+            this.chkTrimValues.UseVisualStyleBackColor = true;
+            // 
+            // chkIgnoreEmptyLines
+            // 
+            this.chkIgnoreEmptyLines.AutoSize = true;
+            this.chkIgnoreEmptyLines.Checked = true;
+            this.chkIgnoreEmptyLines.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkIgnoreEmptyLines.Location = new System.Drawing.Point(240, 77);
+            this.chkIgnoreEmptyLines.Name = "chkIgnoreEmptyLines";
+            this.chkIgnoreEmptyLines.Size = new System.Drawing.Size(158, 20);
+            this.chkIgnoreEmptyLines.TabIndex = 4;
+            this.chkIgnoreEmptyLines.Text = "Ignorar líneas vacías";
+            this.chkIgnoreEmptyLines.UseVisualStyleBackColor = true;
+            // 
             // CsvConfigControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -92,8 +118,10 @@
             this.Controls.Add(this.chkHasHeader);
             this.Controls.Add(this.cboDelimiter);
             this.Controls.Add(this.cboEncoding);
+            this.Controls.Add(this.chkTrimValues);
+            this.Controls.Add(this.chkIgnoreEmptyLines);
             this.Name = "CsvConfigControl";
-            this.Size = new System.Drawing.Size(300, 100);
+            this.Size = new System.Drawing.Size(420, 100);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -106,5 +134,7 @@
         private ComboBox cboEncoding;
         private Label lblEnc;
         private CheckBox chkHasHeader;
+        private CheckBox chkTrimValues;
+        private CheckBox chkIgnoreEmptyLines;
     }
 }

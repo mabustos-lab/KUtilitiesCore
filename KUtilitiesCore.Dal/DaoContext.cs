@@ -42,16 +42,23 @@ namespace KUtilitiesCore.Dal
 
         private readonly DbProviderFactory _factory;
 
-        private readonly ILogger<DaoContext> _logger;
+        private readonly ILogger<DaoContext>? _logger;
 
         private readonly IMetrics _metrics;
 
-        private Lazy<DbConnection> _connection;
+        private Lazy<DbConnection>? _connection;
+
+        /// <summary>
+        /// Conexión publicada de forma anticipada durante la materialización del <see cref="Lazy{T}"/>.
+        /// Permite que los handlers de <see cref="OnConnectionOpened"/>/<see cref="OnConnectionOpenedAsync"/>
+        /// resuelvan <see cref="Connection"/> sin re-entrar en la fábrica del Lazy (guarda de re-entrada).
+        /// </summary>
+        private volatile DbConnection? _openedConnection;
 
         private TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
 
         private bool _disposedValue;
-        private IDisposable _sqlLoggerDisposable = null;
+        private IDisposable? _sqlLoggerDisposable = null;
         private const int _maxPoolSize = 20;
 
         #endregion Fields
@@ -74,7 +81,7 @@ namespace KUtilitiesCore.Dal
 ﻿        /// <exception cref="ArgumentException">
 ﻿        /// Se lanza cuando no se puede crear la fábrica del proveedor de base de datos.
 ﻿        /// </exception>
-        public DaoContext(IConnectionString cnnStr, ILogger<DaoContext> logger = null, IMetrics metrics = null)
+        public DaoContext(IConnectionString cnnStr, ILogger<DaoContext>? logger = null, IMetrics? metrics = null)
         {
             _connectionString = cnnStr ?? throw new ArgumentNullException(nameof(cnnStr));
             _logger = logger;
@@ -99,7 +106,10 @@ namespace KUtilitiesCore.Dal
 
         /// <inheritdoc/>
         public DbConnection Connection
-           => _connection.Value;
+           => _openedConnection
+             ?? _connection?.Value
+             ?? throw new ObjectDisposedException(nameof(DaoContext),
+                 "El contexto de acceso a datos ha sido liberado y no puede ser utilizado");
 
         /// <inheritdoc/>
         public int ConnectionTimeout
@@ -116,7 +126,10 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public Action<ISqlExecutorContext> OnConnectionOpened { get; set; }
+        public Action<ISqlExecutorContext>? OnConnectionOpened { get; set; }
+
+        /// <inheritdoc/>
+        public Func<ISqlExecutorContext, Task>? OnConnectionOpenedAsync { get; set; }
 
         /// <inheritdoc/>
         public string ProviderName => _connectionString.ProviderName;
@@ -151,7 +164,8 @@ namespace KUtilitiesCore.Dal
 
             try
             {
-                DbDataAdapter dataAdapter = _factory.CreateDataAdapter();
+                DbDataAdapter dataAdapter = _factory.CreateDataAdapter()
+                    ?? throw new InvalidOperationException("El proveedor de base de datos no admite adaptadores de datos.");
                 dataAdapter.SelectCommand = command;
                 return dataAdapter;
             }
@@ -163,8 +177,8 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public DbCommand CreateCommand(string sql, IDaoParameterCollection parameters = null,
-           CommandType commandType = CommandType.Text, ITransaction transaction = null)
+        public DbCommand CreateCommand(string sql, IDaoParameterCollection? parameters = null,
+           CommandType commandType = CommandType.Text, ITransaction? transaction = null)
         {
             EnsureNotDisposed();
 
@@ -178,7 +192,8 @@ namespace KUtilitiesCore.Dal
                 // Validar compatibilidad de transacción
                 if (transaction != null)
                 {
-                    var tx = ((TransactionBase)transaction).GetTransactionObject();
+                    var tx = ((TransactionBase)transaction).GetTransactionObject()
+                        ?? throw new InvalidOperationException("La transacción interna no está activa.");
                     if (tx.Connection != Connection)
                     {
                         ReturnToPool(command);
@@ -218,7 +233,8 @@ namespace KUtilitiesCore.Dal
             EnsureNotDisposed();
             try
             {
-                return _factory.CreateCommandBuilder();
+                return _factory.CreateCommandBuilder()
+                    ?? throw new InvalidOperationException("El proveedor de base de datos no admite constructores de comandos.");
             }
             catch (Exception ex)
             {
@@ -239,12 +255,14 @@ namespace KUtilitiesCore.Dal
         {
             EnsureNotDisposed();
 
-            if (_connection.IsValueCreated && _connection.Value.State == ConnectionState.Open)
+            if (_connection is not null && _connection.IsValueCreated && _connection.Value.State == ConnectionState.Open)
                 return true;
 
             try
             {
-                using (var tempConnection = CreateConnection())
+                // Sonda: usa el núcleo sin publicar campo ni invocar hooks para no
+                // materializar la conexión lógica del contexto.
+                using (var tempConnection = CreateConnectionCore())
                 {
                     return tempConnection.State == ConnectionState.Open;
                 }
@@ -264,12 +282,12 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public int ExecuteNonQuery(string sql, IDaoParameterCollection parameters = null,
-           CommandType commandType = CommandType.Text, ITransaction transaction = null)
+        public int ExecuteNonQuery(string sql, IDaoParameterCollection? parameters = null,
+           CommandType commandType = CommandType.Text, ITransaction? transaction = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
 
             try
             {
@@ -296,13 +314,13 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public async Task<int> ExecuteNonQueryAsync(string sql, IDaoParameterCollection parameters = null,
-           CommandType commandType = CommandType.Text, ITransaction transaction = null,
+        public async Task<int> ExecuteNonQueryAsync(string sql, IDaoParameterCollection? parameters = null,
+           CommandType commandType = CommandType.Text, ITransaction? transaction = null,
            CancellationToken cancellationToken = default)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
 
             try
             {
@@ -329,8 +347,8 @@ namespace KUtilitiesCore.Dal
         }
         /// <inheritdoc/>
         public IReaderResultSet ExecuteReader(string sql, IDataReaderConverter translate,
-           IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text,
-           ITransaction transaction = null)
+           IDaoParameterCollection? parameters = null, CommandType commandType = CommandType.Text,
+           ITransaction? transaction = null)
             => ExecuteReaderCore(sql,translate, parameters, commandType, transaction);
 
         /// <summary>
@@ -348,13 +366,13 @@ namespace KUtilitiesCore.Dal
         /// <param name="dbDataReader">Opcional: un DbDataReader para usar en lugar de crear uno nuevo desde el comando. Para fines de prueba.</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         public IReaderResultSet ExecuteReaderCore(string sql, IDataReaderConverter translate,
-           IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text,
-           ITransaction transaction = null, DbDataReader? dbDataReader = null)
+           IDaoParameterCollection? parameters = null, CommandType commandType = CommandType.Text,
+           ITransaction? transaction = null, DbDataReader? dbDataReader = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
-            DbDataReader reader = null;
+            DbCommand? command = null;
+            DbDataReader? reader = null;
             ReaderResultSet fullResultSet = new ReaderResultSet(); // Acumula todos los resultados aquí.
             bool moreResultSets = true; 
             try
@@ -419,9 +437,9 @@ namespace KUtilitiesCore.Dal
         public async Task<IReaderResultSet> ExecuteReaderAsync(
             string sql,
             IDataReaderConverter translate,
-            IDaoParameterCollection parameters = null,
+            IDaoParameterCollection? parameters = null,
             CommandType commandType = CommandType.Text,
-            ITransaction transaction = null,
+            ITransaction? transaction = null,
             CancellationToken cancellationToken = default) => await ExecuteReaderAsyncCore(
             sql,
             translate,
@@ -447,13 +465,13 @@ namespace KUtilitiesCore.Dal
         /// <param name="dbDataReader">Opcional: un DbDataReader para usar en lugar de crear uno nuevo desde el comando. Para fines de prueba.</param>
         /// <returns>Una colección de conjuntos de resultados recuperados de un lector de datos.</returns>
         public async Task<IReaderResultSet> ExecuteReaderAsyncCore(string sql, IDataReaderConverter translate,
-           IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null,
+           IDaoParameterCollection? parameters = null, CommandType commandType = CommandType.Text, ITransaction? transaction = null,
            CancellationToken cancellationToken = default, DbDataReader? dbDataReader = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
-            DbDataReader reader = null;
+            DbCommand? command = null;
+            DbDataReader? reader = null;
             ReaderResultSet fullResultSet = new ReaderResultSet(); // Accumulate all results here
             bool moreResultSets = true; // Initialize to true to enter the do-while loop﻿
             try
@@ -516,15 +534,16 @@ namespace KUtilitiesCore.Dal
             }
         }         /// <inheritdoc/>
 
-        public void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null)
+        public void FillDataSet(string sql, DataSet ds, string tableName, IDaoParameterCollection? parameters = null, CommandType commandType = CommandType.Text, ITransaction? transaction = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
             try
             {
                 command = CreateCommand(sql, parameters, commandType, transaction);
-                using DbDataAdapter adapter = _factory.CreateDataAdapter();
+                using DbDataAdapter adapter = _factory.CreateDataAdapter()
+                    ?? throw new InvalidOperationException("El proveedor de base de datos no admite adaptadores de datos.");
                 adapter.SelectCommand = command;
                 adapter.Fill(ds, tableName);
 
@@ -545,11 +564,11 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public async Task FillDataSetAsync(string sql, DataSet ds, string tableName, IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null, CancellationToken cancellationToken = default)
+        public async Task FillDataSetAsync(string sql, DataSet ds, string tableName, IDaoParameterCollection? parameters = null, CommandType commandType = CommandType.Text, ITransaction? transaction = null, CancellationToken cancellationToken = default)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
             try
             {
                 command = CreateCommand(sql, parameters, commandType, transaction);
@@ -578,17 +597,17 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public TResult Scalar<TResult>(string sql, IDaoParameterCollection parameters = null,
-           CommandType commandType = CommandType.Text, ITransaction transaction = null)
+        public TResult? Scalar<TResult>(string sql, IDaoParameterCollection? parameters = null,
+           CommandType commandType = CommandType.Text, ITransaction? transaction = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
             try
             {
                 command = CreateCommand(sql, parameters, commandType, transaction);
-                object result = command.ExecuteScalar();
-                TResult typedResult = result is DBNull or null ? default : (TResult)Convert.ChangeType(result, typeof(TResult));
+                object? result = command.ExecuteScalar();
+                TResult? typedResult = result is DBNull or null ? default : (TResult)Convert.ChangeType(result, typeof(TResult));
 
                 stopwatch.Stop();
                 _metrics.TrackMetric("ScalarExecutionTime", stopwatch.ElapsedMilliseconds);
@@ -609,19 +628,21 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public async Task<TResult> ScalarAsync<TResult>(string sql, IDaoParameterCollection parameters = null, CommandType commandType = CommandType.Text, ITransaction transaction = null, CancellationToken cancellationToken = default)
+        public async Task<TResult?> ScalarAsync<TResult>(string sql, IDaoParameterCollection? parameters = null, CommandType commandType = CommandType.Text, ITransaction? transaction = null, CancellationToken cancellationToken = default)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
             try
             {
                 command = CreateCommand(sql, parameters, commandType, transaction);
-                object result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-                TResult typedResult = result is DBNull or null ? default : (TResult)Convert.ChangeType(result, typeof(TResult));
+                object? result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+                // TResult sin restricciones: default es null para tipos por referencia cuando la
+                // consulta no retorna valor; el contrato Task<TResult?> lo expresa directamente.
+                TResult? typedResult = result is DBNull or null ? default : (TResult)Convert.ChangeType(result, typeof(TResult));
 
                 stopwatch.Stop();
-                _metrics.TrackMetric("ScalarExecutionTime", stopwatch.ElapsedMilliseconds);
+                _metrics.TrackMetric("ScalarAsyncExecutionTime", stopwatch.ElapsedMilliseconds);
                 _logger?.LogDebug("ScalarAsync ejecutado en {Tiempo}ms", stopwatch.ElapsedMilliseconds);
 
                 return typedResult;
@@ -639,15 +660,16 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public int UpdateDataSet(DataSet ds, string selectCommandText, string tableName, CommandType commandType = CommandType.Text, ITransaction transaction = null)
+        public int UpdateDataSet(DataSet ds, string selectCommandText, string tableName, CommandType commandType = CommandType.Text, ITransaction? transaction = null)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
             try
             {
                 command = CreateCommand(selectCommandText, null, commandType, transaction);
-                using DbDataAdapter adapter = _factory.CreateDataAdapter();
+                using DbDataAdapter adapter = _factory.CreateDataAdapter()
+                    ?? throw new InvalidOperationException("El proveedor de base de datos no admite adaptadores de datos.");
                 adapter.SelectCommand = command;
 
                 using DbCommandBuilder builder = CreateCommandBuilder();
@@ -687,16 +709,17 @@ namespace KUtilitiesCore.Dal
         }
 
         /// <inheritdoc/>
-        public async Task<int> UpdateDataSetAsync(DataSet ds, string selectCommandText, string tableName, CommandType commandType = CommandType.Text, ITransaction transaction = null, CancellationToken cancellationToken = default)
+        public async Task<int> UpdateDataSetAsync(DataSet ds, string selectCommandText, string tableName, CommandType commandType = CommandType.Text, ITransaction? transaction = null, CancellationToken cancellationToken = default)
         {
             EnsureNotDisposed();
             var stopwatch = Stopwatch.StartNew();
-            DbCommand command = null;
+            DbCommand? command = null;
             try
             {
                 command = CreateCommand(selectCommandText, null,
                     commandType, transaction);
-                using DbDataAdapter adapter = _factory.CreateDataAdapter();
+                using DbDataAdapter adapter = _factory.CreateDataAdapter()
+                    ?? throw new InvalidOperationException("El proveedor de base de datos no admite adaptadores de datos.");
                 adapter.SelectCommand = command;
 
                 using DbCommandBuilder builder = CreateCommandBuilder();
@@ -745,7 +768,8 @@ namespace KUtilitiesCore.Dal
         internal DbDataAdapter CreateDataAdapter()
         {
             EnsureNotDisposed();
-            return _factory.CreateDataAdapter();
+            return _factory.CreateDataAdapter()
+                ?? throw new InvalidOperationException("El proveedor de base de datos no admite adaptadores de datos.");
         }
 
         /// <summary>
@@ -783,7 +807,7 @@ namespace KUtilitiesCore.Dal
 
                     // Liberar comandos del pool con verificación de estado
                     int disposedCount = 0;
-                    while (_commandPool.TryTake(out DbCommand command))
+                    while (_commandPool.TryTake(out DbCommand? command))
                     {
                         try
                         {
@@ -804,6 +828,7 @@ namespace KUtilitiesCore.Dal
                         disposedCount);
                 }
 
+                _openedConnection = null;
                 _connection = null;
                 _disposedValue = true;
             }
@@ -811,25 +836,53 @@ namespace KUtilitiesCore.Dal
 
         private DbConnection CreateConnection()
         {
+            DbConnection? connection = null;
             try
             {
-                DbConnection connection = _factory.CreateConnection()!;
-                connection.ConnectionString = _connectionString.CnnString;
-                connection.Open();
-                _logger?.LogDebug("Conexión de base de datos creada y abierta");
+                connection = CreateConnectionCore();
 
-                // Invocar delegado si está configurado
-                OnConnectionOpened?.Invoke(this);
+                // Publicación anticipada: los handlers pueden resolver Connection sin
+                // re-entrar en la fábrica del Lazy (semántica sin re-entrada del hook).
+                _openedConnection = connection;
 
                 EnableSqlLogging(connection);
+
+                // Invocar delegado síncrono si está configurado
+                OnConnectionOpened?.Invoke(this);
+
+                // Invocar delegado asíncrono si está configurado (bloquea la
+                // materialización hasta completar). Los handlers deben usar
+                // ConfigureAwait(false) para evitar interbloqueos sync-over-async.
+                OnConnectionOpenedAsync?.Invoke(this).GetAwaiter().GetResult();
 
                 return connection;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error al crear y abrir conexión de base de datos");
+
+                // Fail-closed: disponer la conexión abierta (sin fugas) y anular la
+                // publicación anticipada. El Lazy cachea la excepción y envenena el
+                // contexto de forma permanente: todo acceso posterior la re-lanza.
+                _openedConnection = null;
+                connection?.Dispose();
                 throw new DataAccessException("Error al crear conexión de base de datos", null, _connectionString.ProviderName, ex);
             }
+        }
+
+        /// <summary>
+        /// Crea y abre la conexión física sin publicar <see cref="_openedConnection"/> ni
+        /// invocar los hooks de apertura. Usado por la sonda de <see cref="DatabaseExists"/>
+        /// para verificar disponibilidad sin materializar la conexión lógica del contexto.
+        /// </summary>
+        /// <returns>Conexión abierta lista para usar; el llamador es dueño de su disposición.</returns>
+        private DbConnection CreateConnectionCore()
+        {
+            DbConnection connection = _factory.CreateConnection()!;
+            connection.ConnectionString = _connectionString.CnnString;
+            connection.Open();
+            _logger?.LogDebug("Conexión de base de datos creada y abierta");
+            return connection;
         }
 
         private void EnableSqlLogging(DbConnection connection)
@@ -887,7 +940,8 @@ namespace KUtilitiesCore.Dal
         }
 
         private DbParameter CreateParameter()
-                            => _factory.CreateParameter();
+                            => _factory.CreateParameter()
+                            ?? throw new InvalidOperationException("El proveedor de base de datos no admite la creación de parámetros.");
 
         private void EnsureNotDisposed()
         {
@@ -899,7 +953,7 @@ namespace KUtilitiesCore.Dal
 
         private DbCommand GetPooledCommand()
         {
-            if (_commandPool.TryTake(out DbCommand command))
+            if (_commandPool.TryTake(out DbCommand? command))
             {
                 // Verificar que el comando esté en estado válido
                 if (command.Connection != null &&
@@ -917,14 +971,15 @@ namespace KUtilitiesCore.Dal
             }
 
             // Crear nuevo comando
-            DbCommand newCommand = _factory.CreateCommand();
+            DbCommand newCommand = _factory.CreateCommand()
+                ?? throw new InvalidOperationException("El proveedor de base de datos no admite la creación de comandos.");
             newCommand.CommandTimeout = (int)_defaultTimeout.TotalSeconds;
             _logger?.LogTrace("Nuevo comando creado");
 
             return newCommand;
         }
 
-        private void ReturnToPool(DbCommand command)
+        private void ReturnToPool(DbCommand? command)
         {
             if (command == null) return;
 

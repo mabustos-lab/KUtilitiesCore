@@ -13,7 +13,7 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
         private readonly IXLCell _cell;
 
         /// <inheritdoc/>
-        public string Address => _cell.Address.ToString();
+        public string Address => _cell.Address.ToString() ?? string.Empty;
         /// <inheritdoc/>
         public int ColumnNumber => _cell.Address.ColumnNumber;
         /// <inheritdoc/>
@@ -25,6 +25,11 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
         /// <inheritdoc/>
         public string FormattedValue => GetFormattedValue();
 
+        /// <summary>
+        /// Envuelve una celda de ClosedXML para exponer sus datos
+        /// a través de la abstracción <see cref="IExcelCell"/>.
+        /// </summary>
+        /// <param name="cell">Celda de ClosedXML que se adapta.</param>
         public ClosedXmlExcelCell(IXLCell cell)
         {
             _cell = cell;

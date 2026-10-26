@@ -9,14 +9,21 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Dal.SQLLog
 {
+    /// <summary>
+    /// Extensiones para habilitar el logging SQL sobre conexiones ADO.NET con destinos
+    /// de logging comunes.
+    /// </summary>
     public static class SqlLoggingExtensions
     {
         /// <summary>
-        /// Configura logging automático con Serilog/ILogger
+        /// Configura logging automático de mensajes SQL hacia un ILogger de Microsoft.Extensions.Logging.
         /// </summary>
+        /// <param name="connection">Conexión a la que se adjunta el logging.</param>
+        /// <param name="logger">Logger de destino al que se envían los mensajes SQL.</param>
+        /// <param name="options">Opciones de filtrado; null aplica las opciones predeterminadas.</param>
         public static IDisposable EnableSerilogSqlLogging<TConnection>(this TConnection connection,
             ILogger logger,
-            SqlLoggingOptions options = null)
+            SqlLoggingOptions? options = null)
             where TConnection : DbConnection
         {
             return connection.EnableSqlLogging(entry =>

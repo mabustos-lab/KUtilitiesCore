@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>disable</Nullable>
+		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<Title>KUtilitiesCore.Dal</Title>
 		<Description>Capa de acceso a datos con soporte para Unit of Work e inserciones masivas.</Description>
@@ -29,7 +29,7 @@
 	  <Compile Remove="UOW\UnregisteredRepositoryException.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.0" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\KUtiitiesCore.Encryption\KUtilitiesCore.Encryption.csproj" />

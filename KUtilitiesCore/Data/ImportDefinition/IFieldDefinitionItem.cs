@@ -56,13 +56,21 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// </summary>
         bool IsUnique { get;  }
         /// <summary>
-        /// Establece el valor default al importar un valor nulo
+        /// Establece el valor default al importar un valor nulo.
         /// </summary>
-        object DefaultValue { get; set; }
+        /// <remarks>
+        /// Puede ser <c>null</c> cuando el campo no define un valor por defecto; en ese caso
+        /// el importador aplica las reglas de campo requerido habituales.
+        /// </remarks>
+        object? DefaultValue { get; set; }
         /// <summary>
         /// Obtiene el convertidor de tipo asociado al campo.
         /// </summary>
-        ITypeConverter TypeConverter { get; }
+        /// <remarks>
+        /// Puede ser <c>null</c> si aún no se ha resuelto un convertidor para <see cref="TargetType"/>;
+        /// los consumidores deben verificarlo antes de usarlo.
+        /// </remarks>
+        ITypeConverter? TypeConverter { get; }
         /// <summary>
         /// Colección de reglas de validación de negocio que se ejecutarán tras la conversión de tipo.
         /// </summary>

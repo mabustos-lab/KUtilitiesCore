@@ -14,9 +14,9 @@ namespace KUtilitiesCore.Data.DataImporter.Interfaces
         string FilePath { get; set; }
 
         /// <summary>
-        /// Nombre de la hoja a procesar
+        /// Nombre de la hoja a procesar; <c>null</c> para usar la primera hoja del libro.
         /// </summary>
-        string SheetName { get; set; }
+        string? SheetName { get; set; }
 
         /// <summary>
         /// Indica si la primera fila contiene encabezados
@@ -44,7 +44,7 @@ namespace KUtilitiesCore.Data.DataImporter.Interfaces
         /// <summary>
         /// Nombre de la hoja
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Número de filas con datos

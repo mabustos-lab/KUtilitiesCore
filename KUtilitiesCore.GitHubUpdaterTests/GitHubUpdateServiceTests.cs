@@ -28,14 +28,14 @@ namespace KUtilitiesCore.GitHubUpdater.Tests
 
             AppUpdateInfo appUpdateInfo = new AppUpdateInfo();
             string version = "0.0.0";
-            string canal = Environment.GetEnvironmentVariable("UpdateChannel");
+            string canal = Environment.GetEnvironmentVariable("UpdateChannel") ?? string.Empty;
             string owner = "mabustos-lab";
             string repo = "Sefoil.Siomax";
-            
-            string token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+
+            string token = Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? string.Empty;
             appUpdateInfo.AppVersion = version;
             appUpdateInfo.UpdateChannel = canal;
-            appUpdateInfo.GitHub.API_URL = Environment.GetEnvironmentVariable("API_URL"); 
+            appUpdateInfo.GitHub.API_URL = Environment.GetEnvironmentVariable("API_URL") ?? string.Empty;
             appUpdateInfo.GitHub.Owner = owner;
             appUpdateInfo.GitHub.Repository = repo;
             appUpdateInfo.SetPlaintextToken(token);

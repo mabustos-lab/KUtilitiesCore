@@ -3,6 +3,11 @@ using System.ComponentModel;
 
 namespace KUtilitiesCore.Tracking.Collection
 {
+    /// <summary>
+    /// Define una colección que rastrea los cambios de estado de sus elementos
+    /// (agregados, modificados o eliminados) notificando sus alteraciones.
+    /// </summary>
+    /// <typeparam name="TEntity">Tipo de elemento rastreado.</typeparam>
     public interface ITrackedCollection<TEntity> : IEnumerable<TEntity>
         where TEntity : class, INotifyPropertyChanged
     {

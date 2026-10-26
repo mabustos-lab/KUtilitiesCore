@@ -12,9 +12,13 @@ namespace KUtilitiesCore.Tracking.Collection
     /// </summary>
     public enum TrackedStatus
     {
+        /// <summary>El elemento no tiene cambios desde su carga o inserción.</summary>
         UnModified,
+        /// <summary>El elemento fue agregado a la colección.</summary>
         Added,
+        /// <summary>El elemento fue modificado tras su carga o inserción.</summary>
         Modified,
+        /// <summary>El elemento fue marcado para eliminación de la colección.</summary>
         Removed
     }
 }

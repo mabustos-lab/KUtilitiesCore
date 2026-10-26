@@ -14,6 +14,12 @@ namespace KUtilitiesCore.Tracking.Collection
     {
         #region Constructors
 
+        /// <summary>
+        /// Inicializa el contenedor asociando la entidad con su estado inicial de
+        /// seguimiento.
+        /// </summary>
+        /// <param name="entity">Entidad a rastrear.</param>
+        /// <param name="status">Estado inicial de seguimiento; por defecto no modificada.</param>
         public EntityTracked(TEntity entity, TrackedStatus status = TrackedStatus.UnModified)
         {
             Entity = entity;
@@ -24,7 +30,14 @@ namespace KUtilitiesCore.Tracking.Collection
 
         #region Properties
 
+        /// <summary>
+        /// Entidad rastreada.
+        /// </summary>
         public TEntity Entity { get; set; }
+
+        /// <summary>
+        /// Estado de seguimiento actual de la entidad dentro de la colección.
+        /// </summary>
         public TrackedStatus Status { get; set; }
 
         #endregion Properties

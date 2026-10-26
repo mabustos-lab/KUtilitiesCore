@@ -6,6 +6,10 @@ using KUtilitiesCore.DataAccess.EfCore.UOW;
 
 namespace KUtilitiesCore.DataAccess.EfCore.Extensions
 {
+    /// <summary>
+    /// Extensiones de <see cref="IServiceCollection"/> para registrar los servicios de
+    /// acceso a datos de KUtilitiesCore basados en Entity Framework Core (UnitOfWork y repositorios genéricos).
+    /// </summary>
     public static class ServiceCollectionExtensions
     {
         /// <summary>

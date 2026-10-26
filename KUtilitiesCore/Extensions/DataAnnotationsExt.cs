@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones para extraer metadatos de DataAnnotations (descripciones, nombres
+    /// para mostrar y formatos) de propiedades y tipos.
+    /// </summary>
     public static class DataAnnotationsExt
     {
         #region Methods

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones para inspeccionar y manipular árboles de expresiones LINQ.
+    /// </summary>
     public static class ExpressionsExt
     {
         #region Methods

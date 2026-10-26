@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 
@@ -14,7 +14,7 @@ namespace KUtilitiesCore.DataAccess.EfCore.Evaluators
         /// <summary>
         /// Genera una consulta IQueryable aplicando todos los criterios definidos en la especificación.
         /// </summary>
-        /// <param name="inputQuery">La consulta base (generalmente dbContext.Set<T>()).</param>
+        /// <param name="inputQuery">La consulta base (generalmente dbContext.Set&lt;T&gt;()).</param>
         /// <param name="specification">Las reglas a aplicar.</param>
         /// <returns>La consulta resultante lista para ser ejecutada.</returns>
         public static IQueryable<T> GetQuery(IQueryable<T> inputQuery, ISpecification<T> specification)

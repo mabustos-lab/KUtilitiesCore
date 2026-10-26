@@ -15,6 +15,10 @@ using System.Text.Json.Serialization;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones de reflexión sobre objetos, incluyendo copia de propiedades entre
+    /// tipos con caché de mapeos y utilidades de serialización JSON.
+    /// </summary>
     public static class ObjectEx
     {
         // Caché estático y seguro para hilos para almacenar los mapeos de propiedades ya calculados.
@@ -69,8 +73,6 @@ namespace KUtilitiesCore.Extensions
         /// Utiliza un diccionario concurrente para cachear los mapeos ya computados.
         /// </summary>
         /// <param name="typePair">El par de tipos para los cuales se obtiene el mapeo.</param>
-        /// <param name="source">La instancia fuente.</param>
-        /// <param name="destination">La instancia destino.</param>
         /// <returns>Un diccionario que mapea propiedades de origen a destino.</returns>
         private static Dictionary<PropertyInfo, PropertyInfo> GetPropertyMapping(
             Tuple<Type, Type> typePair)

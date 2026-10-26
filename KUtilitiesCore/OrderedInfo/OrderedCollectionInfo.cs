@@ -36,8 +36,9 @@ namespace KUtilitiesCore.OrderedInfo
 
         #region Properties
 
-        // <summary>
-        /// Colección de propiedades que ordenará la colección </summary>
+        /// <summary>
+        /// Colección de propiedades que ordenará la colección
+        /// </summary>
         public HashSet<OrderedQueryableInfo> OrderedProperties { get; private set; }
 
         #endregion Properties

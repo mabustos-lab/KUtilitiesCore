@@ -11,7 +11,7 @@ namespace KUtilitiesCore.Dal.Helpers
     {
         private static readonly ConcurrentDictionary<object, PropertyInfo[]> _propertyCache = new();
         internal readonly List<object> _results;
-        readonly Dictionary<string, object> _paramsUsed;
+        readonly Dictionary<string, object?> _paramsUsed;
         private bool _useDefaultDataTable;
 
         public ReaderResultSet()
@@ -24,7 +24,7 @@ namespace KUtilitiesCore.Dal.Helpers
         public bool HasResultsets => _results.Count > 0;
         public int ResultSetCount => _results.Count;
 
-        public IReadOnlyDictionary<string, object> ParamsUsed => _paramsUsed;
+        public IReadOnlyDictionary<string, object?> ParamsUsed => _paramsUsed;
 
         internal void AddResult(object result)
         {
@@ -40,7 +40,7 @@ namespace KUtilitiesCore.Dal.Helpers
         {
             _useDefaultDataTable = useDefaultDataTable;
 
-            IMappingStrategy currentStrategy = null;
+            IMappingStrategy? currentStrategy = null;
             if (strategies.Count > 0)
             {
                 currentStrategy = strategies.Dequeue();
@@ -93,7 +93,7 @@ namespace KUtilitiesCore.Dal.Helpers
 
             throw new InvalidCastException($"No se puede convertir el resultado en el índice {index} al tipo {typeof(TResult).Name}. Use GetResultUnsafe solo con resultados mapeados mediante delegado (WithResult).");
         }
-        internal void SetParams(IDaoParameterCollection parameters = null)
+        internal void SetParams(IDaoParameterCollection? parameters = null)
         {
             if (parameters != null && parameters.Count > 0)
             {

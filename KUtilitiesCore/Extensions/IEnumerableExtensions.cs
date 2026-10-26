@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones de propósito general sobre colecciones enumerables.
+    /// </summary>
     public static class IEnumerableExtensions
     {
 

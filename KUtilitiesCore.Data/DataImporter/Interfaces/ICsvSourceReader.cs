@@ -9,7 +9,6 @@ namespace KUtilitiesCore.Data.DataImporter.Interfaces
     /// <summary>
     /// Interfaz específica para fuentes de datos CSV
     /// </summary>
-    /// <remarks>
     public interface ICsvSourceReader : ITextSourceReader
     {
         /// <summary>

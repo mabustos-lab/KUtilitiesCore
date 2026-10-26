@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -25,14 +25,10 @@
   <None Remove="Messaging\**" />
 </ItemGroup>
 <ItemGroup>
-  <Compile Remove="Helpers\ExpressionsExtCore.cs" />
+    <Compile Remove="Helpers\ExpressionsExtCore.cs" />
 </ItemGroup>
 <ItemGroup>
-  <PackageReference Include="System.ComponentModel.Annotations" Version="5.*" />
-  <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" Condition="'$(TargetFramework)' == 'net48'" />
-</ItemGroup>
-<ItemGroup>
-  <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
+    <ProjectReference Include="..\KUtilitiesCore\KUtilitiesCore.csproj" />
 </ItemGroup>
 
 </Project>

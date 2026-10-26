@@ -28,8 +28,14 @@ namespace KUtilitiesCore.MVVM
         /// <summary>
         /// Obtiene el Comando registrado basado en el nombre
         /// </summary>
-        /// <param name="commandName"></param>
+        /// <param name="commandName">Nombre del comando registrado.</param>
         RelayCommandBase? GetRegisteredCommand(string commandName);
+        /// <summary>
+        /// Elimina del registro el comando con el nombre indicado, de modo que
+        /// deje de recibir notificaciones de cambios de estado.
+        /// </summary>
+        /// <param name="commandName">Nombre del comando a eliminar.</param>
+        /// <returns><see langword="true"/> si el comando existía y fue eliminado; en caso contrario, <see langword="false"/>.</returns>
         bool RemoveRegisteredCommand(string commandName);
     }
 }

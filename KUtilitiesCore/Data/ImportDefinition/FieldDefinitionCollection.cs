@@ -22,6 +22,9 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         #region Properties
 
+        /// <summary>
+        /// Obtiene el número de definiciones de campo contenidas en la colección.
+        /// </summary>
         public int Count => _fields.Count;
 
         #endregion Properties
@@ -42,6 +45,10 @@ namespace KUtilitiesCore.Data.ImportDefinition
             }
         }
 
+        /// <summary>
+        /// Indexador posicional que permite acceder a una definición por su índice en la colección.
+        /// </summary>
+        /// <param name="index">Índice de base cero de la definición.</param>
         public FieldDefinitionItem this[int index] => _fields[index];
 
         #endregion Indexers
@@ -96,7 +103,7 @@ namespace KUtilitiesCore.Data.ImportDefinition
         /// <summary>
         /// Agrega una nueva definicion apartir de <see cref="FieldDefinitionItem"/>
         /// </summary>
-        /// <param name="fieldDefinition"></param>
+        /// <param name="fieldDefinitions">Colección de definiciones de campo a agregar.</param>
         public void AddRange(IEnumerable<FieldDefinitionItem> fieldDefinitions)
         {
             foreach (var item in fieldDefinitions)
@@ -117,11 +124,21 @@ namespace KUtilitiesCore.Data.ImportDefinition
             }
         }
 
+        /// <summary>
+        /// Determina si existe una definición de campo con el nombre interno indicado.
+        /// Se usa para evitar duplicados al agregar nuevas definiciones.
+        /// </summary>
+        /// <param name="fieldName">Nombre interno del campo a buscar.</param>
+        /// <returns><c>true</c> si la colección contiene el campo; <c>false</c> en caso contrario.</returns>
         public bool Contains(string fieldName)
         {
             return _fields.Any(x => x.FieldName == fieldName);
         }
 
+        /// <summary>
+        /// Devuelve un enumerador que recorre las definiciones de campo de la colección.
+        /// </summary>
+        /// <returns>Enumerador sobre las definiciones contenidas.</returns>
         public IEnumerator<FieldDefinitionItem> GetEnumerator()
         {
             return _fields.GetEnumerator();

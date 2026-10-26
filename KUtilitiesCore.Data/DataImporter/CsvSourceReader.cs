@@ -49,9 +49,9 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <exception cref="ArgumentNullException">Cuando filePath es null o vacío</exception>
         public CsvSourceReader(
             string filePath,
-            IDiskFileReader fileReader = null,
-            ICsvParser csvParser = null,
-            TextFileParsingOptions parsingOptions = null)
+            IDiskFileReader? fileReader = null,
+            ICsvParser? csvParser = null,
+            TextFileParsingOptions? parsingOptions = null)
         {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             _fileReader = fileReader ?? new DefaultDiskFileReader();

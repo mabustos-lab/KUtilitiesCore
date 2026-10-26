@@ -23,9 +23,21 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         #region Constructors
 
+        /// <summary>
+        /// Inicializa una definición de campo vacía, con tipo <see cref="string"/> por defecto.
+        /// </summary>
+        /// <remarks>
+        /// Pensado para escenarios de configuración diferida donde las propiedades se
+        /// asignan después de la construcción.
+        /// </remarks>
         public FieldDefinitionItemBase()
         { }
 
+        /// <summary>
+        /// Inicializa la definición de campo a partir de los metadatos de una propiedad.
+        /// </summary>
+        /// <param name="fieldProperty">Propiedad de la que se extraen nombre, tipo y atributos.</param>
+        /// <exception cref="ArgumentNullException">Se lanza si <paramref name="fieldProperty"/> es <c>null</c>.</exception>
         public FieldDefinitionItemBase(PropertyInfo fieldProperty)
         {
             if (fieldProperty == null)
@@ -34,6 +46,15 @@ namespace KUtilitiesCore.Data.ImportDefinition
             LoadInfo(fieldProperty);
         }
 
+        /// <summary>
+        /// Inicializa la definición de campo con valores explícitos.
+        /// </summary>
+        /// <param name="fieldName">Nombre interno o técnico del campo.</param>
+        /// <param name="displayName">Nombre para mostrar; si está vacío se usa <paramref name="fieldName"/>.</param>
+        /// <param name="sourceColumnName">Columna de origen en la fuente de datos; si está vacía se usa <paramref name="displayName"/>.</param>
+        /// <param name="description">Descripción del campo en pantalla.</param>
+        /// <param name="fieldType">Tipo de dato esperado; si es <c>null</c> se usa <see cref="string"/>.</param>
+        /// <param name="allowNull">Indica si el campo acepta valores nulos.</param>
         public FieldDefinitionItemBase(string fieldName, string displayName, string sourceColumnName = "",
             string description = "", Type? fieldType = null, bool allowNull = false)
         {
@@ -96,14 +117,16 @@ namespace KUtilitiesCore.Data.ImportDefinition
 
         /// <inheritdoc/>
         [Required]
-        public string SourceColumnName { get; set; }
+        public string SourceColumnName { get; set; } = string.Empty;
         /// <inheritdoc/>
-        public object DefaultValue { get; set; }
+        public object? DefaultValue { get; set; }
 
         /// <inheritdoc/>
-        public ITypeConverter TypeConverter { get; internal set; }
+        public ITypeConverter? TypeConverter { get; internal set; }
+        /// <inheritdoc/>
         public abstract List<IImportValidationRule> ValidationRules { get; }
 
+        /// <inheritdoc/>
         public abstract IFieldDefinitionItem WithRules(Action<ImportRuleBuilder> ruleConfig);
 
         #endregion Properties

@@ -15,6 +15,11 @@ namespace KUtilitiesCore.Data.DataAnnotations
     {
         #region Constructors
 
+        /// <summary>
+        /// Inicializa el atributo con la descripción literal o la clave de recurso a
+        /// localizar, según se configure <see cref="ResourceType"/>.
+        /// </summary>
+        /// <param name="description">Descripción literal o clave de recurso.</param>
         public DescriptionLocalizedAttribute(string description)
             : base(description)
         { }
@@ -34,6 +39,11 @@ namespace KUtilitiesCore.Data.DataAnnotations
 
         #region Methods
 
+        /// <summary>
+        /// Resuelve la descripción final: si <see cref="ResourceType"/> está definido,
+        /// busca la clave en el recurso; en caso contrario devuelve la descripción literal.
+        /// </summary>
+        /// <returns>La descripción localizada o literal.</returns>
         public string GetDescription()
         {
             if (ResourceType is not null)

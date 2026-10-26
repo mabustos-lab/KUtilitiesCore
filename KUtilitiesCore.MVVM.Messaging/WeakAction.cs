@@ -25,14 +25,14 @@ namespace KUtilitiesCore.MVVM.Messaging
         /// <summary>
         /// Obtiene la acción almacenada como un delegado base.
         /// </summary>
-        protected virtual Delegate ActionHandlerDelegate => _action;
+        protected virtual Delegate? ActionHandlerDelegate => _action;
 
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="WeakAction"/>.
         /// </summary>
         /// <param name="target">El propietario de la acción.</param>
         /// <param name="action">La acción a almacenar.</param>
-        public WeakAction(object target, Action action) // Acepta Action (no genérico)
+        public WeakAction(object target, Action? action) // Acepta Action (no genérico)
         {
             _targetReference = new WeakReference(target);
             _action = action;
@@ -64,7 +64,7 @@ namespace KUtilitiesCore.MVVM.Messaging
         public Action<T> TypedActionHandler => _typedAction;
 
         /// <inheritdoc/>
-        protected override Delegate ActionHandlerDelegate => _typedAction;
+        protected override Delegate? ActionHandlerDelegate => _typedAction;
 
         /// <summary>
         /// Inicializa una nueva instancia de la clase <see cref="WeakAction{T}"/>.
@@ -84,7 +84,9 @@ namespace KUtilitiesCore.MVVM.Messaging
         {
             if (_typedAction != null && IsAlive)
             {
-                _typedAction(default);
+                // default(T) solo es null cuando T es un tipo de referencia,
+                // caso admitido deliberadamente por esta API.
+                _typedAction(default!);
             }
         }
 
@@ -104,7 +106,7 @@ namespace KUtilitiesCore.MVVM.Messaging
         /// Ejecuta la acción con un parámetro de tipo object, que será casteado a <typeparamref name="T"/>.
         /// </summary>
         /// <param name="parameter">El parámetro para la acción.</param>
-        public void ExecuteWithObject(object parameter)
+        public void ExecuteWithObject(object? parameter)
         {
             if (_typedAction != null && IsAlive)
             {
@@ -114,7 +116,8 @@ namespace KUtilitiesCore.MVVM.Messaging
                 }
                 else if (parameter == null && !typeof(T).IsValueType) // Permite null para tipos de referencia
                 {
-                    _typedAction(default); // default(T) será null para tipos de referencia
+                    // T es un tipo de referencia: se invoca con null de forma intencionada.
+                    _typedAction(default!);
                 }
                 else
                 {

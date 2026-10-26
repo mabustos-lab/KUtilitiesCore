@@ -23,18 +23,19 @@ namespace KUtilitiesCore.Dal.Helpers
 
         /// <summary>
         /// Excepción que ocurrió durante la prueba de conexión, si aplica.
+        /// Es null cuando la prueba fue exitosa.
         /// </summary>
-        public DataAccessException Ex { get; set; }
+        public DataAccessException? Ex { get; set; }
 
         /// <summary>
-        /// Nombre publicado del servidor al que se intentó conectar.
+        /// Nombre publicado del servidor al que se intentó conectar. Puede ser null si no se resolvió.
         /// </summary>
-        public string PublishedServerName { get; internal set; }
+        public string? PublishedServerName { get; internal set; }
 
         /// <summary>
-        /// Versión del servidor al que se intentó conectar.
+        /// Versión del servidor al que se intentó conectar. Puede ser null si no se resolvió.
         /// </summary>
-        public string ServerVersion { get; internal set; }
+        public string? ServerVersion { get; internal set; }
 
         /// <summary>
         /// Indica si la prueba de conexión fue exitosa.

@@ -11,6 +11,11 @@ namespace KUtilitiesCore.Data.ImportDefinition.Validation
     {
         private readonly IFieldDefinitionItem _fieldDefinition;
 
+        /// <summary>
+        /// Crea un builder para configurar reglas sobre la definición de campo indicada.
+        /// </summary>
+        /// <param name="fieldDefinition">Definición del campo que recibirá las reglas.</param>
+        /// <exception cref="ArgumentNullException">Se lanza si <paramref name="fieldDefinition"/> es <c>null</c>.</exception>
         public ImportRuleBuilder(IFieldDefinitionItem fieldDefinition)
         {
             _fieldDefinition = fieldDefinition ?? throw new ArgumentNullException(nameof(fieldDefinition));

@@ -11,13 +11,18 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
     {
         private readonly ExcelParsingOptions _options;
 
+        /// <summary>
+        /// Inicializa el conversor con las opciones de análisis que determinan
+        /// el tratamiento de valores vacíos y el recorte de texto.
+        /// </summary>
+        /// <param name="options">Opciones de análisis; si es <c>null</c> se usan los valores por defecto.</param>
         public ClosedXmlCellValueConverter(ExcelParsingOptions options)
         {
             _options = options ?? new ExcelParsingOptions();
         }
 
         /// <inheritdoc/>
-        public string ConvertToString(IExcelCell cell)
+        public string? ConvertToString(IExcelCell cell)
         {
             if (cell == null || cell.IsEmpty)
                 return _options.TreatEmptyAsNull ? null : string.Empty;

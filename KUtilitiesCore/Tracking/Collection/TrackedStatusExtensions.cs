@@ -2,6 +2,10 @@ using System.Data;
 
 namespace KUtilitiesCore.Tracking.Collection
 {
+    /// <summary>
+    /// Extensiones para traducir estados de seguimiento de colecciones a estados
+    /// equivalentes de <see cref="System.Data.DataRowState"/>.
+    /// </summary>
     public static class TrackedStatusExtensions
     {
         /// <summary>

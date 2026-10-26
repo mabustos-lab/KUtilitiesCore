@@ -7,6 +7,9 @@
     {
         #region Properties
 
+        /// <summary>
+        /// Indica si existe una regla activa que restrinja los valores permitidos.
+        /// </summary>
         bool HasRule { get; }
 
         #endregion Properties

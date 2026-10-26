@@ -43,6 +43,7 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
             _workbook = new XLWorkbook(_stream);
         }
 
+        /// <inheritdoc/>
         public IReadOnlyList<string> GetSheetNames()
         {
             var sheets = new List<string>();
@@ -53,6 +54,7 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
             return sheets.AsReadOnly();
         }
 
+        /// <inheritdoc/>
         public IExcelWorksheetReader GetWorksheet(string sheetName)
         {
             var worksheet = _workbook.Worksheets.Worksheet(sheetName);
@@ -62,6 +64,7 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
             return new ClosedXmlWorksheetReader(worksheet);
         }
 
+        /// <inheritdoc/>
         public IExcelWorksheetReader GetFirstWorksheet()
         {
             var worksheet = _workbook.Worksheets.FirstOrDefault();
@@ -71,11 +74,21 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
             return new ClosedXmlWorksheetReader(worksheet);
         }
 
+        /// <inheritdoc/>
         public bool ContainsSheet(string sheetName)
         {
             return _workbook.Worksheets.TryGetWorksheet(sheetName, out _);
         }
 
+        /// <summary>
+        /// Libera el libro de ClosedXML y, si es propietario del stream,
+        /// también lo cierra. Se invoca desde <see cref="Dispose()"/> y,
+        /// opcionalmente, desde el finalizador.
+        /// </summary>
+        /// <param name="disposing">
+        /// <c>true</c> cuando la liberación proviene de una llamada explícita a
+        /// <see cref="Dispose()"/>; <c>false</c> cuando proviene del finalizador.
+        /// </param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -100,6 +113,10 @@ namespace KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml
         //     Dispose(disposing: false);
         // }
 
+        /// <summary>
+        /// Libera todos los recursos del lector invocando a
+        /// <see cref="Dispose(bool)"/> con <c>disposing</c> en <c>true</c>.
+        /// </summary>
         public void Dispose()
         {
             // No cambie este código. Coloque el código de limpieza en el método "Dispose(bool disposing)".

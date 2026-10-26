@@ -29,6 +29,11 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
 
         #region Constructors
 
+        /// <summary>
+        /// Crea un constructor de conexiones seguras a partir de una cadena de conexión
+        /// existente, de la que se extraen servidor, catálogo y credenciales.
+        /// </summary>
+        /// <param name="connectionString">Cadena de conexión de origen.</param>
         public SecureConnectionBuilder(string connectionString) : this(null, string.Empty)
         {
             SetCnnStringProperties(connectionString);
@@ -45,12 +50,22 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// Inicializa una nueva instancia de la clase <see cref="SecureConnectionBuilder"/>.
         /// </summary>
         /// <param name="encryptionService">
-        /// Servicio de cifrado a utilizar. Si es nulo, se utiliza el servicio AES por defecto.
+        /// Servicio de cifrado a utilizar. Si es nulo, se utiliza un servicio AES por defecto cuya
+        /// clave fija está compilada dentro del ensamblado, por lo que solo proporciona un nivel
+        /// de protección de ofuscación y no seguridad real. Para una protección genuina inyecte un
+        /// <see cref="Encryption.IEncryptionService"/> con una clave propia o, en Windows, use el
+        /// servicio DPAPI de <see cref="Encryption.FactoryEncryptionService"/> que delega la
+        /// protección de la clave al sistema operativo.
         /// </param>
         /// <param name="filePath">
         /// Ruta del archivo de configuración. Si es vacío, se utiliza la ruta predeterminada.
         /// </param>
-        public SecureConnectionBuilder(Encryption.IEncryptionService encryptionService, string filePath = "")
+        /// <remarks>
+        /// El servicio AES por defecto existe únicamente como fallback de compatibilidad: una clave
+        /// compilada en el ensamblado puede extraerse con herramientas de desensamblado, de modo que
+        /// cualquier persona con acceso al binario podría descifrar el archivo de configuración.
+        /// </remarks>
+        public SecureConnectionBuilder(Encryption.IEncryptionService? encryptionService, string filePath = "")
         {
             Reset();
             encryptionService ??= Encryption.FactoryEncryptionService.GetAesEncryptionService("@!KUtilities0000");
@@ -102,7 +117,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
             if (string.IsNullOrWhiteSpace(_filePath))
                 throw new InvalidOperationException("La ruta del archivo de configuración no está especificada.");
 
-            string directory = Path.GetDirectoryName(_filePath);
+            string? directory = Path.GetDirectoryName(_filePath);
             if (string.IsNullOrWhiteSpace(directory))
                 throw new InvalidOperationException("No se pudo determinar el directorio del archivo de configuración.");
 
@@ -188,7 +203,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// <returns>Cadena JSON con los valores cifrados.</returns>
         private string EncryptAndSerialize()
         {
-            string res = null;
+            string? res = null;
             try
             {
                 foreach (var property in new[]

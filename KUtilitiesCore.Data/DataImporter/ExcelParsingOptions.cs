@@ -16,9 +16,9 @@ namespace KUtilitiesCore.Data.DataImporter
         public bool HasHeader { get; set; } = true;
 
         /// <summary>
-        /// Nombre de la hoja a procesar (default: primera hoja)
+        /// Nombre de la hoja a procesar; <c>null</c> (valor por defecto) para usar la primera hoja.
         /// </summary>
-        public string SheetName { get; set; }
+        public string? SheetName { get; set; }
 
         /// <summary>
         /// Indica si trimear los valores de texto (default: true)
@@ -31,9 +31,9 @@ namespace KUtilitiesCore.Data.DataImporter
         public bool TreatEmptyAsNull { get; set; } = true;
 
         /// <summary>
-        /// Formato de fecha para conversión (default: null = usar formato de celda)
+        /// Formato de fecha para conversión; <c>null</c> (valor por defecto) para usar el formato de celda.
         /// </summary>
-        public string DateFormat { get; set; }
+        public string? DateFormat { get; set; }
 
         /// <summary>
         /// Fila inicial para leer (1-based, default: 1)

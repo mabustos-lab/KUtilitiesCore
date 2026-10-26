@@ -25,10 +25,20 @@ namespace KUtilitiesCore.MVVM
         private bool isLoading;
         private object? parentViewModel;
 
+        /// <summary>
+        /// Inicializa la base sin propietario de documento; útil para escenarios
+        /// de prueba o cuando el ViewModel se configura por enlace externo.
+        /// </summary>
         public ViewModelHelperBase()
         {
         }
 
+        /// <summary>
+        /// Inicializa la base asociándola al propietario del documento y,
+        /// opcionalmente, al servicio de mensajes.
+        /// </summary>
+        /// <param name="documentOwner">Propietario del documento que aloja este ViewModel.</param>
+        /// <param name="messageService">Servicio de mensajes opcional para notificaciones al usuario.</param>
         public ViewModelHelperBase(IViewModelDocumentOwner documentOwner, ISupportMessageService? messageService = null)
         {
             this.DocumentOwner = documentOwner;

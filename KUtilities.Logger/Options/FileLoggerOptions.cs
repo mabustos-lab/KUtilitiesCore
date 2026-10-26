@@ -28,6 +28,11 @@ namespace KUtilitiesCore.Logger.Options
         /// Indica si el formato de almacenamiento sea una estructura JSON o solo Texto
         /// </summary>
         public bool UseJSonFormat { get; set; } = false;
+        /// <summary>
+        /// Nombre de la aplicación que se incrusta en cada entrada de log,
+        /// de modo que los archivos de distintas aplicaciones puedan mezclarse
+        /// en la misma carpeta sin perder su origen.
+        /// </summary>
         public string ApplicationName { get; set; } = "Application";
     }
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-   <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+    <TargetFramework>net10.0-windows</TargetFramework>
    <LangVersion>latest</LangVersion>
    <Title>KUtilitiesCore.Data.Win</Title>
    <Description>Componentes de interfaz de usuario para Windows Forms destinados a la configuración de importación y exportación de datos.</Description>
@@ -15,9 +15,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="10.*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />

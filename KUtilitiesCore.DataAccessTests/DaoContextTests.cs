@@ -62,6 +62,24 @@ namespace KUtilitiesCore.Dal.Tests
         }
 
         [TestMethod()]
+        public void Connection_AfterDispose_Throws_ObjectDisposed()
+        {
+            // Builder local no nulo para no propagar advertencias de nulabilidad al ctor.
+            SecureConnectionBuilder localBuilder = new()
+            {
+                InitialCatalog = "SiomaxDB",
+                ServerName = "localhost",
+                Encrypt = true,
+                IntegratedSecurity = true,
+                TrustServerCertificate = true
+            };
+            DaoContext dao = new(localBuilder);
+            dao.Dispose();
+
+            Assert.ThrowsExactly<ObjectDisposedException>(() => _ = dao.Connection);
+        }
+
+        [TestMethod()]
         public void ExecuteReader_WithResult_Test()
         {
             // Excluir la prueba si se ejecuta en GitHub Actions (variable de entorno 'GITHUB_ACTIONS' == 'true')

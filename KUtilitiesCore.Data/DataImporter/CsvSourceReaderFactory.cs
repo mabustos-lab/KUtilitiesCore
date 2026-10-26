@@ -32,8 +32,8 @@ namespace KUtilitiesCore.Data.DataImporter
         /// <param name="diskFileReader">Operaciones de acceso a archivos en disco</param>
         /// <param name="csvParser">Operaciones de parseo de datos</param>
         /// <returns>Instancia configurada de ICsvSourceReader</returns>
-        public static ICsvSourceReader CreateWithOptions(string filePath, TextFileParsingOptions options, 
-            IDiskFileReader diskFileReader=null, ICsvParser csvParser = null)
+        public static ICsvSourceReader CreateWithOptions(string filePath, TextFileParsingOptions options,
+            IDiskFileReader? diskFileReader = null, ICsvParser? csvParser = null)
         {
             return new CsvSourceReader(filePath, diskFileReader, csvParser, options);
         }

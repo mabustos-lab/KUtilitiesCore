@@ -29,6 +29,11 @@ namespace KUtilitiesCore.MVVM.Command
 
         private Func<TParam?> _getParamDelegate = () => default;
 
+        /// <summary>
+        /// Inicializa el comando con el nombre indicado; el comportamiento
+        /// (CanExecute/Execute/parámetro vigilado) se resuelve después por reflexión.
+        /// </summary>
+        /// <param name="commandName">Nombre del comando.</param>
         public RelayCommand(string commandName) : base(commandName)
         {
         }
@@ -252,6 +257,11 @@ namespace KUtilitiesCore.MVVM.Command
         /// </summary>
         private Action? _executeAction;
 
+        /// <summary>
+        /// Inicializa el comando con el nombre indicado; la lógica de ejecución
+        /// y CanExecute se resuelve después por reflexión.
+        /// </summary>
+        /// <param name="commandName">Nombre del comando.</param>
         public RelayCommand(string commandName) : base(commandName)
         {
         }

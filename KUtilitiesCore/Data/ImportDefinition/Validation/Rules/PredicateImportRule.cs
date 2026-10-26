@@ -13,18 +13,24 @@ namespace KUtilitiesCore.Data.ImportDefinition.Validation.Rules
     {
         private readonly Func<T, bool> _predicate;
 
+        /// <summary>
+        /// Inicializa la regla con el predicado que determina la validez del valor.
+        /// </summary>
+        /// <param name="predicate">Función que recibe el valor tipado y retorna <c>true</c> si es válido.</param>
+        /// <param name="errorMessage">Mensaje de error; si es <c>null</c> se usa un mensaje genérico.</param>
+        /// <exception cref="ArgumentNullException">Se lanza si <paramref name="predicate"/> es <c>null</c>.</exception>
         public PredicateImportRule(Func<T, bool> predicate, string? errorMessage)
             : base(errorMessage ?? $"El valor de '{typeof(T).Name}' no es válido.")
         {
             _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
         }
         /// <inheritdoc/>
-        public override IEnumerable<ValidationFailure> Validate(object value, string fieldName)
+        public override IEnumerable<ValidationFailure> Validate(object? value, string fieldName)
         {
             // Si es nulo, esta regla no aplica (usar NotNullRule para eso) o se considera válida para permitir nulos.
             if (value == null) yield break;
 
-            ValidationFailure failure = null;
+            ValidationFailure? failure = null;
 
             if (value is T typedValue)
             {

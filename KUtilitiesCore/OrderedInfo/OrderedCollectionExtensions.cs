@@ -23,7 +23,7 @@ namespace KUtilitiesCore.OrderedInfo
         /// </summary>
         /// <typeparam name="T">Tipo del que se recuperarán las propiedades</typeparam>
         /// <param name="onlySupportedTypes">Indica si solo se considerarán tipos soportados</param>
-        /// <returns>Una colección de <see cref="PNameInfo"/> con las propiedades</returns>
+        /// <returns>Una colección de <see cref="PropertyNameInfo"/> con las propiedades</returns>
         public static IEnumerable<PropertyNameInfo> GetPropertyNames<T>(bool onlySupportedTypes = true)
             where T : class
         {

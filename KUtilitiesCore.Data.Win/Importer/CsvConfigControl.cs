@@ -13,9 +13,18 @@ using System.Windows.Forms;
 
 namespace KUtilitiesCore.Data.Win.Importer
 {
+    /// <summary>
+    /// Control de configuración para archivos de texto delimitados (CSV/TSV/PSV).
+    /// Permite elegir separador, codificación, presencia de cabecera, recorte de
+    /// espacios y el tratamiento de líneas vacías; el asistente de importación lo
+    /// hospeda cuando el archivo seleccionado no es Excel.
+    /// </summary>
     public partial class CsvConfigControl : UserControl, IImportConfigControl
     {
 
+        /// <summary>
+        /// Inicializa el control y precarga las opciones de separador y codificación.
+        /// </summary>
         public CsvConfigControl()
         {
             InitializeComponent();
@@ -24,22 +33,27 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         #region Events
 
-        public event EventHandler OptionsChanged;
+        /// <inheritdoc/>
+        public event EventHandler? OptionsChanged;
 
         #endregion Events
 
         #region Methods
 
+        /// <inheritdoc/>
         public IParsingOptions GetParsingOptions()
         {
             return new TextFileParsingOptions
             {
-                Separator = cboDelimiter.SelectedValue?.ToString(),
+                Separator = cboDelimiter.SelectedValue?.ToString() ?? ",",
                 Encoding = (Encoding)(cboEncoding.SelectedValue ?? Encoding.UTF8),
-                HasHeader = chkHasHeader.Checked
+                HasHeader = chkHasHeader.Checked,
+                TrimValues = chkTrimValues.Checked,
+                IgnoreEmptyLines = chkIgnoreEmptyLines.Checked
             };
         }
 
+        /// <inheritdoc/>
         public void Initialize(string fileName)
         {
             if (string.IsNullOrEmpty(fileName)) return;
@@ -74,12 +88,26 @@ namespace KUtilitiesCore.Data.Win.Importer
             cboDelimiter.SelectedIndexChanged += (a, b) => OnOptionsChanged();
             cboEncoding.SelectedIndexChanged += (a, b) => OnOptionsChanged();
             chkHasHeader.CheckedChanged += (a, b) => OnOptionsChanged();
+            chkTrimValues.CheckedChanged += (a, b) => OnOptionsChanged();
+            chkIgnoreEmptyLines.CheckedChanged += (a, b) => OnOptionsChanged();
         }
 
         private void OnOptionsChanged()
         {
             OptionsChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        /// <summary>
+        /// Fija el estado de "Quitar espacios en los valores" para pruebas automatizadas.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void SetTrimValuesForTesting(bool value) => chkTrimValues.Checked = value;
+
+        /// <summary>
+        /// Fija el estado de "Ignorar líneas vacías" para pruebas automatizadas.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void SetIgnoreEmptyLinesForTesting(bool value) => chkIgnoreEmptyLines.Checked = value;
 
         #endregion Methods
     }

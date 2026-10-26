@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones adicionales de LINQ no cubiertas por los operadores estándar.
+    /// </summary>
     public static class LinqExt
     {
         #region Methods

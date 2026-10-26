@@ -17,7 +17,7 @@
         bool HasPreviousPage { get; }
 
         /// <summary>
-        /// El valor de la propiedad de ordenación del último elemento en <see cref="Items"/>. Se
+        /// El valor de la propiedad de ordenación del último elemento en <see cref="IPagedResult{TEntity}.Items"/>. Se
         /// utiliza para solicitar la siguiente página cuando se usa PagingStrategy.Keyset. Es null
         /// si Items está vacío o si la estrategia no es Keyset.
         /// </summary>

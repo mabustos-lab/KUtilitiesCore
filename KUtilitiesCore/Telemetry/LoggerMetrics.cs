@@ -192,6 +192,13 @@ namespace KUtilitiesCore.Telemetry
         {
             #region Constructors
 
+            /// <summary>
+            /// Inicializa la información del mensaje de log con su tipo, texto y
+            /// excepción asociada opcional.
+            /// </summary>
+            /// <param name="messageType">Tipo del mensaje de log.</param>
+            /// <param name="message">Texto del mensaje.</param>
+            /// <param name="exception">Excepción asociada al mensaje; null si no aplica.</param>
             public MessageArgs(LoggerMetricsType messageType, string message, Exception? exception = null)
             {
                 MessageType = messageType;

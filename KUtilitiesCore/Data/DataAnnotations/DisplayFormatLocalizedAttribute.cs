@@ -11,6 +11,11 @@ namespace KUtilitiesCore.Data.DataAnnotations
     public class DisplayFormatLocalizedAttribute : DisplayFormatAttribute
     {
         #region Constructors
+        /// <summary>
+        /// Inicializa el atributo con la cadena de formato literal o la clave de recurso
+        /// a localizar, según se configure <see cref="ResourceType"/>.
+        /// </summary>
+        /// <param name="diplayformat">Cadena de formato literal o clave de recurso.</param>
         public DisplayFormatLocalizedAttribute(string diplayformat) 
         { DataFormatString = diplayformat; }
         #endregion Constructors
@@ -25,6 +30,11 @@ namespace KUtilitiesCore.Data.DataAnnotations
         #endregion Properties
         
         #region Methods
+        /// <summary>
+        /// Resuelve la cadena de formato final: si <see cref="ResourceType"/> está definido,
+        /// busca la clave en el recurso; en caso contrario devuelve la cadena de formato literal.
+        /// </summary>
+        /// <returns>La cadena de formato localizada o literal.</returns>
         public string GetDataFormatString()
         {
             if (ResourceType is not null)

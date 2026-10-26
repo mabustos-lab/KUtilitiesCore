@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Data;
 using System.Threading.Tasks;
 using KUtilitiesCore.DataAccess.UOW.Interfaces;
 using KUtilitiesCore.Dal;
@@ -22,8 +23,13 @@ namespace KUtilitiesCore.Dal.UOW
         private readonly Dictionary<Type, Type> _customRepositories = [];
 
         private bool _disposed;
-        private Hashtable _repositories;
+        private readonly Hashtable _repositories = new();
 
+        /// <summary>
+        /// Inicializa la unidad de trabajo creando el contexto transaccional que envolverá
+        /// a todos los repositorios que resuelva esta instancia.
+        /// </summary>
+        /// <param name="context">Contexto de acceso a datos sobre el que se administrarán las transacciones.</param>
         public DaoUnitOfWork(IDaoContext context)
         {
             UowContext = new DaoUowContext(this, context);
@@ -86,9 +92,6 @@ namespace KUtilitiesCore.Dal.UOW
         /// <inheritdoc/>
         public IRepository<T> Repository<T>() where T : class
         {
-            if (_repositories == null)
-                _repositories = new Hashtable();
-
             var type = typeof(T).Name;
 
             if (!_repositories.ContainsKey(type))
@@ -100,27 +103,30 @@ namespace KUtilitiesCore.Dal.UOW
                 {
                     var customRepoType = _customRepositories[typeof(T)];
                     // Instanciamos usando el constructor validado previamente
-                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
+                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext)
+                        ?? throw new InvalidOperationException(
+                            $"No se pudo crear la instancia del repositorio '{customRepoType.Name}'.");
                 }
                 else
                 {
                     // 2. Fallback al genérico (DefaultDaoRepository)
                     var repositoryType = typeof(DefaultDaoRepository<>);
-                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext);
+                    repositoryInstance = Activator.CreateInstance(repositoryType.MakeGenericType(typeof(T)), UowContext)
+                        ?? throw new InvalidOperationException(
+                            $"No se pudo crear la instancia del repositorio para '{typeof(T).Name}'.");
                 }
 
                 _repositories.Add(type, repositoryInstance);
             }
 
-            return (IRepository<T>)_repositories[type];
+            var storedRepository = _repositories[type]
+                ?? throw new InvalidOperationException($"No se encontró el repositorio registrado para '{type}'.");
+            return (IRepository<T>)storedRepository;
         }
 
         /// <inheritdoc/>
         public TRepo RawRepository<TRepo>() where TRepo : IRawRepository
         {
-            if (_repositories == null)
-                _repositories = new Hashtable();
-
             var type = typeof(TRepo);
             if (!_repositories.ContainsKey(type))
             {
@@ -131,7 +137,9 @@ namespace KUtilitiesCore.Dal.UOW
                 {
                     var customRepoType = _customRepositories[typeof(TRepo)];
                     // Instanciamos usando el constructor validado previamente
-                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext);
+                    repositoryInstance = Activator.CreateInstance(customRepoType, UowContext)
+                        ?? throw new InvalidOperationException(
+                            $"No se pudo crear la instancia del repositorio '{customRepoType.Name}'.");
                 }
                 else
                 {
@@ -144,10 +152,47 @@ namespace KUtilitiesCore.Dal.UOW
                 _repositories.Add(type, repositoryInstance);
             }
 
-            return (TRepo)_repositories[type];
+            var storedRepository = _repositories[type]
+                ?? throw new InvalidOperationException($"No se encontró el repositorio registrado para '{type.Name}'.");
+            return (TRepo)storedRepository;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Abre una transacción explícita sobre el contexto del UoW y la registra en su estado,
+        /// de modo que los repositorios resueltos la compartan y que <see cref="SaveChanges"/>/
+        /// <see cref="Rollback"/> actúen sobre ella.
+        /// </summary>
+        /// <param name="isolationLevel">Nivel de aislamiento de la transacción (por defecto ReadCommitted).</param>
+        /// <returns>La transacción creada y registrada en el UoW.</returns>
+        /// <example>
+        /// Patrón de uso con confirmación explícita. Las operaciones aceptan la transacción
+        /// por parámetro opcional; si no se llama a <see cref="ITransaction.Commit"/>,
+        /// la liberación de la transacción revierte automáticamente los cambios:
+        /// <code>
+        /// var context = new DaoContext(connectionBuilder);
+        /// using var unitOfWork = new DaoUnitOfWork(context);
+        /// using (var transaction = unitOfWork.BeginTransaction())
+        /// {
+        ///     context.ExecuteNonQuery(sql, parameters, transaction: transaction);
+        ///     transaction.Commit(); // sin esta llamada, Dispose revierte los cambios
+        /// }
+        /// </code>
+        /// </example>
+        public ITransaction BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+        {
+            var transaction = UowContext.Context.BeginTransaction(isolationLevel);
+            ((DaoUowContext)UowContext).RegisterTransaction(transaction);
+            return transaction;
+        }
+
+        /// <summary>
+        /// Confirma la transacción registrada en el UoW cuando existe y está viva.
+        /// </summary>
+        /// <returns>
+        /// 1 si confirmó la transacción registrada; 0 cuando no hay ninguna transacción
+        /// registrada (las operaciones ejecutadas sin enlistar operan en autocommit y no
+        /// requieren confirmación).
+        /// </returns>
         public int SaveChanges()
         {
             try
@@ -172,7 +217,8 @@ namespace KUtilitiesCore.Dal.UOW
             }
         }
         /// <summary>
-        /// Revierte todos los cambios realizados en la UOW actual.
+        /// Revierte la transacción registrada en el UoW, si existe y está viva, y deja el UoW
+        /// sin transacción registrada. Sin transacción registrada es un no-op silencioso.
         /// </summary>
         public void Rollback()
         {
@@ -184,13 +230,36 @@ namespace KUtilitiesCore.Dal.UOW
         }
 
         /// <summary>
-        /// En el contexto de ADO.NET/Dal, SaveChanges generalmente confirma la transacción abierta.
-        /// Si no hay transacción explícita y las operaciones fueron atómicas, no hace nada.
+        /// Confirma de forma asíncrona la transacción registrada en el UoW cuando existe y
+        /// está viva, delegando en <see cref="SaveChanges"/>.
         /// </summary>
-        public async Task<int> SaveChangesAsync()
+        /// <remarks>
+        /// Sin transacción registrada el método completa de forma sincrónica (camino
+        /// rápido): no hay trabajo pendiente, así que devuelve 0 sin ocupar el thread
+        /// pool. Con una transacción registrada, el commit de <see cref="ITransaction"/>
+        /// es I/O bloqueante síncrono, por lo que se descarga deliberadamente al thread
+        /// pool para no bloquear al llamador (sync-over-async documentado).
+        /// <para>
+        /// No se soporta <see cref="System.Threading.CancellationToken"/>: la ventana
+        /// útil de cancelación (antes de iniciar el commit) es mínima y abortar un
+        /// commit en curso dejaría la transacción en estado indeterminado. Añadir
+        /// <c>CommitAsync</c> a las abstracciones fue evaluado y rechazado por coste
+        /// (breaking en netstandard2.1) frente a su beneficio.
+        /// </para>
+        /// </remarks>
+        /// <returns>
+        /// 1 si confirmó la transacción registrada; 0 cuando no hay ninguna transacción
+        /// registrada (las operaciones ejecutadas sin enlistar operan en autocommit y no
+        /// requieren confirmación).
+        /// </returns>
+        public Task<int> SaveChangesAsync()
         {
-            // Simulación asíncrona ya que IDAOContext suele ser síncrono en commits
-            return await Task.Run(() => SaveChanges());
+            // Camino rápido: sin transacción registrada no hay commit que ejecutar,
+            // se evita el salto al thread pool para devolver un 0.
+            if (UowContext.Transaction == null)
+                return Task.FromResult(0);
+
+            return Task.Run(SaveChanges);
         }
 
         private void DisposeTransaction()

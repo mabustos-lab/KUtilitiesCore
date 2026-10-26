@@ -53,6 +53,9 @@
             => new()
             { Status = ActionResultStatus.Canceled };
 
+        /// <summary>
+        /// Obtiene una instancia vacía, sin resultado ni estado definidos.
+        /// </summary>
         public static ActionResult<TResult> Empty =>
                     new();
 

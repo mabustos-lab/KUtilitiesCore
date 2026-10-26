@@ -1,4 +1,4 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 using System.Data;
 using KUtilitiesCore.Dal.ConnectionBuilder;
 using Microsoft.Data.SqlClient;
@@ -20,10 +20,10 @@ namespace KUtilitiesCore.Dal.BulkInsert
     /// SQL Server utilizando <see cref="SqlClient.SqlBulkCopy"/> y <see cref="DbConnection"/>.
     /// También soporta estrategias genéricas para otros proveedores de bases de datos.
     /// </summary>
-    /// <remarks>Constructor que inicializa la configuración para la inserción masiva.</remarks>
-    /// <param name="config">Configuración para la inserción masiva.</param>
-    ///// <param name="connectionString">Encapsulación de la cadena de conección</param>
-    /// <exception cref="ArgumentNullException">Se lanza si la configuración es nula.</exception>
+    /// <remarks>
+    /// El constructor primario recibe la <see cref="BulkOperationsConfig"/> necesaria para la
+    /// inserción masiva; se lanza <see cref="ArgumentNullException"/> si la configuración es nula.
+    /// </remarks>
     public class BulkOperationsService(BulkOperationsConfig config) : IBulkOperationsService
     {
         private readonly BulkOperationsConfig _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -36,7 +36,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// <param name="externalTransaction">
         /// Transacción asociada a la operación, si no se asigna internamente se crea una transacción
         /// </param>
-        public void BulkCopy<TContext>(DataTable dataTable, TContext context, ITransaction externalTransaction = null)
+        public void BulkCopy<TContext>(DataTable dataTable, TContext context, ITransaction? externalTransaction = null)
             where TContext : ISqlExecutorContext
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
@@ -57,7 +57,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// <param name="externalTransaction">
         /// Transacción asociada a la operación, si no se asigna internamente se crea una transacción
         /// </param>
-        public void BulkCopy<TContext>(IDataReader reader, TContext context, ITransaction externalTransaction = null)
+        public void BulkCopy<TContext>(IDataReader reader, TContext context, ITransaction? externalTransaction = null)
             where TContext : ISqlExecutorContext
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -74,12 +74,12 @@ namespace KUtilitiesCore.Dal.BulkInsert
         /// <summary>
         /// Realiza una inserción masiva de datos desde un DataTable a la base de datos.
         /// </summary>
-        /// <param name="items">El IEnumerable<T> que contiene los datos a insertar.</param>
+        /// <param name="items">El &lt;T&gt; que contiene los datos a insertar.</param>
         /// <param name="context">Contexto de conexión a la base de datos</param>
         /// <param name="externalTransaction">
         /// Transacción asociada a la operación, si no se asigna internamente se crea una transacción
         /// </param>
-        public void BulkInsert<T, TContext>(IEnumerable<T> items, TContext context, ITransaction externalTransaction = null)
+        public void BulkInsert<T, TContext>(IEnumerable<T> items, TContext context, ITransaction? externalTransaction = null)
            where TContext : ISqlExecutorContext
         {
             if (items == null) return;
@@ -191,7 +191,7 @@ namespace KUtilitiesCore.Dal.BulkInsert
             }
         }
 
-        private void ExecuteBulkOperation<TContext>(TContext context, ITransaction externalTransaction, Action<SqlClient.SqlBulkCopy> operation)
+        private void ExecuteBulkOperation<TContext>(TContext context, ITransaction? externalTransaction, Action<SqlClient.SqlBulkCopy> operation)
             where TContext : ISqlExecutorContext
         {
             // 1. Obtener la conexión subyacente (asumiendo SQL Server)
@@ -221,8 +221,11 @@ namespace KUtilitiesCore.Dal.BulkInsert
                 if (_config.Options.HasFlag(SqlClient.SqlBulkCopyOptions.KeepIdentity))
                     options |= SqlClient.SqlBulkCopyOptions.KeepIdentity;
 
+                var dbTransaction = ((TransactionBase)transaction).GetTransactionObject()
+                    ?? throw new InvalidOperationException("La transacción asociada no está activa.");
+
                 using var bulkCopy = new SqlClient.SqlBulkCopy((SqlClient.SqlConnection)context.Connection, options,
-                       (SqlClient.SqlTransaction)((TransactionBase)transaction).GetTransactionObject());
+                       (SqlClient.SqlTransaction)dbTransaction);
                 {
                     bulkCopy.DestinationTableName = _config.DestinationTableName;
                     bulkCopy.BulkCopyTimeout = _config.BulkCopyTimeout;

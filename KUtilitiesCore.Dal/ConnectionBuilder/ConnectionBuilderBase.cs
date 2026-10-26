@@ -21,32 +21,32 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
     {
         #region Fields
 
-        internal string applicationName;
+        internal string applicationName = string.Empty;
 
         internal int connectionTimeout = 30;
 
         internal bool encrypt;
 
-        internal string initialCatalog;
+        internal string initialCatalog = string.Empty;
 
         internal bool integratedSecurity;
 
-        internal string password;
+        internal string password = string.Empty;
 
-        internal string providerName;
+        internal string providerName = string.Empty;
 
-        internal string serverName;
+        internal string serverName = string.Empty;
 
         internal bool trustServerCertificate;
 
-        internal string userName;
+        internal string userName = string.Empty;
 
         #endregion Fields
 
         #region Events
 
         /// <inheritdoc/>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         #endregion Events
         
@@ -80,7 +80,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// </summary>
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
-        public Action<IConnectionBuilder> CustomDefaultConfig { get; set; }
+        public Action<IConnectionBuilder>? CustomDefaultConfig { get; set; }
 
         /// <inheritdoc/>
         [JsonProperty("E")]
@@ -331,19 +331,19 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
 
                 // 1. Application Name
                 if (TryGetAnyValue(dbcsb, out var appName, "Application Name", "ApplicationName", "App"))
-                    ApplicationName = appName?.ToString();
+                    ApplicationName = appName?.ToString() ?? string.Empty;
                 else
                     ApplicationName = "MyApp"; // Default
 
                 // 2. Server / Data Source
                 if (TryGetAnyValue(dbcsb, out var server, "Data Source", "Server", "Server Name", "Address", "Addr", "Network Address"))
-                    ServerName = server?.ToString();
+                    ServerName = server?.ToString() ?? string.Empty;
                 else
                     ServerName = "Localhost"; // Default
 
                 // 3. Database / Initial Catalog
                 if (TryGetAnyValue(dbcsb, out var database, "Initial Catalog", "InitialCatalog", "Database", "Database Name", "DatabaseName", "DB"))
-                    InitialCatalog = database?.ToString();
+                    InitialCatalog = database?.ToString() ?? string.Empty;
                 else
                     InitialCatalog = "master"; // Default
 
@@ -363,12 +363,12 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
 
                 // 5. Credenciales
                 if (TryGetAnyValue(dbcsb, out var user, "User ID", "UserID", "UID", "User", "User Name", "UserName"))
-                    UserName = user?.ToString();
+                    UserName = user?.ToString() ?? string.Empty;
                 else
                     UserName = string.Empty;
 
                 if (TryGetAnyValue(dbcsb, out var pwd, "Password", "Pwd", "Secret"))
-                    Password = pwd?.ToString();
+                    Password = pwd?.ToString() ?? string.Empty;
                 else
                     Password = string.Empty;
 
@@ -405,7 +405,7 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// <summary>
         /// Intenta obtener un valor del builder buscando por múltiples claves (sinónimos).
         /// </summary>
-        private bool TryGetAnyValue(DbConnectionStringBuilder builder, out object value, params string[] keys)
+        private bool TryGetAnyValue(DbConnectionStringBuilder builder, out object? value, params string[] keys)
         {
             value = null;
             foreach (var key in keys)
@@ -421,10 +421,10 @@ namespace KUtilitiesCore.Dal.ConnectionBuilder
         /// <summary>
         /// Convierte valores string a boolean de forma segura (ej. "yes", "true", "1").
         /// </summary>
-        private bool ParseBooleanSafe(object value)
+        private bool ParseBooleanSafe(object? value)
         {
             if (value == null) return false;
-            string valStr = value.ToString();
+            string valStr = value.ToString() ?? string.Empty;
 
             if (bool.TryParse(valStr, out bool result)) return result;
 

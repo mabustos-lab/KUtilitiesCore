@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace KUtilitiesCore.Extensions
 {
+    /// <summary>
+    /// Extensiones de utilidad para trabajar con colores de <see cref="System.Drawing"/>.
+    /// </summary>
     public static class ColorExt
     {
         #region Methods
