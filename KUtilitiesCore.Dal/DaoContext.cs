@@ -48,6 +48,13 @@ namespace KUtilitiesCore.Dal
 
         private Lazy<DbConnection>? _connection;
 
+        /// <summary>
+        /// Conexión publicada de forma anticipada durante la materialización del <see cref="Lazy{T}"/>.
+        /// Permite que los handlers de <see cref="OnConnectionOpened"/>/<see cref="OnConnectionOpenedAsync"/>
+        /// resuelvan <see cref="Connection"/> sin re-entrar en la fábrica del Lazy (guarda de re-entrada).
+        /// </summary>
+        private volatile DbConnection? _openedConnection;
+
         private TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
 
         private bool _disposedValue;
@@ -99,9 +106,10 @@ namespace KUtilitiesCore.Dal
 
         /// <inheritdoc/>
         public DbConnection Connection
-           => _connection?.Value
-            ?? throw new ObjectDisposedException(nameof(DaoContext),
-                "El contexto de acceso a datos ha sido liberado y no puede ser utilizado");
+           => _openedConnection
+             ?? _connection?.Value
+             ?? throw new ObjectDisposedException(nameof(DaoContext),
+                 "El contexto de acceso a datos ha sido liberado y no puede ser utilizado");
 
         /// <inheritdoc/>
         public int ConnectionTimeout
@@ -119,6 +127,9 @@ namespace KUtilitiesCore.Dal
 
         /// <inheritdoc/>
         public Action<ISqlExecutorContext>? OnConnectionOpened { get; set; }
+
+        /// <inheritdoc/>
+        public Func<ISqlExecutorContext, Task>? OnConnectionOpenedAsync { get; set; }
 
         /// <inheritdoc/>
         public string ProviderName => _connectionString.ProviderName;
@@ -249,7 +260,9 @@ namespace KUtilitiesCore.Dal
 
             try
             {
-                using (var tempConnection = CreateConnection())
+                // Sonda: usa el núcleo sin publicar campo ni invocar hooks para no
+                // materializar la conexión lógica del contexto.
+                using (var tempConnection = CreateConnectionCore())
                 {
                     return tempConnection.State == ConnectionState.Open;
                 }
@@ -815,6 +828,7 @@ namespace KUtilitiesCore.Dal
                         disposedCount);
                 }
 
+                _openedConnection = null;
                 _connection = null;
                 _disposedValue = true;
             }
@@ -822,25 +836,53 @@ namespace KUtilitiesCore.Dal
 
         private DbConnection CreateConnection()
         {
+            DbConnection? connection = null;
             try
             {
-                DbConnection connection = _factory.CreateConnection()!;
-                connection.ConnectionString = _connectionString.CnnString;
-                connection.Open();
-                _logger?.LogDebug("Conexión de base de datos creada y abierta");
+                connection = CreateConnectionCore();
 
-                // Invocar delegado si está configurado
-                OnConnectionOpened?.Invoke(this);
+                // Publicación anticipada: los handlers pueden resolver Connection sin
+                // re-entrar en la fábrica del Lazy (semántica sin re-entrada del hook).
+                _openedConnection = connection;
 
                 EnableSqlLogging(connection);
+
+                // Invocar delegado síncrono si está configurado
+                OnConnectionOpened?.Invoke(this);
+
+                // Invocar delegado asíncrono si está configurado (bloquea la
+                // materialización hasta completar). Los handlers deben usar
+                // ConfigureAwait(false) para evitar interbloqueos sync-over-async.
+                OnConnectionOpenedAsync?.Invoke(this).GetAwaiter().GetResult();
 
                 return connection;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error al crear y abrir conexión de base de datos");
+
+                // Fail-closed: disponer la conexión abierta (sin fugas) y anular la
+                // publicación anticipada. El Lazy cachea la excepción y envenena el
+                // contexto de forma permanente: todo acceso posterior la re-lanza.
+                _openedConnection = null;
+                connection?.Dispose();
                 throw new DataAccessException("Error al crear conexión de base de datos", null, _connectionString.ProviderName, ex);
             }
+        }
+
+        /// <summary>
+        /// Crea y abre la conexión física sin publicar <see cref="_openedConnection"/> ni
+        /// invocar los hooks de apertura. Usado por la sonda de <see cref="DatabaseExists"/>
+        /// para verificar disponibilidad sin materializar la conexión lógica del contexto.
+        /// </summary>
+        /// <returns>Conexión abierta lista para usar; el llamador es dueño de su disposición.</returns>
+        private DbConnection CreateConnectionCore()
+        {
+            DbConnection connection = _factory.CreateConnection()!;
+            connection.ConnectionString = _connectionString.CnnString;
+            connection.Open();
+            _logger?.LogDebug("Conexión de base de datos creada y abierta");
+            return connection;
         }
 
         private void EnableSqlLogging(DbConnection connection)
