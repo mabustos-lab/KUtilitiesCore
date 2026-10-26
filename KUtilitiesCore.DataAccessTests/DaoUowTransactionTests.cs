@@ -280,6 +280,67 @@ namespace KUtilitiesCore.Dal.Tests
 
         #endregion 2.3 Verificacion de vitalidad (design D4)
 
+        #region 2.4 SaveChangesAsync: fast path y descarga deliberada al thread pool
+
+        [TestMethod]
+        public async Task SaveChangesAsync_WithoutRegisteredTransaction_CompletesSynchronouslyAndReturnsZero()
+        {
+            var contextMock = new Mock<IDaoContext>();
+            using var uow = new TestableDaoUnitOfWork(contextMock.Object);
+
+            var task = uow.SaveChangesAsync();
+
+            Assert.IsTrue(task.IsCompleted,
+                "Sin transaccion registrada, SaveChangesAsync debe completar sincronicamente (camino rapido) sin ocupar el thread pool.");
+            Assert.AreEqual(0, await task,
+                "Sin transaccion registrada, SaveChangesAsync debe devolver 0 (autocommit, sin confirmacion pendiente).");
+            contextMock.Verify(c => c.BeginTransaction(It.IsAny<IsolationLevel>()), Times.Never);
+        }
+
+        [TestMethod]
+        public async Task SaveChangesAsync_WithRegisteredTransaction_CommitsAndClearsUow()
+        {
+            var contextMock = new Mock<IDaoContext>();
+            var txMock = new Mock<ITransaction>();
+            using var uow = new TestableDaoUnitOfWork(contextMock.Object);
+            contextMock.Setup(c => c.BeginTransaction(IsolationLevel.ReadCommitted))
+                .Returns(txMock.Object);
+
+            uow.BeginTransaction();
+            var result = await uow.SaveChangesAsync();
+
+            Assert.AreEqual(1, result,
+                "SaveChangesAsync debe confirmar la transaccion registrada y devolver 1.");
+            txMock.Verify(t => t.Commit(), Times.Once);
+            Assert.IsNull(uow.ExposedUowContext.Transaction,
+                "Tras SaveChangesAsync el UoW debe quedar sin transaccion registrada.");
+        }
+
+        [TestMethod]
+        public async Task SaveChangesAsync_CommitFails_RollsBackAndThrowsOriginalException()
+        {
+            var contextMock = new Mock<IDaoContext>();
+            var txMock = new Mock<ITransaction>();
+            using var uow = new TestableDaoUnitOfWork(contextMock.Object);
+            contextMock.Setup(c => c.BeginTransaction(IsolationLevel.ReadCommitted))
+                .Returns(txMock.Object);
+            txMock.Setup(t => t.Commit()).Throws(new InvalidOperationException("fallo del commit"));
+
+            uow.BeginTransaction();
+
+            var ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+                () => uow.SaveChangesAsync());
+
+            StringAssert.Contains(ex.Message, "fallo del commit",
+                "SaveChangesAsync debe propagar la excepcion original del commit.");
+            txMock.Verify(t => t.Rollback(), Times.Once,
+                "El fallo del commit debe revertir la transaccion registrada (paridad con SaveChanges sincrono).");
+            Assert.IsNull(uow.ExposedUowContext.Transaction,
+                "Tras el rollback del camino de error, el UoW debe quedar sin transaccion registrada.");
+        }
+
+        #endregion 2.4 SaveChangesAsync: fast path y descarga deliberada al thread pool
+
         #region 3. Integracion contra SQL Server local
 
         private const string CreateTempTableSql = "CREATE TABLE #TempTx (Id INT, Value NVARCHAR(100));";
