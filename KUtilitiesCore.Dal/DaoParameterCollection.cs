@@ -142,7 +142,7 @@ namespace KUtilitiesCore.Dal
             ParameterDirection direction = ParameterDirection.Input)
         {
             CreateAndAdd(
-                typeof(TType),
+                ResolveClrType(value),
                 p =>
                 {
                     p.ParameterName = parameterName;
@@ -168,8 +168,10 @@ namespace KUtilitiesCore.Dal
         public void Add<TType>(string parameterName, TType value,
             ParameterDirection direction = ParameterDirection.Input)
         {
+            // Cuando el valor llega tipado como object (ej. el valor de
+            // sp_set_session_context), inferir el DbType del tipo en tiempo de ejecución.
             CreateAndAdd(
-                typeof(TType),
+                ResolveClrType(value),
                 p =>
                 {
                     p.ParameterName = parameterName;
@@ -332,6 +334,16 @@ namespace KUtilitiesCore.Dal
             parameter.DbType = dbType;
             AddCore(parameter, configure);
         }
+
+        /// <summary>
+        /// Resuelve el tipo CLR a usar para la inferencia del <see cref="DbType"/>: si el valor
+        /// está tipado estáticamente como <see cref="object"/> (pero no es null), usa su tipo
+        /// en tiempo de ejecución para que la inferencia no falle con 'Object'.
+        /// </summary>
+        private static Type ResolveClrType<TType>(TType value)
+            => typeof(TType) == typeof(object) && value is not null
+                ? value.GetType()
+                : typeof(TType);
 
         /// <summary>
         /// Obtiene el valor de una propiedad específica de un objeto fuente utilizando una

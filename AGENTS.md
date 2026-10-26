@@ -99,6 +99,14 @@ Commit and PR text is in **Spanish, without accents in subjects** (see git histo
 - `KUtilitiesCore.DataAccess` is the abstraction layer (netstandard2.1). Concrete implementations (`Dal`, `EfCore`, `Http`) are separate projects targeting net10.0.
 - Offline `SPHelper/` and `Paging/` folders in `Dal`/`DataAccess` are excluded from compile (`<Compile Remove>`).
 
+### Dal OnConnectionOpened hook contracts (dal-onconnectionopened-reentrancy)
+
+- `DaoContext` publishes the open connection to the volatile field `_openedConnection` **before** invoking the hooks, so `Connection` is safe to read from inside `OnConnectionOpened`/`OnConnectionOpenedAsync` (handlers calling `SetSessionContextAsync` re-enter via the field, not the Lazy factory — no `ValueFactory...` re-entrancy error).
+- Factory order in `CreateConnection()`: `CreateConnectionCore()` (create + open, no hooks, no publish) → publish `_openedConnection` → `EnableSqlLogging` → sync hook → async hook (`.GetAwaiter().GetResult()`, sync-over-async). Hooks fire **exactly once per logical connection**, and concurrent first accesses all block on the Lazy until the hooks complete, then share the same instance.
+- `DatabaseExists()` probes via `CreateConnectionCore()` — the probe does **not** fire hooks and does not materialize the logical connection.
+- Fail-closed: if any hook (or `EnableSqlLogging`) throws, the opened connection is disposed, `_openedConnection` is nulled and the error is wrapped in `DataAccessException`; the Lazy (`ExecutionAndPublication`) caches it, so every later access re-throws the **same** cached exception — the consumer must create a new context. `Dispose()` also nulls `_openedConnection`.
+- `OnConnectionOpenedAsync` (`Func<ISqlExecutorContext, Task>?`) is invoked after the sync hook and blocks materialization until completion; handlers must use `ConfigureAwait(false)` internally to avoid SynchronizationContext deadlocks. New interface member on `ISqlExecutorContext` — breaking for external implementers (only `DaoContext` implements it in-repo).
+
 ### Dal UnitOfWork transaction contracts (dal-explicit-transactions)
 
 - The Dal UoW **never opens implicit transactions**: `DaoUowContext.Transaction` is a passive getter that returns only the transaction explicitly registered in the UoW (null otherwise), with a vitality check (D4) that nulls the reference if the consumer finished the tx outside the UoW (Commit/Rollback/Dispose).
