@@ -233,15 +233,33 @@ namespace KUtilitiesCore.Dal.UOW
         /// Confirma de forma asíncrona la transacción registrada en el UoW cuando existe y
         /// está viva, delegando en <see cref="SaveChanges"/>.
         /// </summary>
+        /// <remarks>
+        /// Sin transacción registrada el método completa de forma sincrónica (camino
+        /// rápido): no hay trabajo pendiente, así que devuelve 0 sin ocupar el thread
+        /// pool. Con una transacción registrada, el commit de <see cref="ITransaction"/>
+        /// es I/O bloqueante síncrono, por lo que se descarga deliberadamente al thread
+        /// pool para no bloquear al llamador (sync-over-async documentado).
+        /// <para>
+        /// No se soporta <see cref="System.Threading.CancellationToken"/>: la ventana
+        /// útil de cancelación (antes de iniciar el commit) es mínima y abortar un
+        /// commit en curso dejaría la transacción en estado indeterminado. Añadir
+        /// <c>CommitAsync</c> a las abstracciones fue evaluado y rechazado por coste
+        /// (breaking en netstandard2.1) frente a su beneficio.
+        /// </para>
+        /// </remarks>
         /// <returns>
         /// 1 si confirmó la transacción registrada; 0 cuando no hay ninguna transacción
         /// registrada (las operaciones ejecutadas sin enlistar operan en autocommit y no
         /// requieren confirmación).
         /// </returns>
-        public async Task<int> SaveChangesAsync()
+        public Task<int> SaveChangesAsync()
         {
-            // Simulación asíncrona ya que IDAOContext suele ser síncrono en commits
-            return await Task.Run(() => SaveChanges());
+            // Camino rápido: sin transacción registrada no hay commit que ejecutar,
+            // se evita el salto al thread pool para devolver un 0.
+            if (UowContext.Transaction == null)
+                return Task.FromResult(0);
+
+            return Task.Run(SaveChanges);
         }
 
         private void DisposeTransaction()
