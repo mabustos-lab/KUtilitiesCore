@@ -18,6 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
+    <ProjectReference Include="..\KUtilitiesCore.Data.Wizard\KUtilitiesCore.Data.Wizard.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

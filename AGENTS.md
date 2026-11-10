@@ -2,7 +2,7 @@
 
 ## Build & Test
 
-The SDK is pinned by `global.json` to the 10.x band (`rollForward: latestFeature`) with the new `dotnet test` MTP experience (`"test": { "runner": "Microsoft.Testing.Platform" }`). All 7 MSTest test projects set `<EnableMSTestRunner>true</EnableMSTestRunner>`; `EventCommandBinder` uses `UseMicrosoftTestingPlatform`.
+The SDK is pinned by `global.json` to the 10.x band (`rollForward: latestFeature`) with the new `dotnet test` MTP experience (`"test": { "runner": "Microsoft.Testing.Platform" }`). All 8 MSTest test projects set `<EnableMSTestRunner>true</EnableMSTestRunner>`; `EventCommandBinder` uses `UseMicrosoftTestingPlatform`.
 
 ```bash
 dotnet build KUtilitiesCore.sln
@@ -35,6 +35,8 @@ Core libraries (net10.0 unless noted; net48/net8.0 support was removed in the .N
 | KUtilitiesCore.MVVM.Messaging | `KUtilitiesCore.MVVM.Messaging/` | net10.0 | Decoupled messaging |
 | KUtilitiesCore.Data | `KUtilitiesCore.Data/` | net10.0 | CSV/Excel import-export (ClosedXML) |
 | KUtilitiesCore.Data.Win | `KUtilitiesCore.Data.Win/` | **net10.0-windows** | WinForms UI components |
+| KUtilitiesCore.Data.Wizard | `KUtilitiesCore.Data.Wizard/` | net10.0 | Shared, UI-agnostic import-wizard orchestration (`ImportWizardController`) |
+| KUtilitiesCore.Data.WPF | `KUtilitiesCore.Data.WPF/` | **net10.0-windows** | WPF import-wizard UI (UseWPF, no Windows Forms) |
 | KUtilitiesCore.DataAccess | `KUtilitiesCore.DataAccess/` | **netstandard2.1** | Abstract interfaces (UoW, Specification, Paging) |
 | KUtilitiesCore.Dal | `KUtilitiesCore.Dal/` | net10.0 | SQL Server DAL (DaoContext, DataReaderConverter, BulkInsert) |
 | KUtilitiesCore.DataAccess.EfCore | `KUtilitiesCore.DataAccess.EfCore/` | net10.0 | EF Core 10 implementation of DataAccess |
@@ -42,7 +44,7 @@ Core libraries (net10.0 unless noted; net48/net8.0 support was removed in the .N
 | KUtilitiesCore.Logger | `KUtilities.Logger/` | **netstandard2.0** | Logging (file, SQL, console providers) |
 | KUtilitiesCore.GitHubUpdater | `KUtilitiesCore.GitHubUpdater/` | net10.0 | GitHub API auto-updater |
 
-Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server impl), `EfCore`, `Http`. `Encryption` → `Core` → `MVVM` → `MVVM.Messaging`. `Core` + `Logger` → `Dal`.
+Dependency chain (simplified): `DataAccess` (abstractions) → `Dal` (SQL Server impl), `EfCore`, `Http`. `Encryption` → `Core` → `MVVM` → `MVVM.Messaging`. `Core` + `Logger` → `Dal`. `Data` → `Data.Wizard` (shared wizard orchestration) → `Data.Win` + `Data.WPF`; `Data.WPF` also references `MVVM`.
 
 ## Development Approach
 

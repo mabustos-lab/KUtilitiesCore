@@ -1,0 +1,134 @@
+<Window x:Class="KUtilitiesCore.Data.WPF.Importer.ImportWizardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:importer="clr-namespace:KUtilitiesCore.Data.WPF.Importer"
+        Title="Asistente de Importación de Datos"
+        Width="920"
+        Height="640"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+    <Window.Resources>
+        <importer:WizardRowErrorIndexConverter x:Key="RowErrorIndexConverter"/>
+        <DataTemplate DataType="{x:Type importer:CsvConfigViewModel}">
+            <importer:CsvConfigControl/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type importer:ExcelConfigViewModel}">
+            <importer:ExcelConfigControl/>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,6">
+            <TextBlock Text="Archivo:" VerticalAlignment="Center"/>
+            <Button Content="Cargar"
+                    Command="{Binding LoadDataCommand}"
+                    DockPanel.Dock="Right"
+                    Margin="6,0,0,0"
+                    Padding="12,3"/>
+            <Button Content="..."
+                    Command="{Binding BrowseFileCommand}"
+                    DockPanel.Dock="Right"
+                    Margin="6,0,0,0"
+                    Padding="8,3"/>
+            <TextBox Text="{Binding FileName}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+        </DockPanel>
+
+        <ContentControl Grid.Row="1"
+                        Content="{Binding CurrentConfig}"
+                        Margin="0,0,0,6"/>
+
+        <GroupBox Grid.Row="2" Header="Mapeo de Campos" Margin="0,0,0,6" MaxHeight="180">
+            <DataGrid ItemsSource="{Binding Mapping}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      SelectionMode="Single"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Campo Destino" Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayName}"
+                                           ToolTip="{Binding Description}"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Columna Origen (Archivo)" Width="*" IsReadOnly="True">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{Binding AvailableSourceColumns}"
+                                           SelectedItem="{Binding SelectedSourceColumn}"
+                                           Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <TabControl Grid.Row="3">
+            <TabItem Header="Datos Importados (Editable)">
+                <DockPanel>
+                    <CheckBox DockPanel.Dock="Top"
+                              Content="Mostrar solo filas con errores."
+                              IsChecked="{Binding ShowErrorsOnly}"
+                              Margin="0,4,0,4"/>
+                    <DataGrid x:Name="dgvPreview"
+                              AutoGenerateColumns="True"
+                              CanUserAddRows="False"
+                              importer:DataGridErrorBehavior.Enabled="True"
+                              AutoGeneratingColumn="OnPreviewAutoGeneratingColumn"
+                              CellEditEnding="OnPreviewCellEditEnding"/>
+                </DockPanel>
+            </TabItem>
+            <TabItem Header="Errores de Validación">
+                <DataGrid ItemsSource="{Binding RowErrors}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Fila"
+                                            Binding="{Binding RowIndex, Converter={StaticResource RowErrorIndexConverter}}"/>
+                        <DataGridTextColumn Header="Campo"
+                                            Binding="{Binding FieldDisplayName}"/>
+                        <DataGridTextColumn Header="Mensaje"
+                                            Binding="{Binding Message}"
+                                            Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
+            <Button Content="Aceptar e Importar"
+                    Command="{Binding ImportCommand}"
+                    Click="OnImportClick"
+                    Padding="12,3"
+                    Margin="0,0,8,0"/>
+            <Button Content="Cancelar"
+                    Click="OnCancelClick"
+                    Padding="12,3"/>
+        </StackPanel>
+
+        <DockPanel Grid.Row="5" Margin="0,6,0,0">
+            <TextBlock Text="{Binding LoadedRowCount, StringFormat='Filas cargadas: {0:N0}'}"
+                       VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding StatusMessage}"
+                       Margin="16,0,0,0"
+                       VerticalAlignment="Center"/>
+        </DockPanel>
+    </Grid>
+</Window>
