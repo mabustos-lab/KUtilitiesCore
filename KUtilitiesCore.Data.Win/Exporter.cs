@@ -11,10 +11,12 @@ using System.Threading.Tasks;
 namespace KUtilitiesCore.Data.Win
 {
     /// <summary>
-    /// Punto de entrada de exportación de datos en entornos WinForms: muestra el diálogo
-    /// "Guardar como", resuelve el formato por extensión y delega en los exportadores de
-    /// <c>KUtilitiesCore.Data</c>. Centraliza aquí la interacción con el usuario para que las
-    /// librerías de exportación permanezcan independientes de la UI.
+    /// Punto de entrada de exportación de datos en entornos WinForms: fachada del diálogo
+    /// nativo "Guardar como" sobre la preparación compartida
+    /// (<see cref="ExportDialogPreparation"/>), que valida el origen, sugiere el nombre,
+    /// aporta el filtro y resuelve el formato por extensión antes de delegar en los
+    /// exportadores de <c>KUtilitiesCore.Data</c>. Centraliza aquí la interacción con el
+    /// usuario para que las librerías de exportación permanezcan independientes de la UI.
     /// </summary>
     public static class Exporter
     {
@@ -30,25 +32,23 @@ namespace KUtilitiesCore.Data.Win
             string titleDialog = "Guardar exportación de datos.",
             string defaulFilename = "")
         {
-            // Validación del DataTable
-            if (dt == null || dt.Rows.Count == 0)
+            // Validación del origen delegada en la preparación compartida: una tabla sin
+            // filas se rechaza ANTES de abrir el diálogo (paridad con la fachada WPF).
+            if (!ExportDialogPreparation.ValidateSource(dt))
             {
                 MessageBox.Show("No hay datos para exportar.", "Exportación",
                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            // Configurar nombre de archivo por defecto
+            // Nombre de archivo por defecto con sello temporal, delegado en la capa compartida.
             if (string.IsNullOrEmpty(defaulFilename))
-                defaulFilename = $"Exportacion_{DateTime.Now:yyyyMMdd_HHmmss}";
+                defaulFilename = ExportDialogPreparation.GetDefaultFileName();
 
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
-                // Configurar el diálogo
-                saveFileDialog.Filter = "Todos los archivos soportados|*.csv;*.tsv;*.psv;*.xlsx;*.xls|" +
-                                       "Archivos de Texto (*.csv, *.tsv, *.psv)|*.csv;*.tsv;*.psv|" +
-                                       "Archivos de Excel (*.xlsx)|*.xlsx|" +
-                                       "Archivos de Excel 97-2003 (*.xls)|*.xls";
+                // Configurar el diálogo (filtro compartido para garantizar paridad de opciones).
+                saveFileDialog.Filter = ExportDialogPreparation.FileDialogFilter;
                 saveFileDialog.Title = titleDialog;
                 saveFileDialog.FileName = defaulFilename;
                 saveFileDialog.DefaultExt = ".xlsx"; // Extensión por defecto
@@ -70,19 +70,16 @@ namespace KUtilitiesCore.Data.Win
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Question) == DialogResult.Yes;
 
-                    // Procesar según la extensión
+                    // Procesar según el formato resuelto por la preparación compartida
                     Cursor.Current = Cursors.WaitCursor;
 
-                    switch (fileExtension)
+                    switch (ExportDialogPreparation.ResolveFormat(selectedFile))
                     {
-                        case ".xlsx":
-                        case ".xls":
+                        case ExportFormat.Excel:
                             dt.ToExcel(selectedFile, abrirAlFinalizar);
                             break;
 
-                        case ".csv":
-                        case ".tsv":
-                        case ".psv":
+                        case ExportFormat.Text:
                             string separator = GetSeparator(selectedFile);
                             dt.ToCsv(selectedFile, abrirAlFinalizar, separator);
                             break;
@@ -160,21 +157,9 @@ namespace KUtilitiesCore.Data.Win
         /// </summary>
         /// <param name="fileName">Nombre o ruta completa del archivo.</param>
         /// <returns>Separador como string (",", "\t", "|").</returns>
+        /// <remarks>Fachada sobre <see cref="ExportDialogPreparation.GetSeparator"/>: la correspondencia extensión→separador es conocimiento de exportación compartido entre plataformas.</remarks>
         public static string GetSeparator(string fileName)
-        {
-            if (string.IsNullOrWhiteSpace(fileName))
-                throw new ArgumentException("El nombre del archivo no puede estar vacío.", nameof(fileName));
-
-            string extension = Path.GetExtension(fileName).ToLowerInvariant();
-
-            return extension switch
-            {
-                ".csv" => ",",
-                ".tsv" => "\t",
-                ".psv" => "|",
-                _ => throw new NotSupportedException($"La extensión '{extension}' no está soportada.")
-            };
-        }
+            => ExportDialogPreparation.GetSeparator(fileName);
 
     }
 }

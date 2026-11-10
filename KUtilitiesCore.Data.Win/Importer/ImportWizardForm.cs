@@ -3,6 +3,7 @@ using KUtilitiesCore.Data.DataImporter.Infraestructure.ClosedXml;
 using KUtilitiesCore.Data.DataImporter.Interfaces;
 using KUtilitiesCore.Data.ImportDefinition;
 using KUtilitiesCore.Data.Validation.Core;
+using KUtilitiesCore.Data.Wizard;
 using System;
 using System.Data;
 using System.Linq;
@@ -16,38 +17,43 @@ namespace KUtilitiesCore.Data.Win.Importer
     /// validación, dejando el resultado en <see cref="ResultData"/> cuando todos los
     /// datos son válidos.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// El estado lógico del asistente (tabla cargada, carga en curso, obsolescencia,
+    /// debounce de revalidación y resultado tipado) vive en el orquestador compartido
+    /// <see cref="ImportWizardController"/> de KUtilitiesCore.Data.Wizard; este formulario
+    /// conserva exclusivamente la interacción de vista: pintado de grids, diálogos,
+    /// mensajes, el commit de ediciones pendientes y el hosting de paneles de
+    /// configuración.
+    /// </para>
+    /// <para>
+    /// El repintado de errores y del aviso de la barra de estado se centraliza en el
+    /// manejo de <see cref="ImportWizardController.ErrorsChanged"/>, de modo que tanto las
+    /// revalidaciones explícitas (importar, editar) como las diferidas por debounce
+    /// producen el mismo efecto visual.
+    /// </para>
+    /// </remarks>
     public partial class ImportWizardForm : Form
     {
         #region Fields
 
         private readonly FieldDefinitionCollection _fieldDefinitions;
 
+        /// <summary>
+        /// Referencia de solo lectura al gestor compartido con el orquestador: el
+        /// formulario la usa para pintar el grid de errores y el conteo de la
+        /// advertencia; su ciclo de vida pertenece al controlador, que lo dispone
+        /// en <see cref="ImportWizardController.Dispose"/>.
+        /// </summary>
         private readonly ImportManager _importManager;
 
-        // Estado Lógico
+        /// <summary>Orquestador compartido dueño del estado lógico del asistente.</summary>
+        private readonly ImportWizardController _controller;
+
+        // Estado de vista
         private IImportConfigControl? currentConfigControl;
 
         private string? currentExtFile;
-
-        private System.Data.DataTable? loadedDataTable;
-
-        /// <summary>
-        /// Indica si hay una carga asíncrona en curso; evita que el usuario dispare
-        /// cargas reentrantes mientras una lectura sigue pendiente.
-        /// </summary>
-        private bool _isLoading;
-
-        /// <summary>
-        /// Temporizador que coalescea las ediciones del preview y del mapeo en una
-        /// única revalidación silenciosa tras una ventana de 400 ms.
-        /// </summary>
-        /// <remarks>
-        /// Se usa un <see cref="System.Windows.Forms.Timer"/> (y no validación en un
-        /// hilo de background) porque el <see cref="DataTable"/> enlazado al grid vía
-        /// <see cref="DataView"/> no es seguro para acceso multi-hilo: el temporizador
-        /// mantiene todo el trabajo en el hilo de UI.
-        /// </remarks>
-        private readonly System.Windows.Forms.Timer _revalidateDebounce = new() { Interval = 400 };
 
         /// <summary>
         /// Indica si <see cref="PopulateMappingGrid"/> está poblando el grid de mapeo;
@@ -69,16 +75,31 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// <param name="importManager">Gestor de importación a utilizar; si es <c>null</c> se instancia uno nuevo.</param>
         public ImportWizardForm(FieldDefinitionCollection fieldDefinitions, ImportManager? importManager = null)
         {
-            InitializeComponent();
-
+            // El estado no-UI se inicializa ANTES de InitializeComponent: el Designer dispara
+            // eventos de grid (p. ej. CellValueChanged al asignar HeaderText) que ya consultan
+            // el estado lógico a través del orquestador.
             _fieldDefinitions = fieldDefinitions ?? [];
             _importManager = importManager ?? new ImportManager();
-            ResultData = null;
-            dgvMapping.AutoGenerateColumns = false;
 
-            // El temporizador dispara la revalidación silenciosa acumulada; se
-            // cancela/reinicia con cada edición (debounce) desde ScheduleSilentRevalidation.
-            _revalidateDebounce.Tick += (sender, e) => RevalidateAfterEdit();
+            // El commit de ediciones pendientes debe ocurrir ANTES de que el orquestador
+            // revalide al dispararse el debounce: este handler se suscribe primero y el
+            // del orquestador (en su constructor) corre después en el mismo evento.
+            var debounceTimer = new WinFormsDebounceTimer();
+            debounceTimer.Elapsed += OnDebounceCommitPendingEdit;
+
+            _controller = new ImportWizardController(_fieldDefinitions, _importManager, debounceTimer)
+            {
+                // El mapeo activo lo decide el usuario en el grid de mapeo: se resuelve en
+                // el momento exacto de validar (pull), porque el grid cambia sin notificar
+                // al orquestador.
+                ActiveDefinitionsResolver = BuildActiveDefinitions
+            };
+            _controller.LoadCompleted += OnControllerLoadCompleted;
+            _controller.LoadFailed += OnControllerLoadFailed;
+            _controller.ErrorsChanged += OnControllerErrorsChanged;
+
+            InitializeComponent();
+            dgvMapping.AutoGenerateColumns = false;
         }
 
         #endregion Constructors
@@ -105,6 +126,8 @@ namespace KUtilitiesCore.Data.Win.Importer
             get => txtFilePath.Text; set
             {
                 txtFilePath.Text = value;
+                // Sincroniza el estado del orquestador: vacío dispara su propio reset.
+                _controller.FileName = value ?? string.Empty;
                 if (string.IsNullOrEmpty(value))
                     ResetWizardState();
                 else
@@ -115,21 +138,38 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// <summary>
         /// Datos cargados de la fuente de datos.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// La asignación adopta la tabla a través del orquestador: se enlaza una vista
+        /// sobre la MISMA tabla (sin clonar) y los errores de validación se pintan
+        /// directamente sobre ella. La tabla sigue siendo propiedad del llamador: el
+        /// orquestador no la dispone, la libera este formulario al cerrarse.
+        /// </para>
+        /// <para>
+        /// Asignar <see langword="null"/> se ignora: sin tabla no hay nada que adoptar ni
+        /// pintar, y conservar la carga anterior es más seguro que dejar la vista apuntando
+        /// a datos que ya no existen.
+        /// </para>
+        /// </remarks>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public System.Data.DataTable? LoadedDataTable
         {
-            get => loadedDataTable;
+            get => _controller.LoadedDataView?.Table;
             protected set
             {
-                loadedDataTable = value;
-                OnLoadedDataSource();
+                if (value is null) return;
+                _controller.Load(new TableDataSourceReader(value));
             }
         }
 
         /// <summary>
         /// Datos requeridos para la importación
         /// </summary>
-        public System.Data.DataTable? ResultData { get; private set; }
+        /// <remarks>
+        /// Proyección tipada materializada por el orquestador tras una validación exitosa;
+        /// es legible incluso después de disponer el asistente.
+        /// </remarks>
+        public System.Data.DataTable? ResultData => _controller.ResultData;
 
         #endregion Properties
 
@@ -157,11 +197,7 @@ namespace KUtilitiesCore.Data.Win.Importer
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                LoadedDataTable = reader.ReadData();
-            }
-            catch (Exception ex)
-            {
-                HandleLoadError(ex);
+                _controller.Load(reader);
             }
             finally
             {
@@ -175,12 +211,13 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// el lector procesa el archivo y actualiza el pipeline de la vista al completarse.
         /// </summary>
         /// <remarks>
-        /// Las continuaciones usan <c>ConfigureAwait(true)</c> (el comportamiento por defecto se
-        /// conserva de forma explícita) porque tocan controles de UI (preview, mapeo, barra de
-        /// estado) que exigen el hilo de UI. Reutiliza <see cref="CreateReader"/> y
-        /// <see cref="HandleLoadError"/> para mantener una sola ruta de decisiones, y el lector
-        /// se dispone en el bloque <c>finally</c> por la misma razón que en la carga síncrona:
-        /// los lectores de Excel mantienen el archivo físico abierto hasta su disposición.
+        /// Las continuaciones se ejecutan en el contexto de UI porque el orquestador no usa
+        /// <c>ConfigureAwait(false)</c>: al completarse toca controles de UI (preview, mapeo,
+        /// barra de estado) que exigen el hilo de UI. Reutiliza <see cref="CreateReader"/> y
+        /// <see cref="HandleLoadError"/> (vía <see cref="ImportWizardController.LoadFailed"/>)
+        /// para mantener una sola ruta de decisiones, y el lector se dispone en el bloque
+        /// <c>finally</c> por la misma razón que en la carga síncrona: los lectores de Excel
+        /// mantienen el archivo físico abierto hasta su disposición.
         /// <example>
         /// <code>
         /// // Desde el hilo de UI:
@@ -201,12 +238,7 @@ namespace KUtilitiesCore.Data.Win.Importer
             try
             {
                 Cursor.Current = Cursors.WaitCursor;
-                var table = await reader.ReadDataAsync().ConfigureAwait(true);
-                LoadedDataTable = table;
-            }
-            catch (Exception ex)
-            {
-                HandleLoadError(ex);
+                await _controller.LoadAsync(reader);
             }
             finally
             {
@@ -261,6 +293,8 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// <remarks>
         /// La barra de estado permanece visible como recordatorio de que los datos
         /// mostrados provienen de una carga anterior, no del último intento fallido.
+        /// Se invoca desde el evento <see cref="ImportWizardController.LoadFailed"/> del
+        /// orquestador, que ya capturó la excepción del lector.
         /// </remarks>
         protected virtual void HandleLoadError(Exception ex)
         {
@@ -294,9 +328,15 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// Importa los datos cargados al DataTable final. El cierre del formulario
         /// lo decide exclusivamente este método según el resultado de la validación:
         /// con éxito cierra con <see cref="DialogResult.OK"/> (si
-        /// <see cref="AutoCloseOnSuccess"/>); con errores permanece abierto para que
-        /// el usuario corrija los datos.
+        /// <see cref="AutoCloseOnSuccess"/>); con errores permanece abierto para que el
+        /// usuario corrija los datos.
         /// </summary>
+        /// <remarks>
+        /// El pipeline de validación (mapeo activo, relectura de la tabla adoptada,
+        /// validación de tipos y banderas de error) pertenece al orquestador
+        /// (<see cref="ImportWizardController.Import()"/>); este método conserva las
+        /// decisiones de vista: mensajes, cambio de pestaña y cierre.
+        /// </remarks>
         protected virtual void ImportData()
         {
             var sourceTable = LoadedDataTable;
@@ -308,10 +348,6 @@ namespace KUtilitiesCore.Data.Win.Importer
 
             CommitPendingGridEdit();
 
-            // Una revalidación diferida no debe dispararse a mitad (o al terminar) de
-            // una importación explícita: se cancela la ventana pendiente del debounce.
-            _revalidateDebounce.Stop();
-
             // Un origen vacío no es un error de validación: se avisa al usuario y
             // se sale sin llenar la pestaña de errores con ruido ("No hay datos...").
             if (sourceTable.Rows.Count == 0)
@@ -320,28 +356,20 @@ namespace KUtilitiesCore.Data.Win.Importer
                 return;
             }
 
-            var activeDefinitions = BuildActiveDefinitions();
             try
             {
-                _importManager.SetMapping(activeDefinitions);
-                _importManager.ReadData(sourceTable);
-                // El retorno bool es la única fuente de decisión: mantener dos
-                // lecturas (bool + colección de errores) invita a que diverjan.
-                var isValid = _importManager.ValidateDataTypes();
-                UpdateRowErrorFlags(sourceTable);
+                // La importación explícita cancela el debounce pendiente dentro del propio
+                // orquestador (Revalidate detiene el temporizador).
+                var args = _controller.Import();
 
                 // El proceso se notifica antes de decidir el cierre para que derivaciones
                 // puedan abortar (lanzando una excepción) si su lógica lo requiere.
                 OnProcessImportFinished();
 
-                if (isValid)
+                if (args.IsValid)
                 {
-                    // La tabla resultado es una proyección tipada propia del asistente:
-                    // exponer el DataSource interno (todo string + columnas de control)
-                    // filtraría detalles de implementación y acoplaría al consumidor
-                    // al ciclo de vida del ImportManager.
-                    ResultData = _importManager.CreateResultTable();
-                    RefreshErrorsGrid();
+                    // La tabla resultado (proyección tipada propia del asistente, sin
+                    // columnas de control) ya fue materializada por el orquestador.
                     tsslWarning.Visible = false;
                     if (AutoCloseOnSuccess)
                     {
@@ -360,12 +388,10 @@ namespace KUtilitiesCore.Data.Win.Importer
                 }
                 else
                 {
-                    ResultData = null;
                     ShowMessage(
-                        $"Se encontraron {_importManager.ValidationErrors.Errors.Count} errores de validación.",
+                        $"Se encontraron {args.ErrorCount} errores de validación.",
                         "Errores",
                         MessageBoxIcon.Warning);
-                    RefreshErrorsGrid();
                     tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
                     tsslWarning.Visible = true;
                     tabControlResults.SelectedTab = tabControlResults.TabPages[1];
@@ -376,6 +402,10 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
             catch (Exception ex)
             {
+                // Un proceso abortado por una derivación no deja resultado utilizable,
+                // igual que si la validación hubiera fallado.
+                _controller.DiscardResult();
+
                 ShowMessage($"Error crítico en el proceso de importación: {ex.Message}",
                     "Error Crítico", MessageBoxIcon.Error);
 
@@ -393,6 +423,12 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// estado sin mostrar diálogos, sin cambiar de pestaña y sin cerrar el
         /// formulario, para no interrumpir al usuario mientras corrige celda por celda.
         /// </summary>
+        /// <remarks>
+        /// El pipeline pertenece al orquestador (<see cref="ImportWizardController.Revalidate()"/>);
+        /// el repintado (grid de errores y aviso) lo produce el evento
+        /// <see cref="ImportWizardController.ErrorsChanged"/>, compartido con las
+        /// revalidaciones diferidas por debounce.
+        /// </remarks>
         protected virtual void RevalidateAfterEdit()
         {
             var sourceTable = LoadedDataTable;
@@ -400,36 +436,16 @@ namespace KUtilitiesCore.Data.Win.Importer
 
             CommitPendingGridEdit();
 
-            var activeDefinitions = BuildActiveDefinitions();
             try
             {
-                _importManager.SetMapping(activeDefinitions);
-                _importManager.ReadData(sourceTable);
-                // Misma fuente única de decisión que ImportData: el retorno bool.
-                var isValid = _importManager.ValidateDataTypes();
-                UpdateRowErrorFlags(sourceTable);
+                _controller.Revalidate();
                 OnProcessImportFinished();
-
-                if (isValid)
-                {
-                    // Misma proyección tipada que ImportData: el resultado de la
-                    // revalidación debe ser consistente con el de la importación.
-                    ResultData = _importManager.CreateResultTable();
-                    RefreshErrorsGrid();
-                    tsslWarning.Visible = false;
-                }
-                else
-                {
-                    ResultData = null;
-                    RefreshErrorsGrid();
-                    tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
-                    tsslWarning.Visible = true;
-                }
             }
             catch
             {
                 // La revalidación por edición es de fondo: solo deja el aviso persistente;
                 // el diagnóstico detallado se reserva para el botón Importar.
+                _controller.DiscardResult();
                 tsslWarning.Text = "Error crítico en la importación, favor de verificar.";
                 tsslWarning.Visible = true;
             }
@@ -443,7 +459,9 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// Trabaja sobre clones de las definiciones originales: la colección pertenece
         /// al consumidor del wizard y puede reutilizarse en importaciones posteriores
         /// (o compartirse entre wizards), por lo que el mapeo activo es una traducción
-        /// interna y nunca un efecto lateral sobre el estado del llamador.
+        /// interna y nunca un efecto lateral sobre el estado del llamador. Es el
+        /// origen del <see cref="ImportWizardController.ActiveDefinitionsResolver"/>
+        /// del orquestador.
         /// </remarks>
         private FieldDefinitionCollection BuildActiveDefinitions()
         {
@@ -503,36 +521,57 @@ namespace KUtilitiesCore.Data.Win.Importer
         }
 
         /// <summary>
-        /// Ocurre cuando el archivo es cargado y asignado al DataSource
+        /// Repinta la vista de errores tras cualquier cambio en la exposición neutral del
+        /// orquestador: grid de errores y aviso de la barra de estado.
         /// </summary>
-        protected virtual void OnLoadedDataSource()
+        /// <remarks>
+        /// Centraliza el repintado de las revalidaciones explícitas y las diferidas por
+        /// debounce en un solo punto: el aviso refleja el resultado de la última validación
+        /// (resultado materializado = válido). Sin tabla cargada (reset) no toca los
+        /// indicadores: la limpieza de vista la hace <see cref="ResetWizardState"/>.
+        /// </remarks>
+        private void OnControllerErrorsChanged(object? sender, EventArgs e)
         {
-            var table = loadedDataTable;
+            RefreshErrorsGrid();
+
+            if (_controller.LoadedDataView?.Table is null) return;
+
+            if (_controller.ResultData is not null)
+            {
+                tsslWarning.Visible = false;
+            }
+            else
+            {
+                tsslWarning.Text = "Los datos contienen errores, favor de verificar.";
+                tsslWarning.Visible = true;
+            }
+        }
+
+        /// <summary>
+        /// Repinta el pipeline de vista tras una carga exitosa del orquestador: preview,
+        /// grid de mapeo, botones y barra de estado.
+        /// </summary>
+        private void OnControllerLoadCompleted(object? sender, EventArgs e)
+        {
+            var table = _controller.LoadedDataView?.Table;
             if (table is null) return;
 
-            // Columna de control que refleja por fila el resultado de la última validación;
-            // permite filtrar solo-errores con un DataView sin copiar filas (ver FilterHasErrors).
-            EnsureHasErrorColumn(table);
-
-            // Se enlaza una VISTA de la tabla y no la tabla directamente: así el filtrado
-            // solo-errores se resuelve cambiando el RowFilter de la vista, y las ediciones
-            // del grid viajan siempre a la misma tabla subyacente.
-            dgvPreview.DataSource = new DataView(table);
+            // La columna de control y las banderas por fila ya fueron garantizadas por el
+            // orquestador al adoptar la tabla; se enlaza la vista que él expone para que
+            // el filtrado solo-errores y las ediciones operen siempre sobre la misma tabla.
+            dgvPreview.DataSource = _controller.LoadedDataView;
 
             // La columna de control es infraestructura del filtro; no aporta nada al usuario.
             if (dgvPreview.Columns["_HasError"] is { } errorColumn)
                 errorColumn.Visible = false;
-
-            ResultData = null;
 
             PopulateMappingGrid();
 
             // Un origen sin filas (p. ej. CSV de solo encabezados) no tiene nada
             // que importar: se deshabilita el botón y se avisa en la barra de estado
             // en lugar de dejar que la validación genere ruido engañoso.
-            var hasRows = table.Rows.Count > 0;
-            btnImport.Enabled = hasRows;
-            if (hasRows)
+            btnImport.Enabled = _controller.CanImport;
+            if (table.Rows.Count > 0)
             {
                 tsslWarning.Visible = false;
             }
@@ -542,6 +581,15 @@ namespace KUtilitiesCore.Data.Win.Importer
                 tsslWarning.Visible = true;
             }
             tsslCount.Text = $"Filas cargadas: {table.Rows.Count:N0}";
+        }
+
+        /// <summary>
+        /// Canaliza el fallo de carga del orquestador hacia el manejo de vista existente:
+        /// la excepción original viaja en los argumentos neutrales del evento.
+        /// </summary>
+        private void OnControllerLoadFailed(object? sender, LoadFailedEventArgs e)
+        {
+            HandleLoadError(e.Exception);
         }
 
         /// <summary>
@@ -584,20 +632,19 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// <remarks>
         /// La recarga automática se descartó deliberadamente: pisaría las ediciones del
         /// usuario en el preview sin aviso. En su lugar se invalida el estado derivado y
-        /// se guía al usuario. El guard de <c>loadedDataTable is null</c> ignora los
+        /// se guía al usuario. El guard de <c>LoadedDataTable is null</c> ignora los
         /// eventos que el propio control dispara durante su inicialización (p. ej.
         /// <see cref="ExcelConfigControl"/> selecciona la primera hoja de forma asíncrona
         /// y eleva <c>OptionsChanged</c> antes de que exista información cargada).
         /// </remarks>
         protected virtual void OnConfigOptionsChanged(object? sender, EventArgs e)
         {
-            if (loadedDataTable is null) return;
+            if (LoadedDataTable is null) return;
 
-            // Cancelar revalidaciones diferidas pendientes: con opciones cambiadas ya no
-            // tendrían sentido y restablecerían un ResultData obsoleto.
-            _revalidateDebounce.Stop();
+            // Cancela revalidaciones diferidas y retira el resultado: con opciones
+            // cambiadas ya no tendrían sentido y restablecerían un resultado obsoleto.
+            _controller.InvalidateData();
 
-            ResultData = null;
             btnImport.Enabled = false;
             tsslWarning.Text = "La configuración de análisis cambió: recargue los datos.";
             tsslWarning.Visible = true;
@@ -609,15 +656,16 @@ namespace KUtilitiesCore.Data.Win.Importer
         }
 
         private void btnImport_Click(object sender, EventArgs e)
-        { ImportData(); }
+        {
+            ImportData();
+        }
 
         private async void btnLoadData_Click(object sender, EventArgs e)
         {
             // Guard de reentrada: mientras una carga está en curso se ignoran clicks
             // adicionales y el botón permanece deshabilitado; la carga real es asíncrona
             // para no congelar el hilo de UI con archivos grandes.
-            if (_isLoading) return;
-            _isLoading = true;
+            if (_controller.IsLoading) return;
             try
             {
                 btnLoadData.Enabled = false;
@@ -625,14 +673,13 @@ namespace KUtilitiesCore.Data.Win.Importer
             }
             finally
             {
-                _isLoading = false;
                 btnLoadData.Enabled = true;
             }
         }
 
         private void cbFilterHasError_CheckedChanged(object sender, EventArgs e)
         {
-            var table = loadedDataTable;
+            var table = LoadedDataTable;
             if (table is null) return;
             FilterHasErrors(table, dgvPreview, cbFilterHasError.Checked);
         }
@@ -641,14 +688,27 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// Reprograma la revalidación silenciosa tras una edición de celda o de mapeo.
         /// </summary>
         /// <remarks>
-        /// Reiniciar (Stop + Start) la ventana de 400 ms coalescea ráfagas de ediciones
-        /// rápidas en una sola pasada de validación, que reconstruye las definiciones
-        /// activas y valida la tabla completa.
+        /// La ventana de estabilización pertenece al orquestador: reiniciarla con cada
+        /// invocación coalescea ráfagas de ediciones rápidas en una sola pasada de
+        /// validación, que reconstruye las definiciones activas y valida la tabla completa.
         /// </remarks>
         protected void ScheduleSilentRevalidation()
         {
-            _revalidateDebounce.Stop();
-            _revalidateDebounce.Start();
+            _controller.ScheduleSilentRevalidation();
+        }
+
+        /// <summary>
+        /// Consolida las ediciones pendientes del grid justo antes de que el orquestador
+        /// revalide al dispararse el debounce.
+        /// </summary>
+        /// <remarks>
+        /// Este handler se suscribe al temporizador ANTES que el del orquestador, por lo
+        /// que en cada disparo el commit corre primero y la revalidación lee la tabla con
+        /// los valores ya consolidados.
+        /// </remarks>
+        private void OnDebounceCommitPendingEdit(object? sender, EventArgs e)
+        {
+            CommitPendingGridEdit();
         }
 
         private void dgvPreview_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -662,7 +722,7 @@ namespace KUtilitiesCore.Data.Win.Importer
         {
             // Solo la columna de origen (índice 1) afecta la conversión; durante el
             // poblado programático del grid el evento es ruido, no intención de usuario.
-            if (_populatingMapping || loadedDataTable is null || e.ColumnIndex != 1 || e.RowIndex < 0)
+            if (_populatingMapping || LoadedDataTable is null || e.ColumnIndex != 1 || e.RowIndex < 0)
             {
                 return;
             }
@@ -679,27 +739,18 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// cargada. El enfoque anterior (clonar la tabla y copiar las filas con error vía
         /// ImportRow) se descartó porque la copia es independiente: las correcciones que
         /// el usuario hacía en la vista filtrada se perdían al restaurar el filtro, y el
-        /// estado de errores quedaba desincronizado entre copia y original.
+        /// estado de errores quedaba desincronizado entre copia y original. La semántica
+        /// del filtro (columna de control + RowFilter) la centraliza el orquestador en
+        /// <see cref="ImportWizardController.CreateErrorsOnlyView(DataTable)"/>.
         /// </remarks>
         /// <param name="dt">Tabla cargada cuyas filas se muestran en el preview.</param>
         /// <param name="dgv">Grid de previsualización a filtrar.</param>
         /// <param name="showErrorOnly"><c>true</c> para mostrar solo filas con error; <c>false</c> para la vista completa.</param>
         protected virtual void FilterHasErrors(DataTable dt, DataGridView dgv, bool showErrorOnly)
         {
-            EnsureHasErrorColumn(dt);
             dgv.DataSource = showErrorOnly
-                ? new DataView(dt, "[_HasError] = true", string.Empty, DataViewRowState.CurrentRows)
+                ? ImportWizardController.CreateErrorsOnlyView(dt)
                 : new DataView(dt);
-        }
-
-        /// <summary>
-        /// Garantiza que la tabla cargada contenga la columna de control
-        /// <c>_HasError</c> usada por el RowFilter del preview.
-        /// </summary>
-        private static void EnsureHasErrorColumn(DataTable table)
-        {
-            if (!table.Columns.Contains("_HasError"))
-                table.Columns.Add("_HasError", typeof(bool));
         }
 
         /// <summary>
@@ -722,27 +773,15 @@ namespace KUtilitiesCore.Data.Win.Importer
             (dgvPreview.BindingContext[dgvPreview.DataSource] as CurrencyManager)?.EndCurrentEdit();
         }
 
-        /// <summary>
-        /// Sincroniza la columna de control <c>_HasError</c> con el estado de errores de
-        /// cada fila tras una validación, de modo que el DataView del preview (y su filtro
-        /// solo-errores) refleje siempre el resultado de la última validación.
-        /// </summary>
-        /// <param name="table">Tabla cargada cuyas banderas se actualizan.</param>
-        protected virtual void UpdateRowErrorFlags(DataTable table)
-        {
-            EnsureHasErrorColumn(table);
-
-            foreach (DataRow row in table.Rows)
-                row["_HasError"] = row.HasErrors;
-        }
-
         private void OnDispose()
         {
-            _revalidateDebounce.Dispose();
-            loadedDataTable?.Dispose();
-            ResultData?.Dispose();
-            if (_importManager != null)
-                _importManager.Dispose();
+            // La tabla cargada es propiedad del formulario: el orquestador la adopta sin
+            // disponerla (contrato de la capa compartida), así que su liberación sigue aquí.
+            _controller.LoadedDataView?.Table?.Dispose();
+
+            // El orquestador libera el temporizador de debounce, el gestor de importación
+            // y el resultado tipado.
+            _controller.Dispose();
         }
 
         /// <summary>
@@ -757,15 +796,10 @@ namespace KUtilitiesCore.Data.Win.Importer
         /// </remarks>
         protected virtual void ResetWizardState()
         {
-            // Sin tabla cargada, ninguna revalidación diferida tiene sentido.
-            _revalidateDebounce.Stop();
-
-            // Asignación directa del campo (no de la propiedad) para no disparar
-            // OnLoadedDataSource con null: el limpiado de la UI se hace aquí explícito.
-            loadedDataTable = null;
-
-            ResultData?.Dispose();
-            ResultData = null;
+            // Reset del estado lógico: detiene el debounce, retira la vista cargada
+            // (sin disponer la tabla del llamador), descarta el resultado y limpia
+            // la exposición de errores.
+            _controller.Reset();
 
             dgvPreview.DataSource = null;
             dgvErrors.DataSource = null;
@@ -814,7 +848,7 @@ namespace KUtilitiesCore.Data.Win.Importer
 
         private void PopulateMappingGrid()
         {
-            var table = loadedDataTable;
+            var table = LoadedDataTable;
             if (table is null) return;
 
             // El poblado programático dispara CellValueChanged por cada asignación:
@@ -900,6 +934,32 @@ namespace KUtilitiesCore.Data.Win.Importer
             ctrl.Dock = DockStyle.Fill;
             pnlConfig.Controls.Add(ctrl);
             return configControl;
+        }
+
+        /// <summary>
+        /// Adaptador que presenta una tabla ya leída como un
+        /// <see cref="IDataSourceReader"/>: el orquestador solo acepta cargas vía lector,
+        /// y este tipo permite inyectar tablas existentes (p. ej. desde la propiedad
+        /// <see cref="LoadedDataTable"/>) sin tocar el sistema de archivos.
+        /// </summary>
+        private sealed class TableDataSourceReader : IDataSourceReader
+        {
+            private readonly DataTable _table;
+
+            /// <summary>Inicializa el adaptador con la tabla que devolverá el lector.</summary>
+            public TableDataSourceReader(DataTable table)
+            {
+                _table = table;
+            }
+
+            /// <summary>Siempre se puede leer: la tabla ya está en memoria.</summary>
+            public bool CanRead => true;
+
+            /// <summary>Devuelve la tabla adaptada sin copiarla.</summary>
+            public DataTable ReadData() => _table;
+
+            /// <summary>Devuelve la tabla adaptada sin copiarla, ya resuelta.</summary>
+            public Task<DataTable> ReadDataAsync() => Task.FromResult(_table);
         }
 
         #endregion Methods

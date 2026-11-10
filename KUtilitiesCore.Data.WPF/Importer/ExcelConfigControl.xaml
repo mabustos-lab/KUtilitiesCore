@@ -1,0 +1,19 @@
+<UserControl x:Class="KUtilitiesCore.Data.WPF.Importer.ExcelConfigControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Orientation="Horizontal">
+        <TextBlock Text="Hoja:" VerticalAlignment="Center"/>
+        <ComboBox ItemsSource="{Binding Sheets}"
+                  SelectedItem="{Binding SelectedSheet}"
+                  Width="140"
+                  Margin="4,0,12,0"/>
+        <CheckBox Content="Tiene encabezados"
+                  IsChecked="{Binding HasHeader}"
+                  Margin="0,0,12,0"
+                  VerticalAlignment="Center"/>
+        <TextBlock Text="Fila inicial:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+        <TextBox Text="{Binding StartRow}" Width="60" Margin="0,0,12,0" VerticalAlignment="Center"/>
+        <TextBlock Text="Fila final (0 = todas):" VerticalAlignment="Center" Margin="0,0,4,0"/>
+        <TextBox Text="{Binding EndRow}" Width="60" VerticalAlignment="Center"/>
+    </StackPanel>
+</UserControl>

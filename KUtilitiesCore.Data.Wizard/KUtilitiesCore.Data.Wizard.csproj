@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Title>KUtilitiesCore.Data.Wizard</Title>
+    <Description>Orquestación compartida del asistente de importación de datos, agnóstica del framework de interfaz de usuario.</Description>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
+  </ItemGroup>
+
+</Project>
