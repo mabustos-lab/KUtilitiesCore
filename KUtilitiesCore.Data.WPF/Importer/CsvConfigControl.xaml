@@ -1,0 +1,24 @@
+<UserControl x:Class="KUtilitiesCore.Data.WPF.Importer.CsvConfigControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:importer="clr-namespace:KUtilitiesCore.Data.WPF.Importer">
+    <StackPanel Orientation="Horizontal">
+        <TextBlock Text="Delimitador:" VerticalAlignment="Center"/>
+        <ComboBox ItemsSource="{x:Static importer:CsvConfigViewModel.DefaultDelimiterOptions}"
+                  DisplayMemberPath="Label"
+                  SelectedItem="{Binding SelectedDelimiter}"
+                  Width="140"
+                  Margin="4,0,12,0"/>
+        <CheckBox Content="Tiene encabezados"
+                  IsChecked="{Binding HasHeader}"
+                  Margin="0,0,12,0"
+                  VerticalAlignment="Center"/>
+        <CheckBox Content="Quitar espacios en los valores"
+                  IsChecked="{Binding TrimValues}"
+                  Margin="0,0,12,0"
+                  VerticalAlignment="Center"/>
+        <CheckBox Content="Ignorar líneas vacías"
+                  IsChecked="{Binding IgnoreEmptyLines}"
+                  VerticalAlignment="Center"/>
+    </StackPanel>
+</UserControl>

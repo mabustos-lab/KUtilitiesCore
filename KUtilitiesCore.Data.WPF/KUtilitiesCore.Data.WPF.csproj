@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Title>KUtilitiesCore.Data.WPF</Title>
+    <Description>Asistente de importación de datos para WPF, construido sobre la capa de orquestación compartida KUtilitiesCore.Data.Wizard.</Description>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KUtilitiesCore.Data.Wizard\KUtilitiesCore.Data.Wizard.csproj" />
+    <ProjectReference Include="..\KUtilitiesCore.Data\KUtilitiesCore.Data.csproj" />
+    <ProjectReference Include="..\KUtilitiesCore.MVVM\KUtilitiesCore.MVVM.csproj" />
+  </ItemGroup>
+
+</Project>
